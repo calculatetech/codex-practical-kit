@@ -47,3 +47,4 @@ No residual risk is accepted.
 - ✅ **CPK-011 — Make RepoWise self-starting and self-updating.** The kit installs missing runtime tools, initializes Git repositories from Codex, enables RepoWise MCP calls, and maintains the wiki after commits.
 - ✅ **CPK-012 — Prevent self-invalidating review closure.** Material changes invalidate review. Review-result, roadmap, publication, checksum, and ignored test-record updates close a clean review without recursion.
 - ✅ **CPK-008 — Make decision handoffs operator-readable.** Material choices now use a compact handoff with the trigger, likelihood, exposure, option effects, recommendation, and exact question.
+- ✅ **CPK-013 — Bootstrap empty project folders.** Empty workspaces now initialize Git and RepoWise. Non-empty, non-Git folders remain unchanged.

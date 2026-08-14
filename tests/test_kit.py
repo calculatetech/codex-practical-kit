@@ -461,6 +461,41 @@ class RepoWiseRuntimeTests(unittest.TestCase):
             self.assertEqual(sum(line.startswith("hook install ") for line in calls), 2)
             self.assertEqual(sum(line.startswith("mcp ") for line in calls), 2)
 
+    def test_bootstrap_initializes_only_empty_non_git_directory(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            log = root / "calls"
+            fake = root / "repowise"
+            fake.write_text(
+                "#!/bin/sh\n"
+                "printf '%s\\n' \"$*\" >> \"$CALL_LOG\"\n"
+                "if [ \"$1\" = init ]; then\n"
+                "  for LAST do :; done\n"
+                "  mkdir -p \"$LAST/.repowise\"\n"
+                "fi\n"
+            )
+            fake.chmod(0o755)
+            env = os.environ.copy()
+            env["CALL_LOG"] = str(log)
+            script = kit.repowise_bootstrap(str(fake))
+
+            empty = root / "empty"
+            empty.mkdir()
+            subprocess.run(["/bin/sh", "-c", script], cwd=empty, env=env, check=True)
+            self.assertTrue((empty / ".git").is_dir())
+            empty_calls = log.read_text().splitlines()
+            self.assertEqual(sum(line.startswith("init ") for line in empty_calls), 1)
+            self.assertEqual(sum(line.startswith("hook install ") for line in empty_calls), 1)
+            self.assertIn(f"mcp {empty}", empty_calls)
+
+            log.write_text("")
+            nonempty = root / "nonempty"
+            nonempty.mkdir()
+            (nonempty / ".keep").write_text("")
+            subprocess.run(["/bin/sh", "-c", script], cwd=nonempty, env=env, check=True)
+            self.assertFalse((nonempty / ".git").exists())
+            self.assertEqual(log.read_text().splitlines(), ["mcp"])
+
 
 class IntegrationTests(unittest.TestCase):
     def test_setup_preserves_roadmap_and_unrelated_blocks(self):
@@ -549,7 +584,7 @@ class IntegrationTests(unittest.TestCase):
         readme = (ROOT / "README.md").read_text()
         prompt = (ROOT / "CODEX-INSTALL-PROMPT.md").read_text()
 
-        self.assertEqual(kit.KIT_VERSION, "0.9.0")
+        self.assertEqual(kit.KIT_VERSION, "0.9.1")
         self.assertIn(f"Version `{kit.KIT_VERSION}`", readme)
         self.assertIn(f"version {kit.KIT_VERSION} or newer", prompt)
 

@@ -23,7 +23,7 @@ from pathlib import Path
 from typing import Any, Iterable
 
 KIT_ID = "codex-practical-kit"
-KIT_VERSION = "0.9.0"
+KIT_VERSION = "0.9.1"
 REPOWISE_VERSION = "0.41.0"
 UV_VERSION = "0.12.4"
 UV_INSTALLER_URL = f"https://astral.sh/uv/{UV_VERSION}/install.sh"
@@ -700,7 +700,13 @@ def repowise_bootstrap(repowise: str) -> str:
     return "\n".join(
         [
             "set -eu",
-            f'ROOT=$(git rev-parse --show-toplevel 2>/dev/null) || exec {command} mcp',
+            'if ! ROOT=$(git rev-parse --show-toplevel 2>/dev/null); then',
+            '  if [ -n "$(ls -A)" ]; then',
+            f"    exec {command} mcp",
+            "  fi",
+            "  git init --quiet 1>&2",
+            "  ROOT=$(git rev-parse --show-toplevel)",
+            "fi",
             'if [ ! -d "$ROOT/.repowise" ]; then',
             f"  {init} 1>&2",
             "fi",

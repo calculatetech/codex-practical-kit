@@ -2,7 +2,7 @@
 
 Codex Practical Kit installs a small working agreement for personal repositories. It favors direct code, clear documentation, and bounded review.
 
-Version `0.9.0` adds operator-readable handoffs for material decisions.
+Version `0.9.1` initializes Git and RepoWise when Codex starts in an empty project folder.
 
 ## Operating model
 
@@ -167,7 +167,9 @@ Docs: updated README.md.
 
 ## RepoWise
 
-The core install enables RepoWise for Git repositories. On the first RepoWise tool call, the managed MCP command creates a no-prose `.repowise` index when necessary. It also installs RepoWise's `post-commit` hook. Later commits start a background wiki update.
+The core install enables RepoWise for Git repositories. If Codex starts in a completely empty folder, the MCP command initializes Git first. It does not initialize Git in a non-empty folder.
+
+On the first RepoWise tool call, the managed MCP command creates a no-prose `.repowise` index when necessary. It also installs RepoWise's `post-commit` hook. Later commits start a background wiki update.
 
 Use eager setup when you want the index before the next Codex session:
 
