@@ -2,8 +2,9 @@
 name: design-preflight
 description: >
   Define the normal-use behavior floor and implementation ceiling before a
-  non-trivial change. Use repository evidence, exclude unsupported conditions,
-  and challenge the design once only when ownership or scope remains unclear.
+  non-trivial change. Derive runtime scenarios systematically, use one
+  independent planning challenge, exclude unsupported conditions, and stop on
+  unresolved normal-use contracts.
 license: MIT
 ---
 
@@ -25,7 +26,7 @@ For each proposed requirement, answer:
 
 1. Does the condition occur during supported normal use?
 2. Does the project control the condition and result?
-3. Can the current path reproduce the problem without fault injection?
+3. Can the condition or planned trigger occur without fault injection?
 4. Does an explicit requirement define the expected result?
 
 Keep the requirement only when all answers are `true`.
@@ -36,6 +37,14 @@ Do not add I/O faults, permissions, links, concurrency, interruption, retry, res
 
 Read the entry point, outcome owner, state owner, callers, checks, and documentation. Use RepoWise only when its current index gives useful leads.
 
+For non-trivial runtime behavior, derive a Scenario Proof with three lenses:
+
+- Input domain: applicable presence, syntax, semantic validity, range boundaries, and explicit relationships.
+- Path and transition: selectors, filters, transformations, controlled boundaries, state changes, and terminal obligations.
+- Collection semantics: supported empty input, one record, duplicates, a duplicate prefix with a later counterexample, and every record that owes a result.
+
+Use source predicates and requirements. Select the minimum cases that exercise each distinct outcome or disprove an invariant. Do not create a Cartesian product.
+
 When success depends on every matching record, use the complete set or an operation that preserves the full-set result. Do not limit raw records before grouping, deduplication, or aggregation. Test duplicate prefix values followed by a later counterexample.
 
 Write one preflight card from `references/preflight-card.md`. It must contain:
@@ -45,21 +54,28 @@ Write one preflight card from `references/preflight-card.md`. It must contain:
 - The normal-use behavior floor.
 - The hard scope ceiling.
 - Applicable failures only.
+- The Scenario Proof for non-trivial runtime behavior.
 - Exact checks.
 
-For ExecPlan work, merge the accepted card into the task ExecPlan. Do not preserve a second planning artifact.
+Every non-trivial runtime preflight requires one task ExecPlan. Merge the accepted card into it before implementation. For other ExecPlan work, do the same. Do not preserve a second planning artifact.
 
-## Optional challenge
+## Independent challenge
 
-The coordinator owns the preflight. Spawn one fresh read-only reviewer only when normal-use ownership or scope remains unclear.
+The coordinator owns the preflight. For non-trivial runtime behavior, spawn one fresh read-only planning challenger with no inherited task conversation. A small change that skips Design Preflight also skips this challenge.
 
-Give that reviewer the card, exact source, and supported model. Do not ask for speculative failure discovery.
+Give the challenger raw requirements, the supported model, exclusions, exact source, entry and terminal owners, selectors, filters, state writers, and current tests.
 
-Apply the supported-model gate to every response. Revise the card once. Do not start a review loop.
+Do not give it the coordinator's card, Scenario Proof, implementation, known edge cases, prior diagnostics, reviewer corrections, severity, or preferred outcome.
+
+Require the JSON in `references/preflight-review.md`. Compare its independent result with the coordinator's derivation once. Merge supported scenarios into the card and ExecPlan. Do not start a review loop.
+
+For scenario applicability, require normal use, project control, a feasible trigger without fault injection, and an explicit result. Record a contract gap when the first three answers are `true` but no explicit result exists. Exclude the result when any of the first three answers is `false`.
+
+For a non-runtime preflight, use this same single challenge only when normal-use ownership or scope remains unclear.
 
 ## Stop condition
 
-Stop for human direction only when supported normal use has duplicate authority, duplicate writers, or an unresolved public contract.
+Stop for human direction when supported normal use has duplicate authority, duplicate writers, or an unresolved public contract. Do not invent an outcome for a contract gap.
 
 Finish with:
 

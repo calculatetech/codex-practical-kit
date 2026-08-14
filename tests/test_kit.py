@@ -584,6 +584,49 @@ class IntegrationTests(unittest.TestCase):
                 for statement in required:
                     self.assertIn(statement, text)
 
+    def test_runtime_scenario_preflight_is_independent_and_durable(self):
+        rules = (ROOT / "assets" / "AGENTS.block.md").read_text()
+        session = (ROOT / "assets" / "hooks" / "session_start.py").read_text()
+        skill = (ROOT / "assets" / "skills" / "design-preflight" / "SKILL.md").read_text()
+        card = (
+            ROOT / "assets" / "skills" / "design-preflight" / "references" / "preflight-card.md"
+        ).read_text()
+        result = (
+            ROOT / "assets" / "skills" / "design-preflight" / "references" / "preflight-review.md"
+        ).read_text()
+        plans = (ROOT / ".agent" / "PLANS.md").read_text()
+
+        self.assertIn("use one fresh planning challenger", rules)
+        self.assertIn("Stop on an unresolved normal-use contract.", rules)
+        self.assertIn("use one independent scenario challenge", session)
+        self.assertIn("For non-trivial runtime behavior, derive a Scenario Proof", skill)
+        self.assertIn("Input domain:", skill)
+        self.assertIn("Path and transition:", skill)
+        self.assertIn("Collection semantics:", skill)
+        self.assertIn("Do not create a Cartesian product.", skill)
+        self.assertIn("with no inherited task conversation", skill)
+        self.assertIn("Do not give it the coordinator's card", skill)
+        self.assertIn("Record a contract gap when the first three answers are `true`", skill)
+        self.assertIn("A small change that skips Design Preflight also skips this challenge.", skill)
+        self.assertIn("Do not invent an outcome for a contract gap.", skill)
+        self.assertIn("condition or planned trigger occur without fault injection", skill)
+        self.assertIn("Every non-trivial runtime preflight requires one task ExecPlan.", skill)
+
+        self.assertIn("## Scenario Proof", card)
+        self.assertIn("Entry point, relevant gates, and terminal owner.", card)
+        self.assertIn("undefined — decision required", card)
+        self.assertIn("planned trigger is feasible without fault injection", card)
+        self.assertIn('"reviewer": "normal-use-scenarios"', result)
+        self.assertIn('"feasible_without_fault_injection": true', result)
+        self.assertIn('"explicit_result_defined": true', result)
+        self.assertIn('"contract_gaps"', result)
+        self.assertIn('"exclusions"', result)
+        self.assertIn('"coverage"', result)
+        self.assertIn("include the accepted Design Preflight Scenario Proof", plans)
+        self.assertIn("Do not start implementation while a supported normal-use result is undefined.", plans)
+        self.assertIn("every non-trivial runtime preflight", rules)
+        self.assertIn("every non-trivial runtime preflight", session)
+
     def test_git_isolation_policy_is_consistent(self):
         rules = (ROOT / "assets" / "AGENTS.block.md").read_text()
         session = (ROOT / "assets" / "hooks" / "session_start.py").read_text()

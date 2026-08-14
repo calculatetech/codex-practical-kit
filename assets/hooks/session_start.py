@@ -12,8 +12,8 @@ context = """Codex Practical Kit is active.
 - Material decisions use `Decision`, optional `Term`, `Trigger`, `Likelihood`, `Current exposure`, `Options`, `Recommendation`, then `Question`.
 - Investigate first. Skip the full handoff for routine inputs. State option effects, use qualitative likelihood, and prefer the smallest reversible choice that meets the requirement.
 - The RepoWise code graph is required. Refresh a stale index before broad exploration. If RepoWise is unavailable, stop and restore it.
-- Before non-trivial implementation, use design-preflight to define the normal-use floor, scope ceiling, owner, and exact checks.
-- Use one ExecPlan for complex features, multi-file changes, and significant refactors.
+- Before non-trivial implementation, use design-preflight to define the normal-use floor, scope ceiling, owner, and exact checks. For runtime behavior, use one independent scenario challenge and stop on an unresolved contract.
+- Use one ExecPlan for every non-trivial runtime preflight, complex feature, multi-file change, or significant refactor.
 - On `main`, allow only bounded documentation, comments, formatting, and roadmap updates. Use a task branch for one writable implementation stream.
 - Use a worktree for independent writable streams, multiple implementation agents, or a main checkout that cannot switch safely.
 - PR mode requires protected `main`, required CI checks, resolved conversations, and workflows that supply those checks. Otherwise, use direct integration.

@@ -66,6 +66,8 @@ Specify repository context explicitly. Name files with full repository-relative 
 
 Describe the supported operating model. Add exceptional behavior only when normal use includes it and the project controls it. If an operation fails, the default procedure stops and reports the error. Specify retry, rollback, or recovery only when the task explicitly requires it.
 
+For non-trivial runtime behavior, include the accepted Design Preflight Scenario Proof. Record each requirement, entry point, relevant gate, terminal owner, retained scenario, expected result, and runnable check. Give one reason for each inapplicable input-domain, path-and-transition, or collection-semantics lens. Do not start implementation while a supported normal-use result is undefined.
+
 Validation is not optional. Include instructions to run tests, to start the system if applicable, and to observe it doing something useful. Describe comprehensive testing for any new features or capabilities. Include expected outputs and error messages so a novice can tell success from failure. Where possible, show how to prove that the change is effective beyond compilation (for example, through a small end-to-end scenario, a CLI invocation, or an HTTP request/response transcript). State the exact test commands appropriate to the project’s toolchain and how to interpret their results.
 
 Capture evidence. When your steps produce terminal output, short diffs, or logs, include them inside the single fenced block as indented examples. Keep them concise and focused on what proves success. If you need to include a patch, prefer file-scoped diffs or small excerpts that a reader can recreate by following your instructions rather than pasting large blobs.
@@ -134,6 +136,10 @@ Prefer additive code changes followed by subtractions that keep tests passing. P
     ## Context and Orientation
 
     Describe the current state relevant to this task as if the reader knows nothing. Name the key files and modules by full path. Define any non-obvious term you will use. Do not refer to prior plans.
+
+    ## Scenario Proof
+
+    For non-trivial runtime behavior, record the accepted input-domain, path-and-transition, and collection-semantics scenarios. Name the expected result and runnable check for each scenario. Record an inapplicable lens with one reason. Stop planning when a supported normal-use result is undefined.
 
     ## Plan of Work
 

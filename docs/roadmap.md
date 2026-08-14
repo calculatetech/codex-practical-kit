@@ -56,3 +56,4 @@ No residual risk is accepted.
 - ✅ **CPK-019 — Make direct publication integrate final work.** In direct mode, one `publish` request now authorizes the path through verified integration into `main`. Tags, releases, and cleanup remain separate.
 - ✅ **CPK-020 — Protect full-set invariants from bounded samples.** Implementation policy, Design Preflight, and correctness review now reject success derived from bounded raw-input samples.
 - ✅ **CPK-021 — Diagnose severe defects at review stop gates.** Each stop finding gets a separate decision handoff. The same final response includes the complete diagnostic before the human halt.
+- ✅ **CPK-022 — Derive runtime scenarios before implementation.** Design Preflight now derives independent input, path, transition, and collection scenarios, preserves contract gaps, and stores accepted proof in one ExecPlan.

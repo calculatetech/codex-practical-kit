@@ -10,6 +10,20 @@ Use Design Preflight for a multi-file change, public interface, persistent produ
 
 State the supported operating model. Define the normal-use behavior floor and hard scope ceiling.
 
+For non-trivial runtime behavior, derive a Scenario Proof with three lenses:
+
+- Input domain: presence, syntax, semantic validity, range boundaries, and explicit relationships.
+- Path and transition: selectors, filters, transformations, controlled boundaries, state changes, and terminal obligations.
+- Collection semantics: supported empty input, one record, duplicates, counterexamples, and per-record results.
+
+Use the smallest cases that exercise each result or disprove an invariant. Do not create a Cartesian product.
+
+Run one fresh read-only planning challenge without inherited task conversation. Give it raw requirements, source, owners, gates, and current tests. Do not give it the coordinator's scenarios or implementation.
+
+Use one task ExecPlan for every non-trivial runtime preflight. Merge the accepted Scenario Proof into it before implementation.
+
+If the first three supported-model answers are true but no explicit result exists, record a contract gap. Stop for human direction before implementation.
+
 When success depends on every matching record, use the complete set or an operation that preserves the full-set result. Do not limit raw records before grouping, deduplication, or aggregation. Test duplicate prefix values followed by a later counterexample.
 
 For each exceptional condition, require four true answers:

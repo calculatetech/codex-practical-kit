@@ -8,6 +8,8 @@ Design Preflight defines the supported operating model, normal-use behavior, own
 
 The four true or false checks prevent possible conditions from becoming automatic requirements.
 
+For runtime behavior, one independent challenger derives input, path, transition, and collection scenarios. An undefined normal-use result stops planning before code.
+
 One ExecPlan records durable implementation decisions and progress. Plan Mode and Design Preflight feed it instead of creating competing records.
 
 ## During code

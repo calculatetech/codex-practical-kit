@@ -40,7 +40,8 @@ Repository `AGENTS.md` files can override this global policy.
 - Use RepoWise before broad exploration. Refresh a stale index. If RepoWise fails, stop and restore the required code graph.
 - For a small fix with one proven owner, edit and check it. Do not create planning files.
 - Use `design-preflight` for multi-file, public-interface, persistent-state, external-service, or unclear work.
-- Use one ExecPlan for complex features, multi-file changes, and significant refactors.
+- For non-trivial runtime behavior, use one fresh planning challenger to derive input, boundary, transition, path, and collection scenarios before implementation. Stop on an unresolved normal-use contract.
+- Use one ExecPlan for every non-trivial runtime preflight, complex feature, multi-file change, or significant refactor.
 - Use the repository `.agent/PLANS.md`, then `$CODEX_HOME/PLANS.md`. Store task plans in `docs/plans/`.
 - Stop for direction only for duplicate authority, duplicate writers, or an unresolved public contract in normal use.
 

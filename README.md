@@ -20,7 +20,7 @@ The toolkit uses these rules:
 
 - `ponytail` keeps code small.
 - `simple-english` keeps prose clear.
-- `design-preflight` defines the normal-use floor and scope ceiling.
+- `design-preflight` defines the normal-use floor, scenario proof, and scope ceiling.
 - `research-first` checks current evidence for costly choices.
 - `docs-maintainer` keeps existing documentation true.
 - `roadmap-maintainer` owns `docs/roadmap.md` lifecycle changes.
@@ -69,7 +69,11 @@ read the real path
 
 Use Design Preflight for multi-file changes, public interfaces, persistent product state, external services, or unclear ownership.
 
-Use one ExecPlan for complex features, multi-file changes, and significant refactors. Store it in `docs/plans/`.
+For non-trivial runtime behavior, one fresh planning challenger derives scenarios from raw requirements and source. It examines input domains, paths and transitions, and collection semantics. Every such preflight uses one ExecPlan. The coordinator merges accepted scenarios into it before implementation.
+
+If supported normal use has no defined result, planning stops for human direction. Codex does not invent the result.
+
+Use one ExecPlan for every non-trivial runtime preflight, complex feature, multi-file change, or significant refactor. Store it in `docs/plans/`.
 
 Use the repository's `.agent/PLANS.md` when present. Otherwise, use `$CODEX_HOME/PLANS.md`. Merge accepted Plan Mode and Design Preflight decisions into the ExecPlan.
 

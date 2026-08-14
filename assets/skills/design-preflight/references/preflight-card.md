@@ -26,7 +26,7 @@ List only behavior that passes all four checks:
 
 - It occurs in supported normal use.
 - The project controls it.
-- Current code reproduces it without fault injection.
+- The condition or planned trigger is feasible without fault injection.
 - An explicit requirement defines the result.
 
 ## Scope ceiling
@@ -36,6 +36,19 @@ List work that must not exist. Include excluded conditions, abstractions, depend
 ## Smallest implementation
 
 Name the existing owner to change and the minimum supporting edits.
+
+## Scenario Proof
+
+For each runtime outcome, record:
+
+- Requirement and source.
+- Entry point, relevant gates, and terminal owner.
+- Applicable input-domain, path-and-transition, and collection cases.
+- Expected result, or `undefined — decision required`.
+- One runnable check for each retained case.
+- One short reason for each inapplicable lens.
+
+Do not create a Cartesian product of inputs.
 
 ## Checks
 
