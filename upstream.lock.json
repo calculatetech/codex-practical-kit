@@ -17,12 +17,6 @@
       "license": "MIT",
       "repository": "https://github.com/UditAkhourii/neuroarxiv"
     },
-    "repowise": {
-      "install_mode": "external uvx process; not bundled",
-      "license": "AGPL-3.0-only",
-      "repository": "https://github.com/repowise-dev/repowise",
-      "version": "0.41.0"
-    },
     "spec-kit": {
       "install_mode": "optional user-installed tool; not bundled or enabled by default",
       "license": "MIT",
@@ -38,6 +32,22 @@
       "install_mode": "optional Codex marketplace; not bundled",
       "license": "CC-BY-SA-4.0",
       "repository": "https://github.com/trailofbits/skills"
+    }
+  },
+  "runtime_tools": {
+    "repowise": {
+      "install_mode": "uv tool install; not bundled",
+      "license": "AGPL-3.0-only",
+      "repository": "https://github.com/repowise-dev/repowise",
+      "version": "0.41.0"
+    },
+    "uv": {
+      "install_mode": "verified upstream installer when missing",
+      "installer_sha256": "f1ee4a249799525a330df57643335120150c9102db7483b1d37546cc43af3a16",
+      "installer_url": "https://astral.sh/uv/0.12.4/install.sh",
+      "license": "Apache-2.0 OR MIT",
+      "repository": "https://github.com/astral-sh/uv",
+      "version": "0.12.4"
     }
   },
   "schema_version": 1,

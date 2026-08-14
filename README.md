@@ -2,7 +2,7 @@
 
 Codex Practical Kit installs a small working agreement for personal repositories. It favors direct code, clear documentation, and bounded review.
 
-Version `0.3.0` adds roadmap governance and deterministic least effort.
+Version `0.5.0` makes RepoWise self-starting and keeps its wiki current after commits.
 
 ## Operating model
 
@@ -23,7 +23,6 @@ The Stop hook is a reminder. It is not a proof system.
 - `ponytail` keeps code small.
 - `simple-english` keeps prose clear.
 - `design-preflight` defines the normal-use floor and scope ceiling.
-- `task-brief` records a small durable handoff when needed.
 - `research-first` checks current evidence for costly choices.
 - `docs-maintainer` keeps existing documentation true.
 - `roadmap-maintainer` owns `docs/roadmap.md` lifecycle changes.
@@ -43,11 +42,15 @@ Run:
 
 The installer copies each skill to `~/.agents/skills/`. These copies belong to the toolkit. Do not edit them directly.
 
-The installer also adds one managed block to `~/.codex/AGENTS.md`. It adds managed hook entries to `~/.codex/hooks.json`.
+The installer also adds managed blocks to `~/.codex/AGENTS.md` and `$CODEX_HOME/config.toml`. It adds managed hook entries to `~/.codex/hooks.json`.
+
+The installer uses an existing `uv` command. If `uv` is absent, it installs pinned uv 0.12.4 from a verified upstream script. It then installs pinned RepoWise 0.41.0 as a persistent uv tool when necessary.
 
 An existing unrecorded skill directory is a conflict. Ownership applies only in the skill directory recorded by the install manifest. The installer stops before it changes a conflicting skill. Move or remove the conflict, then run the installer again.
 
-Version `0.3.0` replaces skill entries recorded by an older toolkit manifest. This converts the installed `0.2.1` skill links to ordinary copies.
+Version `0.4.0` removes the obsolete Task Brief skill when the prior toolkit manifest owns it.
+
+The installer also writes `$CODEX_HOME/PLANS.md`. This file is the default ExecPlan model for repositories that do not contain `.agent/PLANS.md`.
 
 Open a new Codex session after installation. Use `/hooks` to review and trust the hook commands.
 
@@ -59,14 +62,17 @@ For a small change:
 read the real path
   -> fix the shared cause
   -> run a focused check
-  -> finalize documentation and roadmap
+  -> finalize documentation and mark the roadmap ready for review
   -> run one fresh supported-model review
+  -> record review closure
   -> commit
 ```
 
 Use Design Preflight for multi-file changes, public interfaces, persistent product state, external services, or unclear ownership.
 
-Use Task Brief only when the accepted preflight needs a durable handoff. Do not keep an ExecPlan and Task Brief as competing owners.
+Use one ExecPlan for complex features, multi-file changes, and significant refactors. Store it in `docs/plans/`.
+
+Use the repository's `.agent/PLANS.md` when present. Otherwise, use `$CODEX_HOME/PLANS.md`. Merge accepted Plan Mode and Design Preflight decisions into the ExecPlan.
 
 ## Supported-model review
 
@@ -87,6 +93,8 @@ Finalize documentation before review and commit. Never make a documentation chan
 
 If `docs/roadmap.md` exists, it is the human source of truth. Record accepted work before implementation. Make the task Active before the first implementation edit. Update it at every scope or state change.
 
+After validation, keep the task Active and mark it ready for review. After a clean review, record review closure and move the task to its terminal section. Review closure does not require another review.
+
 Repository-root `docs/` contains prose and static documentation assets. Put source, scripts, build files, and configuration with their runtime owner.
 
 ## Plan Mode
@@ -96,6 +104,8 @@ Plan Mode is read-only. Inspect the repository and define the implementation. Do
 The Stop hook returns immediately in Plan Mode. It does not start an old continuation or change its Git-status baseline.
 
 After Plan Mode ends, reread the repository and roadmap. Activate the accepted task before implementation.
+
+For ExecPlan work, put the accepted Plan Mode result into the task ExecPlan after Plan Mode ends.
 
 ## Stop hook
 
@@ -125,24 +135,26 @@ Docs: updated README.md.
 
 ## RepoWise
 
-RepoWise is optional. Configure it for one repository with:
+The core install enables RepoWise for Git repositories. On the first RepoWise tool call, the managed MCP command creates a no-prose `.repowise` index when necessary. It also installs RepoWise's `post-commit` hook. Later commits start a background wiki update.
+
+Use eager setup when you want the index before the next Codex session:
 
 ```bash
 ./setup-repo.sh /path/to/repository
 ./doctor.sh --repo /path/to/repository
 ```
 
-The setup command adds managed RepoWise blocks to repository configuration. It does not create or replace `docs/roadmap.md`.
+The setup command initializes the index, installs or refreshes the Git hook, and adds managed RepoWise blocks to repository configuration. It does not create or replace `docs/roadmap.md`.
 
 If RepoWise is unavailable, continue with Git, `rg`, language tools, and direct source reads.
 
-Remove the integration with:
+Opt out one repository with:
 
 ```bash
 python3 kit.py remove-repo /path/to/repository
 ```
 
-Add `--delete-index` to remove the local `.repowise` directory too.
+This command disables the global RepoWise server in that repository and removes RepoWise's part of `post-commit`. It preserves unrelated hook content. Add `--delete-index` to remove the local `.repowise` directory too.
 
 ## Uninstall
 
@@ -163,6 +175,8 @@ If the install manifest is absent, uninstall reports that the toolkit is not ins
 A successful uninstall removes the manifest. Running uninstall again reports that the toolkit is not installed.
 
 If an operation fails, uninstall stops and reports the error. It does not retry, restore, or repair partial work.
+
+Core uninstall removes the managed MCP configuration. It leaves `uv` and RepoWise installed because other tools or repositories can use them.
 
 ## Verification
 

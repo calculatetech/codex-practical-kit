@@ -55,18 +55,18 @@ Look for:
 - The result names one smallest implementation.
 - Duplicate ownership in supported normal use stops the work.
 
-## 4. Task brief
+## 4. ExecPlan handoff
 
 After an accepted preflight, ask:
 
 ```text
-Put the accepted preflight into one Task Brief. Do not create another specification. Keep exact checks and the scope ceiling.
+Put the accepted preflight into one ExecPlan. Do not create another task plan. Keep exact checks and the scope ceiling.
 ```
 
 Look for:
 
-- One short brief, not separate spec, plan, and task systems.
-- Clear `Must work` and `Must not change` sections.
+- One ExecPlan, not separate brief, plan, and task systems.
+- Clear required behavior and scope ceiling.
 - Checks name the production break they can catch.
 - The implementation stops at the stated ceiling.
 

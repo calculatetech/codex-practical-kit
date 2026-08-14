@@ -1,6 +1,6 @@
 # RepoWise notes
 
-RepoWise is the recommended replacement trial for the broken CBM installation.
+RepoWise is the repository knowledge provider installed by the kit.
 
 ## Why it is worth trying
 
@@ -44,17 +44,23 @@ Every RepoWise result is an observation until source confirms it.
 
 The review packet must record the indexed revision. A stale index cannot prove absence.
 
-## Why it stays optional
+## Runtime ownership
 
 RepoWise is a large external tool and uses AGPL-3.0. The kit does not copy it, modify it, or depend on its database format.
 
-The Codex integration invokes the exact pinned package through `uvx`. Removal only deletes the project config block. It does not need the RepoWise executable to start.
+Core installation reuses `uv` when present. If it is absent, the kit installs pinned uv 0.12.4 from a checksum-verified upstream script. The kit installs RepoWise 0.41.0 as a persistent uv tool when no matching command exists.
+
+The installer adds a user-level RepoWise MCP server. Its first start in a Git repository initializes a no-prose index when `.repowise` is absent. It installs RepoWise's marker-delimited `post-commit` hook before it starts the MCP server.
+
+The managed Codex configuration approves RepoWise MCP calls without another prompt. This setting prevents Codex from canceling the first tool call before dispatch.
+
+The hook starts a background update after each commit. RepoWise owns its queue marker, log, and single-flight update behavior.
 
 When RepoWise fails, use Git, `rg`, language tools, tests, and direct source reads. Continue the task.
 
 ## Day-to-day commands
 
-Set up:
+Set up before the first MCP call:
 
 ```bash
 python3 kit.py setup-repo .
@@ -72,17 +78,19 @@ Check:
 python3 kit.py doctor --repo .
 ```
 
-Remove the integration, but keep the index:
+Opt out this repository, remove RepoWise's hook block, and keep the index:
 
 ```bash
 python3 kit.py remove-repo .
 ```
 
-Remove both:
+Opt out and remove the index:
 
 ```bash
 python3 kit.py remove-repo . --delete-index
 ```
+
+Core uninstall removes the global MCP block. It leaves `uv` and RepoWise installed.
 
 ## Trust boundary
 

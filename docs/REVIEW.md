@@ -8,12 +8,17 @@ Review protects the behavior that the project supports. It does not expand the p
 implementation
   -> checks
   -> documentation
-  -> roadmap terminal state
+  -> roadmap ready-for-review state
   -> one fresh correctness reviewer
+  -> review closure
   -> commit
 ```
 
 Documentation must be final before review and commit.
+
+Review closure records the review result, moves the reviewed roadmap task to its terminal state, and updates matching integrity metadata. These changes do not require another review.
+
+A change to behavior, tests, configuration, requirements, or the supported model invalidates review. Use a fresh reviewer for the corrected candidate.
 
 ## Finding gate
 

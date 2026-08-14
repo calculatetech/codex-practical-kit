@@ -1,10 +1,10 @@
 # Optional Spec Kit
 
-Spec Kit is not the default glue.
+Spec Kit is optional behavior input. ExecPlan remains the implementation owner.
 
-Use Design Preflight first. Put the accepted result into one Task Brief when the work needs a durable handoff.
+Use Design Preflight first. Put accepted decisions into one ExecPlan.
 
-That small path asks for:
+The ExecPlan records:
 
 - Goal.
 - Existing owner.
@@ -13,7 +13,7 @@ That small path asks for:
 - Checks.
 - Unknowns.
 
-Add Spec Kit when one brief is no longer enough. Good signals include:
+Add Spec Kit when the task needs more behavior detail. Good signals include:
 
 - A new application.
 - A feature with several user stories.
@@ -34,13 +34,13 @@ Run `specify integration list` first when the installed release changes its inte
 
 ## One owner rule
 
-Do not use Task Brief and Spec Kit as two parallel specifications for the same work.
+Do not use Spec Kit artifacts as a second implementation tracker.
 
-When Spec Kit owns the work:
+When Spec Kit supplies the behavior specification:
 
 - Its specification is the durable behavior source.
-- Its plan and tasks own implementation progress.
-- Design Preflight reviews the Spec Kit artifacts instead of creating another brief.
+- The ExecPlan owns implementation decisions and progress.
+- Design Preflight reviews the Spec Kit artifacts and feeds accepted decisions into the ExecPlan.
 - Ponytail controls implementation size.
 - Adversarial Review checks the completed diff against the Spec Kit intent.
 - SimpleEnglish controls prose.

@@ -4,7 +4,7 @@ Keep the packet factual and compact.
 
 ## Intent
 
-Quote or link the accepted requirement, Task Brief, plan, or user request.
+Quote or link the accepted requirement, ExecPlan, specification, or user request.
 
 ## Scope
 

@@ -21,10 +21,24 @@
 - Source: https://github.com/repowise-dev/repowise
 - Pinned runtime version: `0.41.0`
 - License: AGPL-3.0-only
-- Integration: separate `uvx` process and MCP server
+- Integration: persistent uv tool, MCP server, and marker-delimited Git hook
 - RepoWise is not copied into or linked with this kit.
 
+### uv
+
+- Source: https://github.com/astral-sh/uv
+- Pinned installer version: `0.12.4`
+- Installer SHA-256: `f1ee4a249799525a330df57643335120150c9102db7483b1d37546cc43af3a16`
+- License: Apache-2.0 OR MIT
+- Integration: checksum-verified upstream installer when `uv` is absent
+
 ## Optional components
+
+### OpenAI ExecPlan guidance
+
+- Source: https://developers.openai.com/cookbook/articles/codex_exec_plans/
+- Status: design source for `.agent/PLANS.md` and the managed ExecPlan workflow
+- The toolkit adds its roadmap, Plan Mode, Design Preflight, documentation, and review rules to this model.
 
 ### GitHub Spec Kit
 

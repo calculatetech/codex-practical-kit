@@ -4,9 +4,21 @@ This document describes the requirements for an execution plan ("ExecPlan"), a d
 
 ## How to use ExecPlans and PLANS.md
 
+An ExecPlan is the only durable implementation plan for a task. Use one for complex features, multi-file changes, and significant refactors. Do not create a plan file for a small, isolated change.
+
+Use the repository's `.agent/PLANS.md` when it exists. Otherwise, use the toolkit-managed `$CODEX_HOME/PLANS.md`. Store the task ExecPlan in `docs/plans/`. Use the roadmap identifier in its filename when the task has one.
+
+Plan Mode and Design Preflight are preparation stages. Merge their accepted decisions into the ExecPlan. Do not preserve a second plan, brief, or preflight record for the same task. The roadmap owns task priority and lifecycle state. The ExecPlan owns implementation decisions and progress.
+
 When authoring an executable specification (ExecPlan), follow PLANS.md _to the letter_. If it is not in your context, refresh your memory by reading the entire PLANS.md file. Be thorough in reading (and re-reading) source material to produce an accurate specification. When creating a spec, start from the skeleton and flesh it out as you do your research.
 
 When implementing an executable specification (ExecPlan), do not prompt the user for "next steps"; simply proceed to the next milestone. Keep all sections up to date, add or split entries in the list at every stopping point to affirmatively state the progress made and next steps. Resolve ambiguities autonomously. Finalize documentation and review before the task commit.
+
+Before review, record that validation is complete and review is pending.
+
+Review closure does not invalidate a clean review. Review closure is limited to five updates: the task ExecPlan review result, reviewed task roadmap transition, publication status, matching checksums, and untracked test-result record.
+
+A change to code, tests, dependencies, migrations, runtime configuration, build configuration, security configuration, behavior requirements, or the supported model invalidates review. Do not make other file changes after a clean review.
 
 When discussing an executable specification (ExecPlan), record decisions in a log in the spec for posterity; it should be unambiguously clear why any change to the specification was made. ExecPlans are living documents, and it should always be possible to restart from _only_ the ExecPlan and no other work.
 

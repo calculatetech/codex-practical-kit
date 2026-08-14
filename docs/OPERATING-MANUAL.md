@@ -2,7 +2,7 @@
 
 ## Small change
 
-Read the real execution path. Fix the shared cause. Run one focused check. Finalize documentation and roadmap state. Then run one review.
+Read the real execution path. Fix the shared cause. Run one focused check. Finalize documentation and roadmap content. Then run one review.
 
 ## Non-trivial change
 
@@ -19,11 +19,25 @@ For each exceptional condition, require four true answers:
 
 If one answer is false, exclude the condition.
 
+## ExecPlan ownership
+
+Use one ExecPlan for complex features, multi-file changes, and significant refactors. Small isolated changes do not need a plan file.
+
+Use the repository's `.agent/PLANS.md` when it exists. Otherwise, use `$CODEX_HOME/PLANS.md`.
+
+Store task ExecPlans in `docs/plans/`. Use the roadmap identifier in the filename when one exists.
+
+Plan Mode and Design Preflight prepare the ExecPlan. Merge their accepted decisions into it. Do not keep another durable task plan.
+
+The roadmap owns task priority and lifecycle state. The ExecPlan owns implementation decisions and progress.
+
 ## Roadmap lifecycle
 
 Use `docs/roadmap.md` as the only roadmap authority. Record accepted work before implementation. Make one task Active before its first implementation edit.
 
-Update the roadmap when scope, order, priority, blocking state, or terminal state changes.
+Update the roadmap when scope, order, priority, blocking state, review state, or terminal state changes.
+
+After validation, keep the task Active and mark it ready for review. After a clean review, move it to its terminal section.
 
 Use Declined for work that the user intentionally does not support. Do not report excluded review findings as residual risk.
 
@@ -33,9 +47,11 @@ Plan Mode is read-only. Do not edit tracked files, stage, commit, publish, or ac
 
 The Stop hook returns immediately in Plan Mode. After Plan Mode ends, reread the repository and roadmap before implementation.
 
+For ExecPlan work, update the task ExecPlan with the accepted design before implementation.
+
 ## Review
 
-Finalize documentation and roadmap state before review. Use one fresh read-only correctness reviewer per pass.
+Finalize documentation and roadmap content before review. Use one fresh read-only correctness reviewer per pass.
 
 Give the reviewer the task, diff, source, supported model, exclusions, and completed checks.
 
@@ -44,6 +60,10 @@ Apply the four true or false checks to each finding. Drop a finding when one ans
 Use another lens only when the active task names that risk. Do not spawn a separate refuter.
 
 Passes 1 and 2 can cause a focused correction. If pass 3 finds a validated defect, stop for human direction.
+
+Review closure does not invalidate a clean review. It records the review result, the roadmap transition, publication status, and matching integrity metadata.
+
+If code, tests, configuration, requirements, or the supported model change, use a fresh reviewer.
 
 ## Stop hook
 

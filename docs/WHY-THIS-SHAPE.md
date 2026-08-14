@@ -8,6 +8,8 @@ Design Preflight defines the supported operating model, normal-use behavior, own
 
 The four true or false checks prevent possible conditions from becoming automatic requirements.
 
+One ExecPlan records durable implementation decisions and progress. Plan Mode and Design Preflight feed it instead of creating competing records.
+
 ## During code
 
 Ponytail reuses existing code and native features. It stops at the first solution that satisfies the accepted task.
@@ -26,10 +28,10 @@ One fresh reviewer checks correctness in the supported model. The coordinator dr
 
 The three-pass breaker remains. It stops recursive correction after three defectful passes.
 
-## Optional repository knowledge
+## Repository knowledge
 
-RepoWise can provide leads about callers, decisions, and tests. It is optional. Source remains authoritative.
+RepoWise can provide leads about callers, decisions, and tests. The kit initializes it on first use and updates it after commits. Source remains authoritative, and native tools remain the fallback.
 
 ## What the toolkit does not become
 
-The toolkit does not own a runtime, service, database, proof system, transaction manager, recovery framework, or universal risk model.
+The toolkit does not become a service, database, proof system, transaction manager, recovery framework, or universal risk model.

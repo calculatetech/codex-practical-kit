@@ -4,7 +4,7 @@ This is the source of truth for project work. Task identifiers are permanent. On
 
 Status legend:
 
-- 🎯 **Active** — currently being implemented
+- 🎯 **Active** — implementation or required review is in progress
 - ⏭ **Planned next** — accepted and ordered for near-term delivery
 - ◻ **Planned later** — accepted but not yet scheduled
 - ⚠️ **Accepted residual risk** — bounded work is complete, but a documented limitation remains accepted

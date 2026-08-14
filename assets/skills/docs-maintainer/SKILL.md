@@ -3,7 +3,7 @@ name: docs-maintainer
 description: >
   Keep repository documentation correct after code changes. Inspect the actual
   diff, find the authoritative document, update only what became wrong, use
-  Simple English, finalize roadmap state before review, and report when no
+  Simple English, finalize roadmap content before review, and report when no
   documentation change is needed. Use before review and commit for any change
   that affects behavior, setup, commands, configuration, public interfaces,
   operations, or architecture.
@@ -31,11 +31,13 @@ Keep the documentation true. Do not write documentation to prove that you wrote 
 7. Keep code, commands, paths, identifiers, and quoted errors exact.
 8. Make sure that examples can still run as written.
 9. If `docs/roadmap.md` exists, finish all other documentation first.
-10. Use `roadmap-maintainer` for the terminal task transition.
-11. Reread the final roadmap. Do not change its lifecycle fields through this skill.
+10. Use `roadmap-maintainer` to mark the Active task ready for review.
+11. Reread the roadmap. Do not change its lifecycle fields through this skill.
 12. Finish before adversarial review and commit.
 
-After a clean review, do not change documentation. If any candidate file changes, that clean review is invalid and commit is blocked until the complete candidate is reviewed again.
+Review closure does not invalidate a clean review. Review closure is limited to five updates: the task ExecPlan review result, reviewed task roadmap transition, publication status, matching checksums, and untracked test-result record.
+
+A change to code, tests, dependencies, migrations, runtime configuration, build configuration, security configuration, behavior requirements, or the supported model invalidates review. Do not make other file changes after a clean review.
 
 ## RepoWise
 

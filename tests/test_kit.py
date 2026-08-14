@@ -3,6 +3,7 @@ import os
 import subprocess
 import sys
 import tempfile
+import tomllib
 import unittest
 from argparse import Namespace
 from pathlib import Path
@@ -37,6 +38,18 @@ class MarkerTests(unittest.TestCase):
         original = "before\nafter\n"
         installed = kit.marker_block(original, "# start", "# end", "managed")
         self.assertEqual(kit.remove_marker_block(installed, "# start", "# end"), original)
+
+    def test_managed_block_replacement_preserves_backslashes(self):
+        updated = kit.marker_block(
+            "# start\nold\n# end\n",
+            "# start",
+            "# end",
+            kit.repowise_config_block("/tmp/repowise"),
+        )
+        self.assertEqual(
+            tomllib.loads(updated)["mcp_servers"]["repowise"]["args"][1],
+            kit.repowise_bootstrap("/tmp/repowise"),
+        )
 
 
 class HookTests(unittest.TestCase):
@@ -109,6 +122,17 @@ class HookTests(unittest.TestCase):
 
 
 class InstallerTests(unittest.TestCase):
+    def setUp(self):
+        self.runtime = mock.patch.object(
+            kit,
+            "ensure_repowise_runtime",
+            return_value=("/usr/bin/uv", "/usr/bin/repowise"),
+        )
+        self.runtime.start()
+
+    def tearDown(self):
+        self.runtime.stop()
+
     def paths(self, base: Path) -> kit.InstallPaths:
         return kit.InstallPaths(
             base / "home", base / "codex", base / "skills", base / "kit"
@@ -137,12 +161,16 @@ class InstallerTests(unittest.TestCase):
                 kit.ALL_SKILLS[0] + "\n",
             )
             paths.install_root.mkdir(parents=True)
+            plans = paths.codex_home / "PLANS.md"
+            plans.parent.mkdir(parents=True)
+            plans.write_text("managed\n", encoding="utf-8")
             (paths.install_root / "install-manifest.json").write_text(
                 json.dumps(
                     {
                         "schema_version": 1,
                         "codex_home": str(paths.codex_home),
                         "skills_home": str(paths.skills_home),
+                        "plans_file": str(plans),
                         "skills": records,
                     }
                 ),
@@ -161,8 +189,44 @@ class InstallerTests(unittest.TestCase):
             self.assertTrue(kit.uninstall_core(Namespace(purge=False), other))
             self.assertTrue(all(not (paths.skills_home / name).exists() for name in kit.ALL_SKILLS))
             self.assertTrue(all((other.skills_home / name).exists() for name in kit.ALL_SKILLS))
+            self.assertFalse(plans.exists())
             self.assertFalse((paths.install_root / "install-manifest.json").exists())
             self.assertFalse(kit.uninstall_core(Namespace(purge=False), other))
+
+    def test_install_manages_global_plans_and_rejects_unowned_file(self):
+        def fake_stage(destination: Path):
+            for name in kit.UPSTREAM_SKILLS:
+                skill = destination / name
+                skill.mkdir(parents=True)
+                (skill / "SKILL.md").write_text(name + "\n")
+            return {name: {"commit": "test"} for name in kit.UPSTREAM_SKILLS}
+
+        with tempfile.TemporaryDirectory() as temp:
+            paths = self.paths(Path(temp))
+            with mock.patch.object(kit, "stage_upstream_skills", fake_stage):
+                kit.install_core(Namespace(repo=None, repowise_prose=False), paths)
+            plans = paths.codex_home / "PLANS.md"
+            self.assertEqual(plans.read_text(), (ROOT / ".agent" / "PLANS.md").read_text())
+            manifest = json.loads((paths.install_root / "install-manifest.json").read_text())
+            self.assertEqual(manifest["plans_file"], str(plans))
+            plans.write_text("changed\n")
+            with mock.patch.object(kit, "stage_upstream_skills", fake_stage):
+                kit.install_core(Namespace(repo=None, repowise_prose=False), paths)
+            self.assertEqual(plans.read_text(), (ROOT / ".agent" / "PLANS.md").read_text())
+            self.assertTrue(kit.uninstall_core(Namespace(purge=False), paths))
+            self.assertFalse(plans.exists())
+
+        with tempfile.TemporaryDirectory() as temp:
+            paths = self.paths(Path(temp))
+            plans = paths.codex_home / "PLANS.md"
+            plans.parent.mkdir(parents=True)
+            plans.write_text("user\n")
+            with mock.patch.object(
+                kit, "stage_upstream_skills", fake_stage
+            ), self.assertRaises(kit.KitError):
+                kit.install_core(Namespace(repo=None, repowise_prose=False), paths)
+            self.assertEqual(plans.read_text(), "user\n")
+            self.assertFalse((paths.codex_home / "AGENTS.md").exists())
 
     def test_changed_skills_home_conflict_stops_before_skill_changes(self):
         with tempfile.TemporaryDirectory() as temp:
@@ -196,7 +260,7 @@ class InstallerTests(unittest.TestCase):
             old.mkdir(parents=True)
             paths.skills_home.mkdir()
             records = []
-            for name in kit.ALL_SKILLS:
+            for name in (*kit.ALL_SKILLS, *kit.OBSOLETE_SKILLS):
                 target = old / name
                 target.mkdir()
                 (target / "SKILL.md").write_text("old\n")
@@ -234,14 +298,168 @@ class InstallerTests(unittest.TestCase):
 
             self.assertTrue(all((paths.skills_home / name).is_dir() for name in kit.ALL_SKILLS))
             self.assertTrue(all(not (paths.skills_home / name).is_symlink() for name in kit.ALL_SKILLS))
+            self.assertTrue(all(not (paths.skills_home / name).exists() for name in kit.OBSOLETE_SKILLS))
             self.assertFalse((paths.install_root / "skills").exists())
             manifest = json.loads((paths.install_root / "install-manifest.json").read_text())
             self.assertEqual(manifest["skills"], [{"name": name} for name in kit.ALL_SKILLS])
+            self.assertEqual(manifest["plans_file"], str(paths.codex_home / "PLANS.md"))
 
     def test_absent_uninstall_is_no_op(self):
         with tempfile.TemporaryDirectory() as temp:
             paths = self.paths(Path(temp))
+            plans = paths.codex_home / "PLANS.md"
+            plans.parent.mkdir(parents=True)
+            plans.write_text("user\n")
             self.assertFalse(kit.uninstall_core(Namespace(purge=True), paths))
+            self.assertEqual(plans.read_text(), "user\n")
+
+    def test_install_preserves_global_config_and_uninstall_removes_owned_block(self):
+        def fake_stage(destination: Path):
+            for name in kit.UPSTREAM_SKILLS:
+                skill = destination / name
+                skill.mkdir(parents=True)
+                (skill / "SKILL.md").write_text(name + "\n")
+            return {}
+
+        with tempfile.TemporaryDirectory() as temp:
+            paths = self.paths(Path(temp))
+            config = paths.codex_home / "config.toml"
+            config.parent.mkdir(parents=True)
+            config.write_text('[mcp_servers.other]\ncommand = "other"\n')
+            with mock.patch.object(kit, "stage_upstream_skills", fake_stage):
+                kit.install_core(Namespace(repo=None, repowise_prose=False), paths)
+            installed = config.read_text()
+            self.assertIn("mcp_servers.other", installed)
+            self.assertIn('default_tools_approval_mode = "approve"', installed)
+            self.assertIn("hook install", installed)
+            self.assertTrue(kit.uninstall_core(Namespace(purge=False), paths))
+            self.assertEqual(config.read_text(), '[mcp_servers.other]\ncommand = "other"\n')
+
+    def test_unowned_global_repowise_config_is_a_conflict(self):
+        with tempfile.TemporaryDirectory() as temp:
+            paths = self.paths(Path(temp))
+            config = paths.codex_home / "config.toml"
+            config.parent.mkdir(parents=True)
+            config.write_text('[mcp_servers.repowise]\ncommand = "user"\n')
+            with mock.patch.object(
+                kit, "stage_upstream_skills", return_value={}
+            ), self.assertRaises(kit.KitError):
+                kit.install_core(Namespace(repo=None, repowise_prose=False), paths)
+            self.assertEqual(config.read_text(), '[mcp_servers.repowise]\ncommand = "user"\n')
+
+
+class RepoWiseRuntimeTests(unittest.TestCase):
+    def paths(self, base: Path) -> kit.InstallPaths:
+        return kit.InstallPaths(
+            base / "home", base / "codex", base / "skills", base / "kit"
+        )
+
+    def test_runtime_pins_match_lock_file(self):
+        runtime = json.loads((ROOT / "upstream.lock.json").read_text())["runtime_tools"]
+        self.assertEqual(runtime["uv"]["version"], kit.UV_VERSION)
+        self.assertEqual(runtime["uv"]["installer_url"], kit.UV_INSTALLER_URL)
+        self.assertEqual(runtime["uv"]["installer_sha256"], kit.UV_INSTALLER_SHA256)
+        self.assertEqual(runtime["repowise"]["version"], kit.REPOWISE_VERSION)
+
+    def test_missing_uv_runs_verified_installer_once(self):
+        with tempfile.TemporaryDirectory() as temp:
+            paths = self.paths(Path(temp))
+
+            def fake_run(command, **kwargs):
+                self.assertEqual(command, ["sh"])
+                self.assertEqual(kwargs["input_text"], "installer")
+                destination = Path(kwargs["env"]["UV_INSTALL_DIR"])
+                destination.mkdir(parents=True)
+                (destination / "uv").write_text("uv")
+                return subprocess.CompletedProcess(command, 0, "", "")
+
+            with mock.patch.object(
+                kit, "find_runtime_command", return_value=None
+            ), mock.patch.object(
+                kit, "download_sha256", return_value=b"installer"
+            ) as download, mock.patch.object(kit, "run", side_effect=fake_run) as run:
+                uv = kit.ensure_uv(paths)
+            self.assertEqual(uv, str(paths.home / ".local" / "bin" / "uv"))
+            download.assert_called_once_with(kit.UV_INSTALLER_URL, kit.UV_INSTALLER_SHA256)
+            run.assert_called_once()
+
+    def test_download_rejects_wrong_sha256(self):
+        class Response:
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *_args):
+                return False
+
+            def read(self):
+                return b"wrong"
+
+        with mock.patch.object(kit.urllib.request, "urlopen", return_value=Response()):
+            with self.assertRaises(kit.KitError):
+                kit.download_sha256("https://example.invalid/uv.sh", "0" * 64)
+
+    def test_missing_repowise_installs_persistent_tool(self):
+        with tempfile.TemporaryDirectory() as temp:
+            paths = self.paths(Path(temp))
+            commands = []
+
+            def fake_run(command, **kwargs):
+                commands.append(command)
+                if command[1:3] == ["tool", "install"]:
+                    destination = Path(kwargs["env"]["UV_TOOL_BIN_DIR"])
+                    destination.mkdir(parents=True)
+                    (destination / "repowise").write_text("repowise")
+                return subprocess.CompletedProcess(command, 0, "", "")
+
+            with mock.patch.object(
+                kit, "find_runtime_command", return_value=None
+            ), mock.patch.object(kit, "run", side_effect=fake_run):
+                repowise = kit.ensure_repowise(paths, "/usr/bin/uv")
+            self.assertEqual(repowise, str(paths.home / ".local" / "bin" / "repowise"))
+            self.assertEqual(
+                commands,
+                [
+                    ["/usr/bin/uv", "tool", "install", "repowise==0.41.0"],
+                    ["/usr/bin/uv", "tool", "update-shell"],
+                ],
+            )
+
+    def test_different_repowise_version_stops_install(self):
+        with tempfile.TemporaryDirectory() as temp:
+            paths = self.paths(Path(temp))
+            with mock.patch.object(
+                kit, "find_runtime_command", return_value="/usr/bin/repowise"
+            ), mock.patch.object(
+                kit, "command_version", return_value="RepoWise 0.40.0"
+            ), mock.patch.object(kit, "run") as run, self.assertRaises(kit.KitError):
+                kit.ensure_repowise(paths, "/usr/bin/uv")
+            run.assert_not_called()
+
+    def test_bootstrap_initializes_once_and_always_installs_hook(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp) / "repo"
+            root.mkdir()
+            GitFixture(root)
+            log = Path(temp) / "calls"
+            fake = Path(temp) / "repowise"
+            fake.write_text(
+                "#!/bin/sh\n"
+                "printf '%s\\n' \"$*\" >> \"$CALL_LOG\"\n"
+                "if [ \"$1\" = init ]; then\n"
+                "  for LAST do :; done\n"
+                "  mkdir -p \"$LAST/.repowise\"\n"
+                "fi\n"
+            )
+            fake.chmod(0o755)
+            env = os.environ.copy()
+            env["CALL_LOG"] = str(log)
+            script = kit.repowise_bootstrap(str(fake))
+            subprocess.run(["/bin/sh", "-c", script], cwd=root, env=env, check=True)
+            subprocess.run(["/bin/sh", "-c", script], cwd=root, env=env, check=True)
+            calls = log.read_text().splitlines()
+            self.assertEqual(sum(line.startswith("init ") for line in calls), 1)
+            self.assertEqual(sum(line.startswith("hook install ") for line in calls), 2)
+            self.assertEqual(sum(line.startswith("mcp ") for line in calls), 2)
 
 
 class IntegrationTests(unittest.TestCase):
@@ -258,18 +476,29 @@ class IntegrationTests(unittest.TestCase):
             (root / "docs").mkdir()
             (root / "docs" / "roadmap.md").write_text("sentinel\n", encoding="utf-8")
 
-            def fake_repowise(repo: Path, *args: str, timeout: int = 1800):
-                (repo / ".repowise").mkdir(exist_ok=True)
+            calls = []
+
+            def fake_repowise(repo: Path, *args: str, **_kwargs):
+                calls.append(args)
+                if args and args[0] == "init":
+                    (repo / ".repowise").mkdir(exist_ok=True)
                 return subprocess.CompletedProcess([], 0, "", "")
 
+            paths = kit.InstallPaths(root, root / "codex", root / "skills", root / "kit")
             with mock.patch.object(kit, "repowise_command", fake_repowise), mock.patch.object(
-                kit.shutil, "which", return_value="/usr/bin/uvx"
+                kit, "ensure_repowise_runtime", return_value=("/usr/bin/uv", "/usr/bin/repowise")
             ):
-                kit.setup_repo(Namespace(repo=str(root), prose=False))
+                kit.setup_repo(Namespace(repo=str(root), prose=False), paths)
             self.assertIn("mcp_servers.other", (root / ".codex" / "config.toml").read_text())
+            self.assertTrue(any(call[:2] == ("hook", "install") for call in calls))
             self.assertEqual((root / "docs" / "roadmap.md").read_text(), "sentinel\n")
-            kit.remove_repo(Namespace(repo=str(root), delete_index=False))
+            with mock.patch.object(kit, "repowise_command", fake_repowise), mock.patch.object(
+                kit, "ensure_repowise_runtime", return_value=("/usr/bin/uv", "/usr/bin/repowise")
+            ):
+                kit.remove_repo(Namespace(repo=str(root), delete_index=False), paths)
             self.assertEqual((root / "AGENTS.md").read_text(), "# Project rules\n")
+            self.assertIn("enabled = false", (root / ".codex" / "config.toml").read_text())
+            self.assertTrue(any(call[:2] == ("hook", "uninstall") for call in calls))
 
     def test_roadmap_contract_and_propagation(self):
         rules = (ROOT / "assets" / "AGENTS.block.md").read_text()
@@ -279,6 +508,34 @@ class IntegrationTests(unittest.TestCase):
         self.assertIn("Activate its task before the first implementation edit", rules)
         self.assertEqual(template.count("## Active"), 1)
         self.assertIn("## Declined", template)
+
+    def test_execplan_is_the_only_durable_task_model(self):
+        rules = (ROOT / "assets" / "AGENTS.block.md").read_text()
+        preflight = (ROOT / "assets" / "skills" / "design-preflight" / "SKILL.md").read_text()
+        self.assertIn("$CODEX_HOME/PLANS.md", rules)
+        self.assertNotIn("task-brief", rules.lower())
+        self.assertNotIn("Task Brief", preflight)
+        self.assertNotIn("task-brief", kit.ALL_SKILLS)
+
+    def test_review_closure_policy_is_consistent(self):
+        owners = [
+            ROOT / ".agent" / "PLANS.md",
+            ROOT / "assets" / "AGENTS.block.md",
+            ROOT / "assets" / "skills" / "adversarial-review" / "SKILL.md",
+            ROOT / "assets" / "skills" / "docs-maintainer" / "SKILL.md",
+            ROOT / "assets" / "skills" / "roadmap-maintainer" / "SKILL.md",
+        ]
+        required = [
+            "Review closure does not invalidate a clean review.",
+            "Review closure is limited to five updates: the task ExecPlan review result, reviewed task roadmap transition, publication status, matching checksums, and untracked test-result record.",
+            "A change to code, tests, dependencies, migrations, runtime configuration, build configuration, security configuration, behavior requirements, or the supported model invalidates review.",
+        ]
+        for owner in owners:
+            text = owner.read_text()
+            with self.subTest(owner=owner):
+                for statement in required:
+                    self.assertIn(statement, text)
+                self.assertNotIn("If any candidate file changes", text)
 
 
 if __name__ == "__main__":

@@ -33,15 +33,18 @@
 
 - If RepoWise MCP tools are available and the index is current, use them before broad grep-and-read exploration.
 - Use RepoWise for overview, callers, change risk, decision history, health, dead code, and affected tests.
-- RepoWise is optional. If it is unavailable, stale, or broken, continue with `rg`, Git, language tools, and direct file reads.
+- If RepoWise is unavailable, stale, or broken, continue with `rg`, Git, language tools, and direct file reads.
 - Never block the task only because an optional provider failed.
 
 ### Define the floor and ceiling before non-trivial work
 
 - For a small fix with one proven owner, edit and check it. Do not create planning files.
 - For multi-file, public-interface, persistent product-state, external-service, or unclear work, use `design-preflight` before implementation.
-- Use `task-brief` when the accepted preflight needs a durable handoff. Merge the preflight into that brief. Do not create two specification owners.
-- Use Spec Kit only when the small brief is not enough or the user asks for Spec Kit.
+- For complex features, multi-file changes, and significant refactors, use one ExecPlan from design through implementation.
+- Use the repository's `.agent/PLANS.md` when present. Otherwise, use `$CODEX_HOME/PLANS.md`.
+- Store task ExecPlans in `docs/plans/`. Use the roadmap identifier in the filename when one exists.
+- Merge accepted Plan Mode and Design Preflight decisions into the ExecPlan. Do not create another durable task plan.
+- Use Spec Kit only when the task needs it or the user asks for it. Its artifacts inform the ExecPlan but do not own implementation progress.
 - Stop for human direction only when supported normal use has duplicate authority, duplicate writers, or an unresolved public contract.
 
 ### Research only when it changes the answer
@@ -57,6 +60,8 @@
 - If `docs/roadmap.md` exists, use `roadmap-maintainer` for every roadmap lifecycle change.
 - Record accepted work before implementation. Activate its task before the first implementation edit.
 - Update the roadmap when task order, priority, accepted scope, blockers, or terminal state changes.
+- After validation, keep the task Active and mark it ready for review.
+- After a clean review, move the reviewed task to its terminal section as review closure.
 - If another task is active, do not replace it or start implementation. Stop for coordination.
 - Do not activate planning, audit, review, or documentation-only work.
 - Never create a roadmap during installation or ordinary work. Initialize one only when the user explicitly requests it.
@@ -72,12 +77,13 @@
 - In Plan Mode, inspect, reason, and define the implementation. Do not edit tracked files.
 - Do not stage, commit, publish, or activate a roadmap task in Plan Mode.
 - Tests and builds can write disposable caches, but they must not rewrite tracked files.
+- For ExecPlan work, put the accepted Plan Mode result into the task ExecPlan after Plan Mode ends.
 - Do not replace a planning turn with pending implementation review or documentation work.
 - After Plan Mode ends, reread the roadmap and repository state before implementation.
 
 ### Review every code change with fresh context
 
-- Finalize code, tests, configuration, documentation, and roadmap state before review.
+- Finalize code, tests, configuration, behavior requirements, supported-model rules, and roadmap content before review.
 - Before you finish code or configuration work, use `adversarial-review`.
 - Each review pass uses one fresh read-only subagent. Give it the task, diff, source, supported model, exclusions, and checks.
 - Always check correctness. Add another lens to the same reviewer only when the active task explicitly names that risk.
@@ -87,6 +93,10 @@
 - Run at most three consecutive defectful passes. If pass 3 still finds a code defect, stop without another automatic fix and wait for human direction.
 - Stop earlier when a validated architecture flaw makes local patching unsafe.
 - Review the final candidate that can be committed.
+- Review closure does not invalidate a clean review.
+- Review closure is limited to five updates: the task ExecPlan review result, reviewed task roadmap transition, publication status, matching checksums, and untracked test-result record.
+- A change to code, tests, dependencies, migrations, runtime configuration, build configuration, security configuration, behavior requirements, or the supported model invalidates review.
+- Do not make other file changes after a clean review.
 - Never change documentation after commit. Finalize it before review and commit.
 - End the final response with one exact status line:
   - `Review: clean — pass N.`
@@ -98,7 +108,8 @@
 
 - Before code review, use the `docs-maintainer` skill.
 - Update only documentation that became wrong or incomplete.
-- If `docs/roadmap.md` exists, use `roadmap-maintainer` for its terminal transition. Then verify the final roadmap.
+- Before review, use `roadmap-maintainer` to mark the Active task ready for review.
+- After a clean review, use `roadmap-maintainer` for the terminal transition as review closure.
 - Do not create filler documentation.
 - End the final response with one line in this exact form:
   - `Docs: updated <paths or topic>.`

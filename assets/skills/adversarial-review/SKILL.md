@@ -11,7 +11,11 @@ license: MIT
 
 Review the behavior that the project supports. Do not expand the product through review.
 
-Documentation, the roadmap, tests, and generated integrity files must be final before review. A review is read-only.
+Code, tests, configuration, behavior requirements, supported-model rules, and roadmap content must be final before review. A review is read-only.
+
+Review closure does not invalidate a clean review. Review closure is limited to five updates: the task ExecPlan review result, reviewed task roadmap transition, publication status, matching checksums, and untracked test-result record.
+
+A change to code, tests, dependencies, migrations, runtime configuration, build configuration, security configuration, behavior requirements, or the supported model invalidates review. Do not make other file changes after a clean review.
 
 ## Supported-model gate
 

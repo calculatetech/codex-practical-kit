@@ -45,7 +45,7 @@ Write one preflight card from `references/preflight-card.md`. It must contain:
 - Applicable failures only.
 - Exact checks.
 
-Use a Task Brief when the accepted card needs a durable handoff. Do not create a second specification owner.
+For ExecPlan work, merge the accepted card into the task ExecPlan. Do not preserve a second planning artifact.
 
 ## Optional challenge
 

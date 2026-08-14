@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Install and remove the Codex Practical Kit without owning a new runtime."""
+"""Install and remove the Codex Practical Kit."""
 
 from __future__ import annotations
 
@@ -23,7 +23,11 @@ from pathlib import Path
 from typing import Any, Iterable
 
 KIT_ID = "codex-practical-kit"
-KIT_VERSION = "0.3.0"
+KIT_VERSION = "0.5.0"
+REPOWISE_VERSION = "0.41.0"
+UV_VERSION = "0.12.4"
+UV_INSTALLER_URL = f"https://astral.sh/uv/{UV_VERSION}/install.sh"
+UV_INSTALLER_SHA256 = "f1ee4a249799525a330df57643335120150c9102db7483b1d37546cc43af3a16"
 ROOT = Path(__file__).resolve().parent
 AGENTS_START = "<!-- codex-practical-kit:start -->"
 AGENTS_END = "<!-- codex-practical-kit:end -->"
@@ -35,10 +39,10 @@ CUSTOM_SKILLS = (
     "docs-maintainer",
     "roadmap-maintainer",
     "research-first",
-    "task-brief",
     "design-preflight",
     "adversarial-review",
 )
+OBSOLETE_SKILLS = ("task-brief",)
 UPSTREAM_SKILLS = ("ponytail", "simple-english")
 ALL_SKILLS = (*UPSTREAM_SKILLS, *CUSTOM_SKILLS)
 
@@ -109,12 +113,16 @@ def run(
     *,
     cwd: Path | None = None,
     check: bool = True,
+    env: dict[str, str] | None = None,
+    input_text: str | None = None,
     timeout: int = 120,
 ) -> subprocess.CompletedProcess[str]:
     try:
         result = subprocess.run(
             command,
             cwd=cwd,
+            env=env,
+            input=input_text,
             text=True,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
@@ -153,7 +161,7 @@ def marker_block(text: str, start: str, end: str, body: str) -> str:
     block = f"{start}\n{body.rstrip()}\n{end}"
     pattern = re.compile(re.escape(start) + r".*?" + re.escape(end), re.DOTALL)
     if pattern.search(text):
-        return pattern.sub(block, text, count=1).rstrip() + "\n"
+        return pattern.sub(lambda _match: block, text, count=1).rstrip() + "\n"
     prefix = text.rstrip()
     return ((prefix + "\n\n") if prefix else "") + block + "\n"
 
@@ -206,6 +214,22 @@ def download_file(url: str, expected_blob: str) -> bytes:
         raise KitError(
             "Downloaded upstream file did not match the pinned Git blob. "
             f"Expected {expected_blob}, got {actual}: {url}"
+        )
+    return data
+
+
+def download_sha256(url: str, expected_sha256: str) -> bytes:
+    request = urllib.request.Request(url, headers={"User-Agent": f"{KIT_ID}/{KIT_VERSION}"})
+    try:
+        with urllib.request.urlopen(request, timeout=60) as response:
+            data = response.read()
+    except (urllib.error.URLError, TimeoutError) as exc:
+        raise KitError(f"Could not download pinned upstream file:\n{url}\n{exc}") from exc
+    actual = hashlib.sha256(data).hexdigest()
+    if actual != expected_sha256:
+        raise KitError(
+            "Downloaded upstream file did not match the pinned SHA-256. "
+            f"Expected {expected_sha256}, got {actual}: {url}"
         )
     return data
 
@@ -277,6 +301,24 @@ def uninstall_global_agents(paths: InstallPaths) -> None:
         write_file(agents, updated)
     else:
         agents.unlink()
+
+
+def plans_path(paths: InstallPaths) -> Path:
+    return paths.codex_home / "PLANS.md"
+
+
+def install_global_plans(paths: InstallPaths) -> None:
+    write_file(plans_path(paths), read_text(ROOT / ".agent" / "PLANS.md"))
+
+
+def uninstall_global_plans(paths: InstallPaths, manifest: dict[str, Any]) -> None:
+    recorded = manifest.get("plans_file")
+    if recorded is None:
+        return
+    expected = plans_path(paths)
+    if recorded != str(expected):
+        raise KitError(f"Install manifest has an invalid plans file: {recorded}")
+    remove_path(expected)
 
 
 # ---------- hooks ----------
@@ -454,6 +496,16 @@ def install_core(args: argparse.Namespace, paths: InstallPaths) -> None:
         for item in previous_records
         if isinstance(item, dict) and item.get("name") in ALL_SKILLS
     }
+    obsolete_names = {
+        str(item.get("name"))
+        for item in previous_records
+        if isinstance(item, dict) and item.get("name") in OBSOLETE_SKILLS
+    }
+    plan = plans_path(paths)
+    plan_owned = (
+        isinstance(previous_manifest, dict)
+        and previous_manifest.get("plans_file") == str(plan)
+    )
     staging = Path(tempfile.mkdtemp(prefix="stage-", dir=paths.install_root.parent))
     try:
         skill_stage = staging / "skills"
@@ -470,7 +522,11 @@ def install_core(args: argparse.Namespace, paths: InstallPaths) -> None:
                 "These skill directories already exist and are not owned by this kit:\n- "
                 + "\n- ".join(map(str, conflicts))
             )
+        if plan.exists() and not plan_owned:
+            raise KitError(f"This plans file already exists and is not owned by this kit: {plan}")
         load_hooks_config(paths)
+        validate_global_repowise_config(paths)
+        uv, repowise = ensure_repowise_runtime(paths)
 
         shutil.copytree(ROOT / "assets" / "hooks", paths.install_root / "hooks", dirs_exist_ok=True)
         obsolete_hook = paths.install_root / "hooks" / "stop_docs.py"
@@ -480,9 +536,13 @@ def install_core(args: argparse.Namespace, paths: InstallPaths) -> None:
         shutil.copy2(ROOT / "LICENSE", paths.install_root / "LICENSE")
 
         records = install_skills(paths, skill_stage, owned_names)
+        for name in obsolete_names:
+            remove_path(paths.skills_home / name)
         remove_path(paths.install_root / "skills")
         install_global_agents(paths)
+        install_global_plans(paths)
         install_hooks(paths)
+        install_global_repowise(paths, repowise)
         manifest = {
             "schema_version": 1,
             "kit_version": KIT_VERSION,
@@ -490,6 +550,9 @@ def install_core(args: argparse.Namespace, paths: InstallPaths) -> None:
             "codex_home": str(paths.codex_home),
             "skills_home": str(paths.skills_home),
             "install_root": str(paths.install_root),
+            "plans_file": str(plan),
+            "uv": uv,
+            "repowise": repowise,
             "skills": records,
             "upstream": upstream_records,
         }
@@ -509,7 +572,7 @@ def uninstall_skills(paths: InstallPaths) -> None:
     names: list[str] = []
     for item in records:
         name = item.get("name") if isinstance(item, dict) else None
-        if name not in ALL_SKILLS or name in names:
+        if name not in (*ALL_SKILLS, *OBSOLETE_SKILLS) or name in names:
             raise KitError("Found an invalid skill record in the install manifest.")
         names.append(name)
     for name in names:
@@ -527,8 +590,10 @@ def uninstall_core(args: argparse.Namespace, paths: InstallPaths) -> bool:
         raise KitError(f"Install manifest is missing recorded destinations: {path}")
     installed = InstallPaths(paths.home, Path(codex_home), Path(skills_home), paths.install_root)
     uninstall_skills(installed)
+    uninstall_global_plans(installed, manifest)
     uninstall_global_agents(installed)
     uninstall_hooks(installed)
+    uninstall_global_repowise(installed)
     path.unlink()
     if args.purge and paths.install_root.exists():
         shutil.rmtree(paths.install_root)
@@ -546,16 +611,116 @@ def resolve_git_root(path: Path) -> Path:
     return Path(value).resolve()
 
 
-def repowise_config_block(root: Path, uvx: str) -> str:
+def user_bin(paths: InstallPaths) -> Path:
+    return paths.home / ".local" / "bin"
+
+
+def find_runtime_command(paths: InstallPaths, name: str) -> str | None:
+    found = shutil.which(name)
+    if found:
+        return found
+    candidate = user_bin(paths) / name
+    if candidate.is_file():
+        return str(candidate)
+    manifest = json_load(manifest_path(paths), {})
+    recorded = manifest.get(name) if isinstance(manifest, dict) else None
+    return recorded if isinstance(recorded, str) and Path(recorded).is_file() else None
+
+
+def ensure_uv(paths: InstallPaths) -> str:
+    uv = find_runtime_command(paths, "uv")
+    if uv:
+        return uv
+
+    script = download_sha256(UV_INSTALLER_URL, UV_INSTALLER_SHA256).decode("utf-8")
+    destination = user_bin(paths)
+    env = os.environ.copy()
+    env["HOME"] = str(paths.home)
+    env["UV_INSTALL_DIR"] = str(destination)
+    env.pop("UV_UNMANAGED_INSTALL", None)
+    run(["sh"], env=env, input_text=script, timeout=300)
+    uv = destination / "uv"
+    if not uv.is_file():
+        raise KitError(f"uv {UV_VERSION} installation did not create {uv}")
+    return str(uv)
+
+
+def ensure_repowise(paths: InstallPaths, uv: str) -> str:
+    repowise = find_runtime_command(paths, "repowise")
+    if repowise:
+        version = command_version([repowise, "--version"])
+        if version and REPOWISE_VERSION in version:
+            return repowise
+        raise KitError(
+            f"Found a different RepoWise command at {repowise}: {version or 'unknown version'}. "
+            f"Install RepoWise {REPOWISE_VERSION} or remove that command before retrying."
+        )
+
+    destination = user_bin(paths)
+    env = os.environ.copy()
+    env["HOME"] = str(paths.home)
+    env["UV_TOOL_BIN_DIR"] = str(destination)
+    env["UV_TOOL_DIR"] = str(paths.home / ".local" / "share" / "uv" / "tools")
+    run([uv, "tool", "install", f"repowise=={REPOWISE_VERSION}"], env=env, timeout=1800)
+    run([uv, "tool", "update-shell"], env=env, timeout=60)
+    repowise = destination / "repowise"
+    if not repowise.is_file():
+        raise KitError(f"RepoWise {REPOWISE_VERSION} installation did not create {repowise}")
+    return str(repowise)
+
+
+def ensure_repowise_runtime(paths: InstallPaths) -> tuple[str, str]:
+    uv = ensure_uv(paths)
+    return uv, ensure_repowise(paths, uv)
+
+
+def repowise_init_args(prose: bool) -> list[str]:
+    args = [
+        "init",
+        "--yes",
+        "--no-codex",
+        "--no-agents",
+        "--no-editor-setup",
+        "--no-distill-hook",
+        "--no-claude-md",
+        "--no-workspace",
+    ]
+    if prose:
+        args.extend(["--prose", "--provider", "codex_cli"])
+    else:
+        args.append("--no-prose")
+    return args
+
+
+def repowise_bootstrap(repowise: str) -> str:
+    command = shlex.quote(repowise)
+    init = " ".join(
+        [command, *map(shlex.quote, repowise_init_args(False)), '"$ROOT"']
+    )
     return "\n".join(
         [
-            "[mcp_servers.repowise]",
-            f"command = {toml_string(uvx)}",
-            'args = ["--from", "repowise==0.41.0", "repowise", "mcp"]',
-            f"cwd = {toml_string(str(root))}",
-            "startup_timeout_sec = 30",
+            "set -eu",
+            f'ROOT=$(git rev-parse --show-toplevel 2>/dev/null) || exec {command} mcp',
+            'if [ ! -d "$ROOT/.repowise" ]; then',
+            f"  {init} 1>&2",
+            "fi",
+            f'{command} hook install "$ROOT" --no-workspace 1>&2',
+            f'exec {command} mcp "$ROOT"',
         ]
     )
+
+
+def repowise_config_block(repowise: str, root: Path | None = None) -> str:
+    lines = [
+        "[mcp_servers.repowise]",
+        'command = "/bin/sh"',
+        f"args = [\"-c\", {toml_string(repowise_bootstrap(repowise))}]",
+        'default_tools_approval_mode = "approve"',
+        "startup_timeout_sec = 1800",
+    ]
+    if root is not None:
+        lines.append(f"cwd = {toml_string(str(root))}")
+    return "\n".join(lines)
 
 
 def repowise_agents_block() -> str:
@@ -565,7 +730,7 @@ def repowise_agents_block() -> str:
 - Use RepoWise MCP tools for repository overview, symbol context, callers, change risk, decision history, code health, dead code, and affected tests.
 - Read source before you treat an inferred relationship or generated page as authoritative.
 - If RepoWise is unavailable or stale, continue with native tools. Do not stop the task.
-- Refresh the index with `uvx --from repowise==0.41.0 repowise update --no-agents`."""
+- Refresh the index with `repowise update --no-agents`."""
 
 
 def ensure_no_external_repowise_table(text: str) -> None:
@@ -577,47 +742,79 @@ def ensure_no_external_repowise_table(text: str) -> None:
         )
 
 
-def repowise_command(root: Path, *args: str, timeout: int = 1800) -> subprocess.CompletedProcess[str]:
-    uvx = shutil.which("uvx")
-    if not uvx:
-        raise KitError(
-            "RepoWise setup needs `uvx`. Install uv, then rerun this command. "
-            "The core Ponytail, SimpleEnglish, docs, and research kit does not need uv."
-        )
-    return run([uvx, "--from", "repowise==0.41.0", "repowise", *args], cwd=root, timeout=timeout)
+def global_repowise_config(paths: InstallPaths) -> Path:
+    return paths.codex_home / "config.toml"
 
 
-def setup_repo(args: argparse.Namespace) -> None:
+def validate_global_repowise_config(paths: InstallPaths) -> None:
+    ensure_no_external_repowise_table(read_text(global_repowise_config(paths)))
+
+
+def install_global_repowise(paths: InstallPaths, repowise: str) -> None:
+    config = global_repowise_config(paths)
+    updated = marker_block(
+        read_text(config),
+        REPOWISE_START,
+        REPOWISE_END,
+        repowise_config_block(repowise),
+    )
+    write_file(config, updated)
+
+
+def uninstall_global_repowise(paths: InstallPaths) -> None:
+    config = global_repowise_config(paths)
+    if not config.exists():
+        return
+    updated = remove_marker_block(read_text(config), REPOWISE_START, REPOWISE_END)
+    if updated:
+        write_file(config, updated)
+    else:
+        config.unlink()
+
+
+def repowise_command(
+    root: Path,
+    *args: str,
+    paths: InstallPaths,
+    repowise: str | None = None,
+    timeout: int = 1800,
+) -> subprocess.CompletedProcess[str]:
+    if repowise is None:
+        _, repowise = ensure_repowise_runtime(paths)
+    return run([repowise, *args], cwd=root, timeout=timeout)
+
+
+def setup_repo(args: argparse.Namespace, paths: InstallPaths) -> None:
     root = resolve_git_root(Path(args.repo).expanduser().resolve())
     config = root / ".codex" / "config.toml"
     agents = root / "AGENTS.md"
     config_before = read_text(config)
     agents_before = read_text(agents)
     ensure_no_external_repowise_table(config_before)
+    _, repowise = ensure_repowise_runtime(paths)
 
     if not (root / ".repowise").exists():
-        init_args = [
-            "init",
-            "--yes",
-            "--no-codex",
-            "--no-agents",
-            "--no-editor-setup",
-            "--no-distill-hook",
-            "--no-claude-md",
-        ]
-        if args.prose:
-            init_args.extend(["--prose", "--provider", "codex_cli"])
-        else:
-            init_args.append("--no-prose")
-        repowise_command(root, *init_args)
+        repowise_command(
+            root,
+            *repowise_init_args(args.prose),
+            paths=paths,
+            repowise=repowise,
+        )
+    repowise_command(
+        root,
+        "hook",
+        "install",
+        str(root),
+        "--no-workspace",
+        paths=paths,
+        repowise=repowise,
+    )
 
-    uvx = shutil.which("uvx")
-    assert uvx is not None
     config_after = marker_block(
         config_before,
         REPOWISE_START,
         REPOWISE_END,
-        repowise_config_block(root, uvx),
+        repowise_config_block(repowise, root),
     )
     agents_after = marker_block(
         agents_before,
@@ -630,16 +827,31 @@ def setup_repo(args: argparse.Namespace) -> None:
     remove_path(root / ".codex-practical-kit")
 
 
-def remove_repo(args: argparse.Namespace) -> None:
+def remove_repo(args: argparse.Namespace, paths: InstallPaths) -> None:
     root = resolve_git_root(Path(args.repo).expanduser().resolve())
     config = root / ".codex" / "config.toml"
     agents = root / "AGENTS.md"
-    if config.exists():
-        updated = remove_marker_block(read_text(config), REPOWISE_START, REPOWISE_END)
-        if updated:
-            write_file(config, updated)
-        else:
-            config.unlink()
+    config_before = read_text(config)
+    ensure_no_external_repowise_table(config_before)
+    _, repowise = ensure_repowise_runtime(paths)
+    repowise_command(
+        root,
+        "hook",
+        "uninstall",
+        str(root),
+        "--no-workspace",
+        paths=paths,
+        repowise=repowise,
+    )
+    write_file(
+        config,
+        marker_block(
+            config_before,
+            REPOWISE_START,
+            REPOWISE_END,
+            "[mcp_servers.repowise]\nenabled = false",
+        ),
+    )
     if agents.exists():
         updated = remove_marker_block(
             read_text(agents),
@@ -655,11 +867,11 @@ def remove_repo(args: argparse.Namespace) -> None:
     remove_path(root / ".codex-practical-kit")
 
 
-def update_repowise(args: argparse.Namespace) -> None:
+def update_repowise(args: argparse.Namespace, paths: InstallPaths) -> None:
     root = resolve_git_root(Path(args.repo).expanduser().resolve())
     if not (root / ".repowise").exists():
         raise KitError(f"RepoWise is not initialized in {root}")
-    repowise_command(root, "update", "--no-agents")
+    repowise_command(root, "update", "--no-agents", paths=paths)
 
 
 # ---------- diagnostics ----------
@@ -682,6 +894,14 @@ def doctor(args: argparse.Namespace, paths: InstallPaths) -> int:
         ok &= check(dest.exists(), f"skill {name}", str(dest))
     agents = paths.codex_home / "AGENTS.md"
     ok &= check(agents.exists() and AGENTS_START in read_text(agents), "global AGENTS block", str(agents))
+    plan = plans_path(paths)
+    expected_plan = read_text(ROOT / ".agent" / "PLANS.md")
+    plan_recorded = manifest.get("plans_file") if isinstance(manifest, dict) else None
+    ok &= check(
+        plan_recorded == str(plan) and read_text(plan) == expected_plan,
+        "global PLANS file",
+        str(plan),
+    )
     hooks_path = paths.codex_home / "hooks.json"
     try:
         hooks_data = json_load(hooks_path, {})
@@ -690,6 +910,26 @@ def doctor(args: argparse.Namespace, paths: InstallPaths) -> int:
     except KitError:
         hooks_ok = False
     ok &= check(hooks_ok, "Codex hooks", str(hooks_path))
+
+    global_config = global_repowise_config(paths)
+    global_text = read_text(global_config)
+    ok &= check(
+        REPOWISE_START in global_text
+        and 'default_tools_approval_mode = "approve"' in global_text,
+        "global RepoWise MCP config",
+        str(global_config),
+    )
+    uv = find_runtime_command(paths, "uv")
+    ok &= check(bool(uv), "uv", uv or "not found")
+    repowise = find_runtime_command(paths, "repowise")
+    ok &= check(bool(repowise), "RepoWise command", repowise or "not found")
+    if repowise:
+        version = command_version([repowise, "--version"])
+        ok &= check(
+            bool(version and REPOWISE_VERSION in version),
+            f"RepoWise {REPOWISE_VERSION}",
+            version or "unavailable",
+        )
 
     codex_version = command_version(["codex", "--version"])
     ok &= check(bool(codex_version), "Codex CLI", codex_version or "not found")
@@ -706,12 +946,21 @@ def doctor(args: argparse.Namespace, paths: InstallPaths) -> int:
         else:
             ok &= check((root / ".repowise").is_dir(), "RepoWise index", str(root / ".repowise"))
             config = read_text(root / ".codex" / "config.toml")
-            ok &= check(REPOWISE_START in config, "RepoWise MCP config", str(root / ".codex" / "config.toml"))
-            uvx = shutil.which("uvx")
-            ok &= check(bool(uvx), "uvx", uvx or "not found")
-            if uvx:
-                version = command_version([uvx, "--from", "repowise==0.41.0", "repowise", "--version"])
-                ok &= check(bool(version and "0.41.0" in version), "RepoWise 0.41.0", version or "unavailable")
+            disabled = bool(
+                REPOWISE_START in config
+                and re.search(r"(?m)^enabled\s*=\s*false\s*$", config)
+            )
+            ok &= check(
+                not disabled,
+                "repository RepoWise opt-out",
+                "disabled" if disabled else "enabled",
+            )
+            hook = read_text(root / ".git" / "hooks" / "post-commit")
+            ok &= check(
+                "# repowise-hook-start" in hook and "# repowise-hook-end" in hook,
+                "RepoWise post-commit hook",
+                str(root / ".git" / "hooks" / "post-commit"),
+            )
     print("\nResult:", "ready" if ok else "needs attention")
     return 0 if ok else 1
 
@@ -728,7 +977,7 @@ def add_path_options(parser: argparse.ArgumentParser) -> None:
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="Install minimal coding, design preflight, adversarial review, docs, research, and optional RepoWise skills for Codex."
+        description="Install minimal coding, ExecPlan, design preflight, adversarial review, docs, research, and RepoWise support for Codex."
     )
     sub = parser.add_subparsers(dest="command", required=True)
 
@@ -752,7 +1001,7 @@ def build_parser() -> argparse.ArgumentParser:
     update = sub.add_parser("repowise-update", help="Refresh the pinned RepoWise index.")
     update.add_argument("repo", nargs="?", default=".")
 
-    diag = sub.add_parser("doctor", help="Check the core kit and optional repository integration.")
+    diag = sub.add_parser("doctor", help="Check the core kit and repository integration.")
     add_path_options(diag)
     diag.add_argument("--repo", help="Also check RepoWise in this repository.")
 
@@ -762,34 +1011,35 @@ def build_parser() -> argparse.ArgumentParser:
 def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
+    paths = InstallPaths.from_args(args)
     try:
         if args.command == "setup-repo":
-            setup_repo(args)
+            setup_repo(args, paths)
             print("RepoWise is ready for this repository.")
-            print("Start a new Codex session, review the project hooks/config trust prompt, then run `codex mcp list`.")
+            print("Start a new Codex session, then run `codex mcp list`.")
             return 0
         if args.command == "remove-repo":
-            remove_repo(args)
+            remove_repo(args, paths)
             print("Removed the managed RepoWise Codex integration.")
             if not args.delete_index:
                 print("Kept the .repowise index. Use --delete-index to remove it.")
             return 0
         if args.command == "repowise-update":
-            update_repowise(args)
+            update_repowise(args, paths)
             print("RepoWise index updated.")
             return 0
 
-        paths = InstallPaths.from_args(args)
         if args.command == "install":
             install_core(args, paths)
             print("Core kit installed.")
             print(f"Skills: {paths.skills_home}")
             print(f"Global instructions: {paths.codex_home / 'AGENTS.md'}")
+            print(f"Global ExecPlan rules: {plans_path(paths)}")
             print(f"Hooks: {paths.codex_home / 'hooks.json'}")
             print("Open a new Codex session and use `/hooks` to review and trust the new command hooks.")
             if args.repo:
                 repo_args = argparse.Namespace(repo=args.repo, prose=args.repowise_prose)
-                setup_repo(repo_args)
+                setup_repo(repo_args, paths)
                 print(f"RepoWise configured for {resolve_git_root(Path(args.repo).expanduser().resolve())}.")
             return 0
         if args.command == "uninstall":

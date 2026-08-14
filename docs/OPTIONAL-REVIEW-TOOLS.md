@@ -18,7 +18,7 @@ Best fit:
 Why it is not bundled:
 
 - It is a complete engineering workflow with many skills.
-- It overlaps Ponytail, Task Brief, docs maintenance, research, and the kit review loop.
+- It overlaps Ponytail, ExecPlan, docs maintenance, research, and the kit review loop.
 - The core `ce-code-review` skill has a large support tree and helper scripts.
 
 Install when you want the full workflow:
@@ -128,7 +128,7 @@ License: MIT.
 
 ## RepoWise
 
-RepoWise remains the default optional context provider.
+RepoWise is the kit's default repository context provider.
 
 Use it before implementation and review for:
 

@@ -42,7 +42,7 @@ Update the roadmap when one of these events occurs:
 - Accepted scope changes.
 - Work becomes blocked or resumes.
 - The user accepts a residual risk.
-- Validation establishes a terminal candidate.
+- Validation establishes a review candidate.
 
 Plan-only, audit-only, review-only, and documentation-only work does not become Active.
 
@@ -60,25 +60,33 @@ Keep blocked implementation Active. Add the concrete blocker or remaining outcom
 
 Record newly discovered work only when it is authorized or supported by concrete evidence. Give it the next permanent identifier and place it in the correct planned section. Do not implement it without authorization.
 
-## Finish a task
+## Prepare a task for review
 
 Documentation must be final before review and commit.
 
 1. Let Docs Maintainer finish all non-roadmap documentation.
-2. Move the Active task to one terminal section.
-3. Use Completed when no accepted limitation remains.
-4. Use Accepted residual risk when bounded work is complete and the user accepts a documented limitation.
-5. Use Declined when the user intentionally does not support the work.
-6. Never put one identifier in more than one terminal section.
-7. Reread the complete roadmap and make sure that no task is incorrectly Active.
-8. Let Docs Maintainer verify the final roadmap without changing its lifecycle fields.
-9. Include the final roadmap in the candidate that receives review.
+2. Keep the task Active.
+3. Update its text to state that validation is complete and review is pending.
+4. Let Docs Maintainer verify the roadmap without changing its lifecycle fields.
+5. Include this roadmap in the candidate that receives review.
 
 If validation fails, keep the task Active and record the blocker. Do not claim a terminal state.
 
-If review finds a validated defect, that candidate is rejected. Move the task back to Active, make the correction, and finalize all documentation before the next review pass.
+If review finds a validated defect, keep the task Active. Make the correction and finalize all documentation before the next review pass.
 
-After a clean review, do not change code, tests, configuration, documentation, the roadmap, or the checksum manifest. Commit that exact candidate.
+## Close a reviewed task
+
+After a clean review, move the reviewed Active task to one terminal section.
+
+1. Use Completed when no accepted limitation remains.
+2. Use Accepted residual risk when bounded work is complete and the user accepts a documented limitation.
+3. Use Declined when the user intentionally does not support the work.
+4. Never put one identifier in more than one terminal section.
+5. Reread the complete roadmap and make sure that no task is incorrectly Active.
+
+Review closure does not invalidate a clean review. Review closure is limited to five updates: the task ExecPlan review result, reviewed task roadmap transition, publication status, matching checksums, and untracked test-result record.
+
+A change to code, tests, dependencies, migrations, runtime configuration, build configuration, security configuration, behavior requirements, or the supported model invalidates review. Do not make other file changes after a clean review.
 
 ## Template
 
