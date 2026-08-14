@@ -162,7 +162,7 @@ Apply the four true or false checks to each finding. Drop a finding when one ans
 
 Use another lens only when the active task names that risk. Do not spawn a separate refuter.
 
-Passes 1 and 2 can cause a focused correction. If pass 3 finds a validated defect, stop for human direction.
+Fix every validated in-scope finding. Only passes with implementation defects advance the three-defect breaker. Documentation and review-housekeeping findings remain actionable, but they neither increment nor reset the three-defect count. If the third consecutive counted pass finds an implementation defect, stop for human direction.
 
 Review closure does not invalidate a clean review. It records the review result, the roadmap transition, publication status, and matching integrity metadata.
 

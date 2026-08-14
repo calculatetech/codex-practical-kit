@@ -26,7 +26,7 @@ Both finish before review and commit. Documentation never changes after the task
 
 One fresh reviewer checks correctness in the supported model. The coordinator drops every finding that fails one true or false check.
 
-The three-pass breaker remains. It stops recursive correction after three defectful passes.
+The three-defect breaker stops recursive implementation correction after three counted passes. Documentation and review-housekeeping findings remain actionable, but they neither increment nor reset the three-defect count.
 
 ## Repository knowledge
 

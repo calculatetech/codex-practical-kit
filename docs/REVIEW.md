@@ -54,13 +54,15 @@ Always use the correctness lens. Add another lens to the same reviewer only when
 
 Do not use a separate refuter. The coordinator reads the cited source and applies the four true or false checks.
 
-## Three passes
+## Three-defect breaker
 
-A validated P0, P1, or P2 correctness defect makes the pass defectful.
+A validated P0, P1, or P2 correctness defect in executable source, tests, migrations, dependencies, or runtime, build, or security configuration makes a counted implementation-defect pass.
 
-For pass 1 or 2, fix the smallest shared cause with Ponytail. Add one focused check. Finalize documentation again. Then use a new reviewer.
+Fix every validated in-scope finding with the smallest shared correction. Add one focused check. Finalize documentation again. Then use a new reviewer.
 
-If pass 3 finds a validated defect, stop. Wait for human direction.
+Documentation and review-housekeeping findings remain actionable, but they neither increment nor reset the three-defect count.
+
+If the third consecutive counted pass finds an implementation defect, stop. Wait for human direction.
 
 ## Final markers
 
@@ -75,6 +77,6 @@ Docs: updated README.md.
 ```
 
 ```text
-Review: stopped — defects found in three consecutive passes; human direction required.
+Review: stopped — implementation defects found in three counted passes; human direction required.
 Docs: no change needed — implementation is not accepted.
 ```

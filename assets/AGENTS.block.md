@@ -163,7 +163,9 @@
 - For every finding, require four true results: normal use, project control, reproduction without fault injection, and an explicit requirement violation.
 - Drop a finding when any result is false. Do not roadmap it or report it as residual risk.
 - Use Ponytail for validated fixes. Review again with fresh context.
-- Run at most three consecutive defectful passes. If pass 3 still finds a code defect, stop without another automatic fix and wait for human direction.
+- Count a pass only when it finds a validated defect in executable source, tests, migrations, dependencies, or runtime, build, or security configuration.
+- Documentation and review-housekeeping findings remain actionable, but they neither increment nor reset the three-defect count.
+- If the third consecutive counted pass finds an implementation defect, stop without another automatic fix and wait for human direction.
 - Stop earlier when a validated architecture flaw makes local patching unsafe.
 - Review the final candidate that can be committed.
 - Review closure does not invalidate a clean review.
@@ -174,7 +176,7 @@
 - End the final response with one exact status line:
   - `Review: clean — pass N.`
   - `Review: clean after fixes — pass N.`
-  - `Review: stopped — defects found in three consecutive passes; human direction required.`
+  - `Review: stopped — implementation defects found in three counted passes; human direction required.`
   - `Review: stopped — architecture decision required on pass N.`
 
 ### Keep documentation true

@@ -115,7 +115,7 @@ Every finding must pass four checks:
 
 Drop the finding when any answer is false. Do not record it as residual risk.
 
-Each pass uses one fresh read-only reviewer. Passes 1 and 2 can cause a focused fix. A defectful pass 3 stops for human direction.
+Each pass uses one fresh read-only reviewer. Fix every validated in-scope finding. Only implementation defects advance the three-defect breaker. Documentation and review-housekeeping findings remain actionable, but they neither increment nor reset the three-defect count. The third consecutive counted implementation-defect pass stops for human direction.
 
 ## Documentation order
 

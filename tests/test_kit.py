@@ -704,6 +704,23 @@ class IntegrationTests(unittest.TestCase):
                     self.assertIn(statement, text)
                 self.assertNotIn("If any candidate file changes", text)
 
+    def test_review_cycle_counts_only_implementation_defects(self):
+        owners = [
+            ROOT / "README.md",
+            ROOT / "assets" / "AGENTS.block.md",
+            ROOT / "assets" / "skills" / "adversarial-review" / "SKILL.md",
+            ROOT / "docs" / "OPERATING-MANUAL.md",
+            ROOT / "docs" / "REVIEW.md",
+            ROOT / "docs" / "WHY-THIS-SHAPE.md",
+        ]
+        accounting = "Documentation and review-housekeeping findings remain actionable, but they neither increment nor reset the three-defect count."
+
+        for owner in owners:
+            with self.subTest(owner=owner):
+                text = owner.read_text()
+                self.assertIn(accounting, text)
+                self.assertNotIn("defects found in three consecutive passes", text)
+
 
 if __name__ == "__main__":
     unittest.main()

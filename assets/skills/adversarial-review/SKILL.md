@@ -2,8 +2,9 @@
 name: adversarial-review
 description: >
   Run one clean-context, supported-model correctness review after code or
-  configuration changes. Reject findings about excluded conditions. Fix a
-  validated normal-use defect with Ponytail and repeat for at most three passes.
+  configuration changes. Reject findings about excluded conditions. Fix
+  validated normal-use defects with Ponytail. Stop after three counted
+  implementation-defect passes.
 license: MIT
 ---
 
@@ -64,11 +65,15 @@ Read each cited source location. Apply the four true or false questions. Do not 
 
 Ignore style advice, generic best practice, hypothetical environment failure, fault injection, and work outside the active task.
 
-A confirmed P0, P1, or P2 correctness defect makes the pass defectful. P3 advice does not.
+A confirmed P0, P1, or P2 correctness defect in executable source, tests, migrations, dependencies, or runtime, build, or security configuration makes a counted implementation-defect pass. P3 advice does not.
 
-## Three-pass breaker
+Documentation and review-housekeeping findings remain actionable, but they neither increment nor reset the three-defect count. Review housekeeping includes plans, roadmap state, publication records, checksums, manifests, staging scope, and ignored test-result records.
 
-For a defectful pass 1 or 2:
+## Three-defect breaker
+
+Before you fix a finding, stop if the pass produces the third consecutive counted implementation defect. Do not apply another automatic fix.
+
+Otherwise, for any validated in-scope finding:
 
 1. Fix the smallest shared cause with Ponytail.
 2. Add or correct one focused check.
@@ -76,11 +81,9 @@ For a defectful pass 1 or 2:
 4. Finalize documentation again.
 5. Start a new pass with a fresh reviewer.
 
-If pass 3 finds a validated defect, stop. Do not apply another automatic fix.
-
 Use one final status line:
 
 - `Review: clean — pass N.`
 - `Review: clean after fixes — pass N.`
-- `Review: stopped — defects found in three consecutive passes; human direction required.`
+- `Review: stopped — implementation defects found in three counted passes; human direction required.`
 - `Review: stopped — architecture decision required on pass N.`
