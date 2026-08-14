@@ -21,7 +21,7 @@ No task is planned next.
 
 ## Planned later
 
-- ◻ **CPK-008 — Make decision handoffs operator-readable.** Explain unfamiliar terms, the concrete trigger, likelihood in the supported operating model, current exposure, options, effects, and a recommendation before requesting direction.
+No task is planned later.
 
 ## Accepted residual risk
 
@@ -46,3 +46,4 @@ No residual risk is accepted.
 - ✅ **CPK-002 — Make ExecPlan the durable task model.** The kit installs one global ExecPlan fallback, preserves repository overrides, and removes Task Brief as a competing owner.
 - ✅ **CPK-011 — Make RepoWise self-starting and self-updating.** The kit installs missing runtime tools, initializes Git repositories from Codex, enables RepoWise MCP calls, and maintains the wiki after commits.
 - ✅ **CPK-012 — Prevent self-invalidating review closure.** Material changes invalidate review. Review-result, roadmap, publication, checksum, and ignored test-record updates close a clean review without recursion.
+- ✅ **CPK-008 — Make decision handoffs operator-readable.** Material choices now use a compact handoff with the trigger, likelihood, exposure, option effects, recommendation, and exact question.

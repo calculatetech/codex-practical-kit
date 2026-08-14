@@ -29,6 +29,22 @@
 - Keep code, commands, identifiers, and quoted errors exact.
 - When an explanation is still dense, add a `Plain version:` sentence.
 
+### Hand off material decisions
+
+- A material decision changes scope, architecture, authority, exposure, or the delivered result.
+- Before you request direction on a material decision, investigate discoverable facts and exclude unsupported conditions.
+- Do not use the full handoff for discoverable facts, routine values, status questions, or minor preferences.
+- Use these labels in order: `Decision`, `Term` when needed, `Trigger`, `Likelihood`, `Current exposure`, `Options`, `Recommendation`, and `Question`.
+- Use `Term` only for an unfamiliar term. Define the term before you use it elsewhere.
+- For `Likelihood`, use `already present`, `likely`, `unlikely`, or `unknown`. Give the supporting evidence.
+- Do not invent numeric probabilities.
+- For `Current exposure`, use `yes`, `no`, or `unknown`. Give one factual reason.
+- Give two or three practical options. Each option must state its effect. Do not add filler options.
+- Recommend one option and give the reason.
+- If evidence does not distinguish the options, recommend the smallest reversible option that satisfies the requirement.
+- End with one exact question that requests the required direction.
+- If no real choice exists, state the required action instead of requesting direction.
+
 ### Use repository knowledge before broad exploration
 
 - If RepoWise MCP tools are available and the index is current, use them before broad grep-and-read exploration.

@@ -549,7 +549,7 @@ class IntegrationTests(unittest.TestCase):
         readme = (ROOT / "README.md").read_text()
         prompt = (ROOT / "CODEX-INSTALL-PROMPT.md").read_text()
 
-        self.assertEqual(kit.KIT_VERSION, "0.8.0")
+        self.assertEqual(kit.KIT_VERSION, "0.9.0")
         self.assertIn(f"Version `{kit.KIT_VERSION}`", readme)
         self.assertIn(f"version {kit.KIT_VERSION} or newer", prompt)
 
@@ -601,6 +601,41 @@ class IntegrationTests(unittest.TestCase):
         self.assertIn("Each push resets the required CI and Codex review gates.", plans)
         self.assertIn("`publish` authorizes the path through squash merge", session)
         self.assertIn("Each push resets the gates.", session)
+
+    def test_material_decision_handoff_policy_is_consistent(self):
+        rules = (ROOT / "assets" / "AGENTS.block.md").read_text()
+        session = (ROOT / "assets" / "hooks" / "session_start.py").read_text()
+        manual = (ROOT / "docs" / "OPERATING-MANUAL.md").read_text()
+
+        shared = [
+            "A material decision changes scope, architecture, authority, exposure, or the delivered result.",
+            "Before you request direction on a material decision, investigate discoverable facts and exclude unsupported conditions.",
+            "Do not use the full handoff for discoverable facts, routine values, status questions, or minor preferences.",
+            "Use these labels in order: `Decision`, `Term` when needed, `Trigger`, `Likelihood`, `Current exposure`, `Options`, `Recommendation`, and `Question`.",
+            "Do not invent numeric probabilities.",
+            "Each option must state its effect.",
+            "If no real choice exists, state the required action instead of requesting direction.",
+        ]
+        for owner in [rules, manual]:
+            with self.subTest(owner=owner[:30]):
+                for statement in shared:
+                    self.assertIn(statement, owner)
+
+        labels = [
+            "`Decision`",
+            "`Term`",
+            "`Trigger`",
+            "`Likelihood`",
+            "`Current exposure`",
+            "`Options`",
+            "`Recommendation`",
+            "`Question`",
+        ]
+        order_line = next(line for line in rules.splitlines() if "Use these labels" in line)
+        positions = [order_line.index(label) for label in labels]
+        self.assertEqual(positions, sorted(positions))
+        self.assertIn("Material decisions use `Decision`", session)
+        self.assertIn("Skip the full handoff for routine inputs.", session)
 
     def test_review_closure_policy_is_consistent(self):
         owners = [

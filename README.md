@@ -2,7 +2,7 @@
 
 Codex Practical Kit installs a small working agreement for personal repositories. It favors direct code, clear documentation, and bounded review.
 
-Version `0.8.0` adds conditional pull request publication and conversation closure.
+Version `0.9.0` adds operator-readable handoffs for material decisions.
 
 ## Operating model
 
@@ -77,6 +77,14 @@ Use the repository's `.agent/PLANS.md` when present. Otherwise, use `$CODEX_HOME
 Keep `main` for bounded documentation, comments, formatting, and roadmap updates. Use a task branch for one writable implementation stream. Use a worktree for independent writable streams, multiple implementation agents, or a main checkout that cannot switch safely.
 
 Task implementation permits coherent local checkpoint commits on the isolated branch. It does not authorize publication or cleanup.
+
+## Material decisions
+
+A material decision changes scope, architecture, authority, exposure, or the delivered result.
+
+Before Codex requests direction, it states the trigger, likelihood, current exposure, practical options, effects, and one recommendation. It defines unfamiliar terms before use.
+
+Routine facts, values, status questions, and minor preferences stay concise. Codex investigates discoverable facts instead of asking the user for them.
 
 ## Pull request publication
 

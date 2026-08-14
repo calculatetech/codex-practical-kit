@@ -19,6 +19,41 @@ For each exceptional condition, require four true answers:
 
 If one answer is false, exclude the condition.
 
+## Material decision handoff
+
+A material decision changes scope, architecture, authority, exposure, or the delivered result.
+
+Before you request direction on a material decision, investigate discoverable facts and exclude unsupported conditions.
+
+Do not use the full handoff for discoverable facts, routine values, status questions, or minor preferences.
+
+Use these labels in order: `Decision`, `Term` when needed, `Trigger`, `Likelihood`, `Current exposure`, `Options`, `Recommendation`, and `Question`.
+
+Use `Term` only for an unfamiliar term. Define the term before you use it elsewhere.
+
+For `Likelihood`, use `already present`, `likely`, `unlikely`, or `unknown`. Give the supporting evidence. Do not invent numeric probabilities.
+
+For `Current exposure`, use `yes`, `no`, or `unknown`. Give one factual reason.
+
+Give two or three practical options. Each option must state its effect. Do not add filler options.
+
+Recommend one option and give the reason. If evidence does not distinguish the options, recommend the smallest reversible option that satisfies the requirement.
+
+End with one exact question that requests the required direction.
+
+If no real choice exists, state the required action instead of requesting direction.
+
+Example:
+
+- **Decision:** Decide whether to pay for protected `main` now.
+- **Term:** Branch protection is a GitHub rule that controls changes to `main`.
+- **Trigger:** The current plan cannot protect this private repository.
+- **Likelihood:** Already present. GitHub rejects the protection request.
+- **Current exposure:** Yes. Direct integration remains active, and GitHub does not block direct pushes.
+- **Options:** Keep direct integration with no new cost. Upgrade the plan to enable protection, but PR mode still needs CI.
+- **Recommendation:** Keep direct integration until CI exists. Protection alone does not activate PR mode.
+- **Question:** Keep direct integration until CI exists?
+
 ## ExecPlan ownership
 
 Use one ExecPlan for complex features, multi-file changes, and significant refactors. Small isolated changes do not need a plan file.
