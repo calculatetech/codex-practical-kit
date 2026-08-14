@@ -49,3 +49,4 @@ No residual risk is accepted.
 - ✅ **CPK-008 — Make decision handoffs operator-readable.** Material choices now use a compact handoff with the trigger, likelihood, exposure, option effects, recommendation, and exact question.
 - ✅ **CPK-013 — Bootstrap empty project folders.** Empty workspaces now initialize Git and RepoWise. Non-empty, non-Git folders remain unchanged.
 - ✅ **CPK-014 — Remove the Stop hook.** The toolkit installs only Session Start. Reinstallation removes old Stop and Session End hooks while it preserves unrelated handlers. Agent instructions remain the review authority.
+- ✅ **CPK-015 — Install Codex hooks in config.toml.** The installer checks parsed Session Start handler entries in the documented Codex configuration file. It leaves existing matching entries unchanged and creates no legacy JSON file.

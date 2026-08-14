@@ -72,7 +72,7 @@ class InstallerTests(unittest.TestCase):
             (skill / "SKILL.md").write_text(name + "\n", encoding="utf-8")
         return source
 
-    def test_reinstall_removes_stop_hooks(self):
+    def test_reinstall_accepts_existing_config_toml_hook(self):
         def fake_stage(destination: Path):
             for name in kit.UPSTREAM_SKILLS:
                 skill = destination / name
@@ -84,48 +84,55 @@ class InstallerTests(unittest.TestCase):
             paths = self.paths(Path(temp))
             hook_root = paths.install_root / "hooks"
             hook_root.mkdir(parents=True)
-            for name in (*kit.OBSOLETE_HOOK_BASENAMES, "hook_common.py"):
+            for name in ("stop_gate.py", "stop_docs.py", "session_end.py", "hook_common.py"):
                 (hook_root / name).write_text("old\n")
             cache = hook_root / "__pycache__"
             cache.mkdir()
             (cache / "stop_gate.cpython-314.pyc").write_text("old\n")
 
-            def handler(name: str):
-                return {"type": "command", "command": f"python {hook_root / name}"}
-
-            hooks_path = paths.codex_home / "hooks.json"
-            hooks_path.parent.mkdir(parents=True)
-            hooks_path.write_text(
-                json.dumps(
-                    {
-                        "hooks": {
-                            "SessionStart": [{"hooks": [handler("session_start.py")]}],
-                            "Stop": [
-                                {
-                                    "hooks": [
-                                        handler("stop_gate.py"),
-                                        {"type": "command", "command": "python /tmp/user.py"},
-                                    ]
-                                }
-                            ],
-                            "SessionEnd": [{"hooks": [handler("session_end.py")]}],
-                        }
-                    }
-                )
+            config_path = paths.codex_home / "config.toml"
+            config_path.parent.mkdir(parents=True)
+            existing_hook = kit.hooks_config_block(paths).replace(
+                "hooks.SessionStart", 'hooks."SessionStart"'
             )
+            original = (
+                "\n\n[[hooks.PreToolUse]]\n"
+                'matcher = "shell"\n\n'
+                "[[hooks.PreToolUse.hooks]]\n"
+                'type = "command"\n'
+                'command = "python /tmp/user.py"\n\n'
+                + existing_hook
+                + "\n\n\n"
+            )
+            config_path.write_text(original, encoding="utf-8")
+
+            kit.install_hooks(paths)
+            kit.uninstall_hooks(paths)
+            self.assertEqual(config_path.read_text(), original)
 
             with mock.patch.object(kit, "stage_upstream_skills", fake_stage):
                 kit.install_core(Namespace(repo=None, repowise_prose=False), paths)
+                kit.install_core(Namespace(repo=None, repowise_prose=False), paths)
 
-            hooks = json.loads(hooks_path.read_text())["hooks"]
-            self.assertEqual(set(hooks), {"SessionStart", "Stop"})
+            config_text = config_path.read_text()
+            hooks = tomllib.loads(config_text)["hooks"]
+            self.assertEqual(set(hooks), {"PreToolUse", "SessionStart"})
             self.assertEqual(
-                hooks["Stop"][0]["hooks"],
-                [{"type": "command", "command": "python /tmp/user.py"}],
+                hooks["PreToolUse"][0]["hooks"][0]["command"],
+                "python /tmp/user.py",
             )
+            self.assertEqual(len(hooks["SessionStart"]), 1)
+            self.assertNotIn(kit.HOOKS_START, config_text)
+            self.assertNotIn(kit.HOOKS_END, config_text)
+            self.assertFalse((paths.codex_home / "hooks.json").exists())
             self.assertEqual(
                 {path.name for path in hook_root.iterdir()}, {"session_start.py"}
             )
+
+            kit.uninstall_core(Namespace(purge=False), paths)
+            remaining = tomllib.loads(config_path.read_text())["hooks"]
+            self.assertEqual(set(remaining), {"PreToolUse", "SessionStart"})
+            self.assertNotIn(kit.HOOKS_START, config_path.read_text())
 
     def test_copy_reinstall_and_uninstall(self):
         with tempfile.TemporaryDirectory() as temp:
@@ -311,6 +318,7 @@ class InstallerTests(unittest.TestCase):
                 kit.install_core(Namespace(repo=None, repowise_prose=False), paths)
             installed = config.read_text()
             self.assertIn("mcp_servers.other", installed)
+            self.assertIn(kit.HOOKS_START, installed)
             self.assertIn('default_tools_approval_mode = "approve"', installed)
             self.assertIn("hook install", installed)
             self.assertTrue(kit.uninstall_core(Namespace(purge=False), paths))

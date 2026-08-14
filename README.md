@@ -40,7 +40,7 @@ Run:
 
 The installer copies each skill to `~/.agents/skills/`. These copies belong to the toolkit. Do not edit them directly.
 
-The installer also adds managed blocks to `~/.codex/AGENTS.md` and `$CODEX_HOME/config.toml`. It adds a managed Session Start entry to `~/.codex/hooks.json`.
+The installer also adds managed blocks to `~/.codex/AGENTS.md` and `$CODEX_HOME/config.toml`. The `config.toml` block contains the Session Start hook.
 
 The installer uses an existing `uv` command. If `uv` is absent, it installs pinned uv 0.12.4 from a verified upstream script. It then installs pinned RepoWise 0.41.0 as a persistent uv tool when necessary.
 

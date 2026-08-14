@@ -16,6 +16,7 @@ import sys
 import sysconfig
 import tempfile
 import time
+import tomllib
 import urllib.error
 import urllib.request
 from dataclasses import dataclass
@@ -33,9 +34,9 @@ AGENTS_START = "<!-- codex-practical-kit:start -->"
 AGENTS_END = "<!-- codex-practical-kit:end -->"
 REPOWISE_START = "# >>> codex-practical-kit:repowise >>>"
 REPOWISE_END = "# <<< codex-practical-kit:repowise <<<"
-HOOK_HANDLER_BASENAMES = {"session_start.py", "stop_gate.py", "stop_docs.py", "session_end.py"}
+HOOKS_START = "# >>> codex-practical-kit:hooks >>>"
+HOOKS_END = "# <<< codex-practical-kit:hooks <<<"
 INSTALLED_HOOK_BASENAMES = {"session_start.py"}
-OBSOLETE_HOOK_BASENAMES = HOOK_HANDLER_BASENAMES - INSTALLED_HOOK_BASENAMES
 CUSTOM_SKILLS = (
     "docs-maintainer",
     "roadmap-maintainer",
@@ -331,121 +332,77 @@ def hook_command(python: Path, script: Path) -> tuple[str, str]:
     return posix, windows
 
 
-def handler_is_ours(handler: Any, hook_root: Path) -> bool:
-    if not isinstance(handler, dict):
-        return False
-    commands = (
-        (str(handler.get("command") or ""), True),
-        (str(handler.get("commandWindows") or ""), False),
+def hooks_config_block(paths: InstallPaths) -> str:
+    command, command_windows = hook_command(
+        Path(sys.executable).resolve(),
+        paths.install_root / "hooks" / "session_start.py",
     )
-    for command, posix in commands:
-        try:
-            parts = shlex.split(command, posix=posix)
-        except ValueError:
-            continue
-        if len(parts) == 2 and parts[1].strip('"') in {
-            str(hook_root / name) for name in HOOK_HANDLER_BASENAMES
-        }:
-            return True
-    return False
+    return "\n".join(
+        [
+            "[[hooks.SessionStart]]",
+            'matcher = "startup|resume|clear|compact"',
+            "",
+            "[[hooks.SessionStart.hooks]]",
+            'type = "command"',
+            f"command = {toml_string(command)}",
+            f"commandWindows = {toml_string(command_windows)}",
+            'statusMessage = "Loading practical defaults"',
+            "timeout = 10",
+            "additionalContextLimit = 1200",
+        ]
+    )
 
 
-def remove_our_hooks(data: dict[str, Any], hook_root: Path) -> dict[str, Any]:
-    hooks = data.get("hooks")
-    if not isinstance(hooks, dict):
-        return data
-    for event in list(hooks):
-        groups = hooks.get(event)
-        if not isinstance(groups, list):
-            continue
-        kept_groups = []
-        for group in groups:
-            if not isinstance(group, dict):
-                kept_groups.append(group)
-                continue
-            handlers = group.get("hooks")
-            if not isinstance(handlers, list):
-                kept_groups.append(group)
-                continue
-            kept_handlers = [
-                handler for handler in handlers if not handler_is_ours(handler, hook_root)
-            ]
-            if kept_handlers:
-                copy = dict(group)
-                copy["hooks"] = kept_handlers
-                kept_groups.append(copy)
-        if kept_groups:
-            hooks[event] = kept_groups
-        else:
-            hooks.pop(event, None)
-    if not hooks:
-        data.pop("hooks", None)
-    return data
-
-
-def load_hooks_config(paths: InstallPaths) -> dict[str, Any]:
-    hooks_path = paths.codex_home / "hooks.json"
-    data = json_load(hooks_path, {})
-    if not isinstance(data, dict):
-        raise KitError(f"Expected a JSON object in {hooks_path}")
-    hooks = data.get("hooks")
-    if hooks is not None and not isinstance(hooks, dict):
-        raise KitError(f"Expected `hooks` to be an object in {hooks_path}")
-    if isinstance(hooks, dict):
-        for event in ("SessionStart", "Stop", "SessionEnd"):
-            if event in hooks and not isinstance(hooks[event], list):
-                raise KitError(f"Expected hooks.{event} to be a list in {hooks_path}")
-    return data
+def session_start_hook_exists(paths: InstallPaths, text: str) -> bool:
+    if not text.strip():
+        return False
+    try:
+        config = tomllib.loads(text)
+    except tomllib.TOMLDecodeError as exc:
+        path = paths.codex_home / "config.toml"
+        raise KitError(f"Invalid TOML. Fix this file before installation: {path}\n{exc}") from exc
+    command, command_windows = hook_command(
+        Path(sys.executable).resolve(),
+        paths.install_root / "hooks" / "session_start.py",
+    )
+    expected = {
+        "type": "command",
+        "command": command,
+        "commandWindows": command_windows,
+        "statusMessage": "Loading practical defaults",
+        "timeout": 10,
+        "additionalContextLimit": 1200,
+    }
+    groups = config.get("hooks", {}).get("SessionStart", [])
+    return any(
+        all(handler.get(key) == value for key, value in expected.items())
+        for group in groups
+        for handler in group.get("hooks", [])
+    )
 
 
 def install_hooks(paths: InstallPaths) -> None:
-    hooks_path = paths.codex_home / "hooks.json"
-    data = load_hooks_config(paths)
-    hook_root = paths.install_root / "hooks"
-    data = remove_our_hooks(data, hook_root)
-    hooks = data.setdefault("hooks", {})
-    if not isinstance(hooks, dict):
-        raise KitError(f"Expected `hooks` to be an object in {hooks_path}")
-
-    py = Path(sys.executable).resolve()
-    definitions = (
-        (
-            "SessionStart",
-            {
-                "matcher": "startup|resume|clear|compact",
-                "hooks": [
-                    {
-                        "type": "command",
-                        "command": hook_command(py, hook_root / "session_start.py")[0],
-                        "commandWindows": hook_command(py, hook_root / "session_start.py")[1],
-                        "timeout": 10,
-                        "statusMessage": "Loading practical defaults",
-                        "additionalContextLimit": 1200,
-                    }
-                ],
-            },
-        ),
-    )
-    for event, group in definitions:
-        current = hooks.setdefault(event, [])
-        if not isinstance(current, list):
-            raise KitError(f"Expected hooks.{event} to be a list in {hooks_path}")
-        current.append(group)
-    write_file(hooks_path, json.dumps(data, indent=2, sort_keys=True) + "\n")
+    config = paths.codex_home / "config.toml"
+    text = read_text(config)
+    if not session_start_hook_exists(paths, text):
+        write_file(
+            config,
+            marker_block(text, HOOKS_START, HOOKS_END, hooks_config_block(paths)),
+        )
 
 
 def uninstall_hooks(paths: InstallPaths) -> None:
-    hooks_path = paths.codex_home / "hooks.json"
-    if not hooks_path.exists():
+    config = paths.codex_home / "config.toml"
+    if not config.exists():
         return
-    data = json_load(hooks_path, {})
-    if not isinstance(data, dict):
-        raise KitError(f"Expected a JSON object in {hooks_path}")
-    data = remove_our_hooks(data, paths.install_root / "hooks")
-    if data:
-        write_file(hooks_path, json.dumps(data, indent=2, sort_keys=True) + "\n")
+    text = read_text(config)
+    if HOOKS_START not in text:
+        return
+    updated = remove_marker_block(text, HOOKS_START, HOOKS_END)
+    if updated:
+        write_file(config, updated)
     else:
-        hooks_path.unlink()
+        config.unlink()
 
 
 # ---------- core install lifecycle ----------
@@ -498,7 +455,6 @@ def install_core(args: argparse.Namespace, paths: InstallPaths) -> None:
             )
         if plan.exists() and not plan_owned:
             raise KitError(f"This plans file already exists and is not owned by this kit: {plan}")
-        load_hooks_config(paths)
         validate_global_repowise_config(paths)
         uv, repowise = ensure_repowise_runtime(paths)
 
@@ -882,19 +838,15 @@ def doctor(args: argparse.Namespace, paths: InstallPaths) -> int:
         "global PLANS file",
         str(plan),
     )
-    hooks_path = paths.codex_home / "hooks.json"
+    hooks_path = paths.codex_home / "config.toml"
+    hooks_text = read_text(hooks_path)
+    hook_root = paths.install_root / "hooks"
+    installed_files = {path.name for path in hook_root.iterdir()} if hook_root.is_dir() else set()
     try:
-        hooks_data = json_load(hooks_path, {})
-        serialized = json.dumps(hooks_data)
-        hook_root = paths.install_root / "hooks"
-        installed_files = {path.name for path in hook_root.iterdir()} if hook_root.is_dir() else set()
-        hooks_ok = all(
-            str(hook_root / name) in serialized for name in INSTALLED_HOOK_BASENAMES
-        ) and all(
-            str(hook_root / name) not in serialized for name in OBSOLETE_HOOK_BASENAMES
-        ) and installed_files == INSTALLED_HOOK_BASENAMES
+        hooks_ok = session_start_hook_exists(paths, hooks_text)
     except KitError:
         hooks_ok = False
+    hooks_ok = hooks_ok and installed_files == INSTALLED_HOOK_BASENAMES
     ok &= check(hooks_ok, "Codex hooks", str(hooks_path))
 
     global_config = global_repowise_config(paths)
@@ -1021,7 +973,7 @@ def main(argv: list[str] | None = None) -> int:
             print(f"Skills: {paths.skills_home}")
             print(f"Global instructions: {paths.codex_home / 'AGENTS.md'}")
             print(f"Global ExecPlan rules: {plans_path(paths)}")
-            print(f"Hooks: {paths.codex_home / 'hooks.json'}")
+            print(f"Hooks: {paths.codex_home / 'config.toml'}")
             print("Open a new Codex session and use `/hooks` to review and trust the Session Start hook.")
             if args.repo:
                 repo_args = argparse.Namespace(repo=args.repo, prose=args.repowise_prose)
