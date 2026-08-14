@@ -52,3 +52,4 @@ No residual risk is accepted.
 - ✅ **CPK-015 — Install Codex hooks in config.toml.** The installer checks parsed Session Start handler entries in the documented Codex configuration file. It leaves existing matching entries unchanged and creates no legacy JSON file.
 - ✅ **CPK-016 — Require the RepoWise code graph.** Codex waits for automatic RepoWise initialization and does not continue without the required graph.
 - ✅ **CPK-017 — Count only implementation defects toward the review breaker.** Documentation and review-housekeeping findings remain actionable but do not advance or reset the three-defect count.
+- ✅ **CPK-018 — Compact the global agent profile.** The managed policy is below 100 lines and defines safe coordinator, subagent, and reviewer roles.

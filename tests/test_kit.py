@@ -72,6 +72,27 @@ class InstallerTests(unittest.TestCase):
             (skill / "SKILL.md").write_text(name + "\n", encoding="utf-8")
         return source
 
+    def test_global_agents_profile_is_compact_and_subagent_safe(self):
+        with tempfile.TemporaryDirectory() as temp:
+            paths = self.paths(Path(temp))
+            agents = paths.codex_home / "AGENTS.md"
+            agents.parent.mkdir(parents=True)
+            agents.write_text("# User preference\n- Keep me.\n")
+
+            kit.install_global_agents(paths)
+
+            installed = agents.read_text()
+            self.assertTrue(installed.startswith("# User preference\n- Keep me.\n"))
+            self.assertLess(len(installed.splitlines()), 100)
+            self.assertIn("Only the active coordinator can delegate", installed)
+            self.assertIn("A subagent performs only its assigned task", installed)
+            self.assertIn("A subagent does not delegate", installed)
+            self.assertIn("A read-only reviewer does not edit files.", installed)
+            self.assertIn(
+                "Remove a worktree or branch only after integration is proven and its state is clean.",
+                installed,
+            )
+
     def test_reinstall_accepts_existing_config_toml_hook(self):
         def fake_stage(destination: Path):
             for name in kit.UPSTREAM_SKILLS:

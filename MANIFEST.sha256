@@ -3,9 +3,9 @@ d17aa6a17b96f4c133c98621fec5ab127c8dfec1b4fa78a8c718a4585b935cef  ./.agent/PLANS
 a113436b77134657f86c51235f09a0511b1556b1234dab22809a6c0e708e4e82  ./CODEX-INSTALL-PROMPT.md
 6612129aca01053f15098204fb4bbaafdf85a667956202530bdcbc339e58e462  ./LICENSE
 e31adc17bb990edd4cd62e60d3e57091385b921874356e637bbd5c3598d09965  ./PLAYGROUND.md
-67f2d471a7b30dc88a3e4cadfc4b35b53672c91bda137fed0d2504ed80690f9f  ./README.md
+ae22652356bf40b688c3c919e6108cf461fef20320101d2f051ebfa710f04a2a  ./README.md
 69a6206080464a02398a6ec98174016a0571e731b4e7b501a3c427b5349c74ae  ./THIRD_PARTY.md
-ab94b2be6ea8bfdccf15a98e329cd9ecaac2fe5a6de73560a4ee80aea0de87e6  ./assets/AGENTS.block.md
+52fa1c18aca170ef3b77e8e1b6595f593b3dc059499ef0387db07627a09533c0  ./assets/AGENTS.block.md
 fe29a91a466c8042a18ee6636757e959dce9b7e2e61a62f784ac99b9bf4ba8b9  ./assets/hooks/session_start.py
 e8e936324ace9152ab637858af7b4ef05409bcffcf4e90e91ba8906c91c70235  ./assets/skills/adversarial-review/SKILL.md
 d5bf644b124f45edaafa9740e492cf812056998c6d8583ddd4559e2ba1fd6859  ./assets/skills/adversarial-review/references/finding-format.md
@@ -40,12 +40,13 @@ ee4c9afd95a993dfc30f68746111eadc075d927ec4ad2d4ef35803340aadf568  ./docs/plans/c
 d1c7b05d5f7119e0886377e714a34efcb8415587804e55ce6c01ef21b8544dab  ./docs/plans/cpk-015-config-toml-hooks.md
 d52d2dcb84b37e81a2c968a0a12eda937fe31aea882a3de2873738ed00d3dbeb  ./docs/plans/cpk-016-required-repowise.md
 446daab16b7799ab9715be21f17c6b4dc541e5f4aa7bb3c27a89f2ff924cbd11  ./docs/plans/cpk-017-review-cycle-accounting.md
-99c3f04c825a5c6acff3702a491d4b615ed8a300ab07ff3f2b87417ea9d65b24  ./docs/roadmap.md
+3f9cd8829beccc92470890bd9d5bc0aff83daaef3316eb9b09236098f0e66c00  ./docs/plans/cpk-018-compact-agents-profile.md
+3bc41ece304a0101c137dd1c0c081a775d61eeb42e6f89f4e82f337a1663f9fb  ./docs/roadmap.md
 ab56a88d9188979f06ea142d1f58ea0d6ad9088e83a965bd324209d83da513ad  ./doctor.sh
 3466d2e34145cfdaa83d793960794b2aefc96f3d9c48d22fd2af930ec819e9c4  ./install.sh
 e51641e77ca1b7abc96d9e7bb08caf6979df2815cffca491282603af33dcc167  ./kit.py
 aa6fc7c37c332f5c5f8d6eb2abdacdbba464895302ec51a60d2484530754ae68  ./run-tests.sh
 bdae5fdc5840e46ec70d4a0a9581974be65576bdf8a721262a9fa3792c455237  ./setup-repo.sh
-2b65df332f46fb4840a8a477ab33cd155d2ece6075838decdf7fc1b6a0754176  ./tests/test_kit.py
+a9a636d68cebe8c0e56be8836ae8f6e5fcfd75996687073b48054693d84604e4  ./tests/test_kit.py
 f12cff94ef7f9b0ca489cbe43e1de737011476966e04c1578f4977177b0da217  ./uninstall.sh
 60f43425edbce4c5b67f9d1b1002fcc4e2430eb8bdd57e2f8c374bd20b0a52bb  ./upstream.lock.json
