@@ -2,7 +2,7 @@
 
 Codex Practical Kit installs a small working agreement for personal repositories. It favors direct code, clear documentation, and bounded review.
 
-Version `0.6.0` defines when Codex uses a task branch or worktree and keeps `main` for bounded documentation work.
+Version `0.7.0` defines feature, fix, checkpoint, prerelease, and release-boundary rules.
 
 ## Operating model
 
@@ -77,6 +77,16 @@ Use the repository's `.agent/PLANS.md` when present. Otherwise, use `$CODEX_HOME
 Keep `main` for bounded documentation, comments, formatting, and roadmap updates. Use a task branch for one writable implementation stream. Use a worktree for independent writable streams, multiple implementation agents, or a main checkout that cannot switch safely.
 
 Task implementation permits coherent local checkpoint commits on the isolated branch. It does not permit push, pull request creation, merge to `main`, or cleanup. Each action needs separate authorization.
+
+## Version policy
+
+Start initial development at `0.1.0`. Use `0.MINOR.PATCH` during initial development. Version `1.0.0` is the first production-ready release.
+
+Features and pre-1.0 breaking changes increment the minor number. Bug fixes and published same-feature checkpoints increment the patch number. Local checkpoint commits do not change the version.
+
+Do not add alpha or beta suffixes by default. Use them only for public testing of a specific target version. Publish normal `0.x` versions as full GitHub releases so GitHub can identify the latest release.
+
+The source uses version `X.Y.Z`. Its Git tag uses `vX.Y.Z` and identifies the exact integrated commit. A version is consumed when its tag reaches GitHub.
 
 ## Supported-model review
 

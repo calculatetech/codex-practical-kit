@@ -539,6 +539,40 @@ class IntegrationTests(unittest.TestCase):
         self.assertIn("cumulative diff from the recorded base commit", plans)
         self.assertIn("Each action needs separate authorization.", manual)
 
+    def test_version_policy_is_consistent(self):
+        rules = (ROOT / "assets" / "AGENTS.block.md").read_text()
+        session = (ROOT / "assets" / "hooks" / "session_start.py").read_text()
+        plans = (ROOT / ".agent" / "PLANS.md").read_text()
+        manual = (ROOT / "docs" / "OPERATING-MANUAL.md").read_text()
+        readme = (ROOT / "README.md").read_text()
+        prompt = (ROOT / "CODEX-INSTALL-PROMPT.md").read_text()
+
+        self.assertEqual(kit.KIT_VERSION, "0.7.0")
+        self.assertIn(f"Version `{kit.KIT_VERSION}`", readme)
+        self.assertIn(f"version {kit.KIT_VERSION} or newer", prompt)
+
+        shared = [
+            "Start initial development at `0.1.0`.",
+            "Use `0.MINOR.PATCH` during initial development.",
+            "increment the minor number for a feature or breaking change",
+            "Increment the patch number for a bug fix or a published checkpoint in the same feature line.",
+            "After `1.0.0`, increment the major number for a breaking change",
+            "Do not use alpha or beta suffixes by default.",
+            "Publish a normal `0.x` version as a full GitHub release.",
+            "Use source version `X.Y.Z` and Git tag `vX.Y.Z`.",
+            "A version is consumed when its tag reaches GitHub.",
+            "If publication fails before the remote tag exists",
+            "If publication fails after the remote tag exists",
+        ]
+        for owner in [rules, manual]:
+            with self.subTest(owner=owner[:30]):
+                for statement in shared:
+                    self.assertIn(statement, owner)
+
+        self.assertIn("Start initial development at `0.1.0`.", readme)
+        self.assertIn("Local checkpoint commits do not change the version.", session)
+        self.assertIn("select the target after scope is fixed", plans)
+
     def test_review_closure_policy_is_consistent(self):
         owners = [
             ROOT / ".agent" / "PLANS.md",

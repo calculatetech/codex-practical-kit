@@ -18,6 +18,8 @@ context = """Codex Practical Kit is active.
 - Use one ExecPlan for complex features, multi-file changes, and significant refactors.
 - On `main`, allow only bounded documentation, comments, formatting, and roadmap updates. Use a task branch for one writable implementation stream.
 - Use a worktree for independent writable streams, multiple implementation agents, or a main checkout that cannot switch safely.
+- For toolkit releases, features increment the minor version. Fixes and published same-feature checkpoints increment the patch version.
+- Local checkpoint commits do not change the version. Use prerelease suffixes only for planned public testing.
 - Use research only for unfamiliar, current, high-impact, or hard-to-reverse choices.
 - When docs/roadmap.md exists, use roadmap-maintainer before implementation and at each task transition.
 - Finalize documentation and the roadmap before adversarial-review and commit.

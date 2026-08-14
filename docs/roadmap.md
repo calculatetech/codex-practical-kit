@@ -17,7 +17,6 @@ No task is active.
 
 ## Planned next
 
-- ⏭ **CPK-005 — Define version increments.** Formalize feature increments to the second digit and bug-fix increments to the third. Set timing, synchronized files, failed-release handling, and release boundaries.
 - ⏭ **CPK-006 — Define PR publication.** State when work needs a pull request, when drafts become ready, and which checks gate publication.
 - ⏭ **CPK-007 — Close PR conversations.** Monitor CI and Codex review, detect approval reactions or findings, respond, and resolve all threads.
 
@@ -41,6 +40,7 @@ No residual risk is accepted.
 - ✅ **CPK-001 — Make roadmap state authoritative.** The Roadmap Maintainer, template, and lifecycle rules make `docs/roadmap.md` the human source of truth.
 - ✅ **CPK-003 — Reconcile adversarial review.** One fresh reviewer per pass applies the supported-model true or false gate before commit.
 - ✅ **CPK-004 — Define Git task isolation.** Branches isolate one implementation stream. Worktrees isolate independent writers. Main remains available for bounded documentation work.
+- ✅ **CPK-005 — Define version increments.** Initial development starts at 0.1.0. Features increment minor versions. Fixes and published same-feature checkpoints increment patch versions.
 - ✅ **CPK-010 — Restore deterministic least effort.** Copy-only installation with manifest-scoped ownership, one-attempt failure handling, plain Git status, and bounded review replace speculative recovery and proof machinery.
 - ✅ **CPK-002 — Make ExecPlan the durable task model.** The kit installs one global ExecPlan fallback, preserves repository overrides, and removes Task Brief as a competing owner.
 - ✅ **CPK-011 — Make RepoWise self-starting and self-updating.** The kit installs missing runtime tools, initializes Git repositories from Codex, enables RepoWise MCP calls, and maintains the wiki after commits.

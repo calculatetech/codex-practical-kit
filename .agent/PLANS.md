@@ -16,6 +16,8 @@ When implementing an executable specification (ExecPlan), do not prompt the user
 
 For non-trivial work, record the base branch, base commit, task branch, and isolation form in the ExecPlan. Local checkpoint commits are allowed on an isolated task branch. They do not authorize push, pull request creation, merge to `main`, or cleanup. Final review covers the cumulative diff from the recorded base commit.
 
+When a task changes the toolkit version, select the target after scope is fixed and record it in the ExecPlan. A local checkpoint commit does not change the version. Update all current-version owners and matching checksums before validation and review.
+
 Before review, record that validation is complete and review is pending.
 
 Review closure does not invalidate a clean review. Review closure is limited to five updates: the task ExecPlan review result, reviewed task roadmap transition, publication status, matching checksums, and untracked test-result record.

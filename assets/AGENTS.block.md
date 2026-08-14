@@ -66,6 +66,23 @@
 - Require separate authorization for push, pull request creation, merge to `main`, and cleanup.
 - Remove a worktree or branch only after integration is proven, its state is clean, and cleanup is authorized.
 
+### Select toolkit versions
+
+- Start initial development at `0.1.0`.
+- Use `0.MINOR.PATCH` during initial development. Use `1.0.0` for the first production-ready release.
+- After task scope is fixed, select the target version and record it in the ExecPlan.
+- Before `1.0.0`, increment the minor number for a feature or breaking change. Reset the patch number to zero.
+- Increment the patch number for a bug fix or a published checkpoint in the same feature line.
+- Do not change the version for a local checkpoint commit or unreleased documentation, comment, formatting, plan, test, or review-closure change.
+- After `1.0.0`, increment the major number for a breaking change, the minor number for a compatible feature, and the patch number for a bug fix.
+- Do not use alpha or beta suffixes by default. Use alpha for incomplete public testing. Use beta after feature scope is complete.
+- Publish a normal `0.x` version as a full GitHub release. Mark only a suffixed test version as a GitHub prerelease.
+- Before validation and review, update all current-version owners and matching checksums.
+- Use source version `X.Y.Z` and Git tag `vX.Y.Z`. The tag must identify the exact integrated commit.
+- A version is consumed when its tag reaches GitHub. Do not move or reuse a consumed version.
+- If publication fails before the remote tag exists, keep the selected version and correct the candidate.
+- If publication fails after the remote tag exists, preserve the tag and stop for human direction.
+
 ### Research only when it changes the answer
 
 - Use the `research-first` skill for unfamiliar, current, high-impact, or hard-to-reverse choices.
