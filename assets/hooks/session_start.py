@@ -1,12 +1,7 @@
 #!/usr/bin/env python3
 """Save a Git baseline and inject a compact working agreement."""
 
-from __future__ import annotations
-
-from hook_common import read_payload, save_baseline, write_json
-
-payload = read_payload()
-save_baseline(payload)
+import json
 
 context = """Codex Practical Kit is active.
 - Use Ponytail full for coding: understand first, reuse existing code, fix the root cause, and keep the correct diff small.
@@ -31,9 +26,9 @@ context = """Codex Practical Kit is active.
 - End with one `Review:` line and one `Docs:` line.
 """
 
-write_json({
+print(json.dumps({
     "hookSpecificOutput": {
         "hookEventName": "SessionStart",
         "additionalContext": context,
     }
-})
+}, separators=(",", ":")))

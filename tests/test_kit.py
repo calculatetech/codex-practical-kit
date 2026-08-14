@@ -1,7 +1,6 @@
 import json
 import os
 import subprocess
-import sys
 import tempfile
 import tomllib
 import unittest
@@ -10,12 +9,8 @@ from pathlib import Path
 from unittest import mock
 
 ROOT = Path(__file__).resolve().parents[1]
-HOOKS = ROOT / "assets" / "hooks"
-sys.path.insert(0, str(ROOT))
-sys.path.insert(0, str(HOOKS))
 
-import hook_common  # noqa: E402
-import kit  # noqa: E402
+import kit
 
 
 class GitFixture:
@@ -52,75 +47,6 @@ class MarkerTests(unittest.TestCase):
         )
 
 
-class HookTests(unittest.TestCase):
-    def setUp(self):
-        self.temp = tempfile.TemporaryDirectory()
-        self.base = Path(self.temp.name)
-        self.repo = self.base / "repo"
-        self.repo.mkdir()
-        self.git = GitFixture(self.repo)
-        self.git.commit("app.py", "print('one')\n")
-        self.old_state = os.environ.get("XDG_STATE_HOME")
-        os.environ["XDG_STATE_HOME"] = str(self.base / "state")
-
-    def tearDown(self):
-        if self.old_state is None:
-            os.environ.pop("XDG_STATE_HOME", None)
-        else:
-            os.environ["XDG_STATE_HOME"] = self.old_state
-        self.temp.cleanup()
-
-    def payload(self, **extra):
-        payload = {"session_id": "test", "cwd": str(self.repo), "hook_event_name": "Stop"}
-        payload.update(extra)
-        return payload
-
-    def run_stop(self, **extra):
-        result = subprocess.run(
-            [sys.executable, str(HOOKS / "stop_gate.py")],
-            input=json.dumps(self.payload(**extra)),
-            text=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            check=True,
-            env=os.environ.copy(),
-        )
-        return json.loads(result.stdout)
-
-    def test_equal_status_allows_stop(self):
-        hook_common.save_baseline(self.payload())
-        self.assertEqual(self.run_stop(), {})
-
-    def test_code_change_needs_both_current_markers(self):
-        hook_common.save_baseline(self.payload())
-        (self.repo / "app.py").write_text("print('two')\n", encoding="utf-8")
-        self.assertEqual(self.run_stop().get("decision"), "block")
-        message = "Review: clean — pass 1.\nDocs: no change needed — behavior is unchanged."
-        self.assertEqual(self.run_stop(last_assistant_message=message), {})
-        self.assertEqual(self.run_stop(), {})
-
-    def test_docs_change_needs_docs_marker(self):
-        hook_common.save_baseline(self.payload())
-        (self.repo / "README.md").write_text("docs\n", encoding="utf-8")
-        self.assertEqual(self.run_stop().get("decision"), "block")
-        self.assertEqual(
-            self.run_stop(last_assistant_message="Docs: updated README.md."), {}
-        )
-
-    def test_plan_mode_returns_without_advancing_status(self):
-        hook_common.save_baseline(self.payload())
-        (self.repo / "app.py").write_text("print('two')\n", encoding="utf-8")
-        self.assertEqual(self.run_stop(permission_mode="plan"), {})
-        self.assertEqual(self.run_stop().get("decision"), "block")
-
-    def test_root_docs_uses_suffix_allowlist(self):
-        hook_common.save_baseline(self.payload())
-        (self.repo / "docs").mkdir()
-        (self.repo / "docs" / "tool.py").write_text("print('x')\n", encoding="utf-8")
-        self.assertIn("documentation-only", self.run_stop().get("reason", ""))
-        self.assertFalse(hook_common.is_forbidden_docs_file("docs/image.png"))
-
-
 class InstallerTests(unittest.TestCase):
     def setUp(self):
         self.runtime = mock.patch.object(
@@ -145,6 +71,61 @@ class InstallerTests(unittest.TestCase):
             skill.mkdir(parents=True)
             (skill / "SKILL.md").write_text(name + "\n", encoding="utf-8")
         return source
+
+    def test_reinstall_removes_stop_hooks(self):
+        def fake_stage(destination: Path):
+            for name in kit.UPSTREAM_SKILLS:
+                skill = destination / name
+                skill.mkdir(parents=True)
+                (skill / "SKILL.md").write_text(name + "\n")
+            return {}
+
+        with tempfile.TemporaryDirectory() as temp:
+            paths = self.paths(Path(temp))
+            hook_root = paths.install_root / "hooks"
+            hook_root.mkdir(parents=True)
+            for name in (*kit.OBSOLETE_HOOK_BASENAMES, "hook_common.py"):
+                (hook_root / name).write_text("old\n")
+            cache = hook_root / "__pycache__"
+            cache.mkdir()
+            (cache / "stop_gate.cpython-314.pyc").write_text("old\n")
+
+            def handler(name: str):
+                return {"type": "command", "command": f"python {hook_root / name}"}
+
+            hooks_path = paths.codex_home / "hooks.json"
+            hooks_path.parent.mkdir(parents=True)
+            hooks_path.write_text(
+                json.dumps(
+                    {
+                        "hooks": {
+                            "SessionStart": [{"hooks": [handler("session_start.py")]}],
+                            "Stop": [
+                                {
+                                    "hooks": [
+                                        handler("stop_gate.py"),
+                                        {"type": "command", "command": "python /tmp/user.py"},
+                                    ]
+                                }
+                            ],
+                            "SessionEnd": [{"hooks": [handler("session_end.py")]}],
+                        }
+                    }
+                )
+            )
+
+            with mock.patch.object(kit, "stage_upstream_skills", fake_stage):
+                kit.install_core(Namespace(repo=None, repowise_prose=False), paths)
+
+            hooks = json.loads(hooks_path.read_text())["hooks"]
+            self.assertEqual(set(hooks), {"SessionStart", "Stop"})
+            self.assertEqual(
+                hooks["Stop"][0]["hooks"],
+                [{"type": "command", "command": "python /tmp/user.py"}],
+            )
+            self.assertEqual(
+                {path.name for path in hook_root.iterdir()}, {"session_start.py"}
+            )
 
     def test_copy_reinstall_and_uninstall(self):
         with tempfile.TemporaryDirectory() as temp:
@@ -584,7 +565,7 @@ class IntegrationTests(unittest.TestCase):
         readme = (ROOT / "README.md").read_text()
         prompt = (ROOT / "CODEX-INSTALL-PROMPT.md").read_text()
 
-        self.assertEqual(kit.KIT_VERSION, "0.9.1")
+        self.assertEqual(kit.KIT_VERSION, "0.10.0")
         self.assertIn(f"Version `{kit.KIT_VERSION}`", readme)
         self.assertIn(f"version {kit.KIT_VERSION} or newer", prompt)
 

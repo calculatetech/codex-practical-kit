@@ -23,7 +23,7 @@ from pathlib import Path
 from typing import Any, Iterable
 
 KIT_ID = "codex-practical-kit"
-KIT_VERSION = "0.9.1"
+KIT_VERSION = "0.10.0"
 REPOWISE_VERSION = "0.41.0"
 UV_VERSION = "0.12.4"
 UV_INSTALLER_URL = f"https://astral.sh/uv/{UV_VERSION}/install.sh"
@@ -34,7 +34,8 @@ AGENTS_END = "<!-- codex-practical-kit:end -->"
 REPOWISE_START = "# >>> codex-practical-kit:repowise >>>"
 REPOWISE_END = "# <<< codex-practical-kit:repowise <<<"
 HOOK_HANDLER_BASENAMES = {"session_start.py", "stop_gate.py", "stop_docs.py", "session_end.py"}
-INSTALLED_HOOK_BASENAMES = {"session_start.py", "stop_gate.py", "session_end.py"}
+INSTALLED_HOOK_BASENAMES = {"session_start.py"}
+OBSOLETE_HOOK_BASENAMES = HOOK_HANDLER_BASENAMES - INSTALLED_HOOK_BASENAMES
 CUSTOM_SKILLS = (
     "docs-maintainer",
     "roadmap-maintainer",
@@ -424,33 +425,6 @@ def install_hooks(paths: InstallPaths) -> None:
                 ],
             },
         ),
-        (
-            "Stop",
-            {
-                "hooks": [
-                    {
-                        "type": "command",
-                        "command": hook_command(py, hook_root / "stop_gate.py")[0],
-                        "commandWindows": hook_command(py, hook_root / "stop_gate.py")[1],
-                        "timeout": 20,
-                        "statusMessage": "Checking review and documentation evidence",
-                    }
-                ]
-            },
-        ),
-        (
-            "SessionEnd",
-            {
-                "hooks": [
-                    {
-                        "type": "command",
-                        "command": hook_command(py, hook_root / "session_end.py")[0],
-                        "commandWindows": hook_command(py, hook_root / "session_end.py")[1],
-                        "timeout": 3,
-                    }
-                ]
-            },
-        ),
     )
     for event, group in definitions:
         current = hooks.setdefault(event, [])
@@ -528,10 +502,10 @@ def install_core(args: argparse.Namespace, paths: InstallPaths) -> None:
         validate_global_repowise_config(paths)
         uv, repowise = ensure_repowise_runtime(paths)
 
-        shutil.copytree(ROOT / "assets" / "hooks", paths.install_root / "hooks", dirs_exist_ok=True)
-        obsolete_hook = paths.install_root / "hooks" / "stop_docs.py"
-        if obsolete_hook.exists():
-            obsolete_hook.unlink()
+        hook_root = paths.install_root / "hooks"
+        remove_path(hook_root)
+        hook_root.mkdir()
+        shutil.copy2(ROOT / "assets" / "hooks" / "session_start.py", hook_root)
         shutil.copy2(ROOT / "upstream.lock.json", paths.install_root / "upstream.lock.json")
         shutil.copy2(ROOT / "LICENSE", paths.install_root / "LICENSE")
 
@@ -912,7 +886,13 @@ def doctor(args: argparse.Namespace, paths: InstallPaths) -> int:
     try:
         hooks_data = json_load(hooks_path, {})
         serialized = json.dumps(hooks_data)
-        hooks_ok = all(name in serialized for name in INSTALLED_HOOK_BASENAMES)
+        hook_root = paths.install_root / "hooks"
+        installed_files = {path.name for path in hook_root.iterdir()} if hook_root.is_dir() else set()
+        hooks_ok = all(
+            str(hook_root / name) in serialized for name in INSTALLED_HOOK_BASENAMES
+        ) and all(
+            str(hook_root / name) not in serialized for name in OBSOLETE_HOOK_BASENAMES
+        ) and installed_files == INSTALLED_HOOK_BASENAMES
     except KitError:
         hooks_ok = False
     ok &= check(hooks_ok, "Codex hooks", str(hooks_path))
@@ -1042,7 +1022,7 @@ def main(argv: list[str] | None = None) -> int:
             print(f"Global instructions: {paths.codex_home / 'AGENTS.md'}")
             print(f"Global ExecPlan rules: {plans_path(paths)}")
             print(f"Hooks: {paths.codex_home / 'hooks.json'}")
-            print("Open a new Codex session and use `/hooks` to review and trust the new command hooks.")
+            print("Open a new Codex session and use `/hooks` to review and trust the Session Start hook.")
             if args.repo:
                 repo_args = argparse.Namespace(repo=args.repo, prose=args.repowise_prose)
                 setup_repo(repo_args, paths)

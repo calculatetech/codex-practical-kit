@@ -35,7 +35,7 @@ No residual risk is accepted.
 
 - ✅ **Minimal implementation discipline.** Ponytail, Simple English, repository-first inspection, and focused validation rules are installed.
 - ✅ **Design and planning foundation.** Design Preflight, Spec Kit guidance, and ExecPlan rules are available.
-- ✅ **Review and documentation foundation.** Clean-context adversarial review, the three-pass breaker, documentation maintenance, and Git-status reminders are available.
+- ✅ **Review and documentation foundation.** Clean-context adversarial review, the three-pass breaker, and documentation maintenance are available.
 - ✅ **CPK-001 — Make roadmap state authoritative.** The Roadmap Maintainer, template, and lifecycle rules make `docs/roadmap.md` the human source of truth.
 - ✅ **CPK-003 — Reconcile adversarial review.** One fresh reviewer per pass applies the supported-model true or false gate before commit.
 - ✅ **CPK-004 — Define Git task isolation.** Branches isolate one implementation stream. Worktrees isolate independent writers. Main remains available for bounded documentation work.
@@ -48,3 +48,4 @@ No residual risk is accepted.
 - ✅ **CPK-012 — Prevent self-invalidating review closure.** Material changes invalidate review. Review-result, roadmap, publication, checksum, and ignored test-record updates close a clean review without recursion.
 - ✅ **CPK-008 — Make decision handoffs operator-readable.** Material choices now use a compact handoff with the trigger, likelihood, exposure, option effects, recommendation, and exact question.
 - ✅ **CPK-013 — Bootstrap empty project folders.** Empty workspaces now initialize Git and RepoWise. Non-empty, non-Git folders remain unchanged.
+- ✅ **CPK-014 — Remove the Stop hook.** The toolkit installs only Session Start. Reinstallation removes old Stop and Session End hooks while it preserves unrelated handlers. Agent instructions remain the review authority.

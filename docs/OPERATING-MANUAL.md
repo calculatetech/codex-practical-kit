@@ -148,7 +148,7 @@ Use Declined for work that the user intentionally does not support. Do not repor
 
 Plan Mode is read-only. Do not edit tracked files, stage, commit, publish, or activate a roadmap task.
 
-The Stop hook returns immediately in Plan Mode. After Plan Mode ends, reread the repository and roadmap before implementation.
+After Plan Mode ends, reread the repository and roadmap before implementation.
 
 For ExecPlan work, update the task ExecPlan with the accepted design before implementation.
 
@@ -167,14 +167,6 @@ Passes 1 and 2 can cause a focused correction. If pass 3 finds a validated defec
 Review closure does not invalidate a clean review. It records the review result, the roadmap transition, publication status, and matching integrity metadata.
 
 If code, tests, configuration, requirements, or the supported model change, use a fresh reviewer.
-
-## Stop hook
-
-The hook compares plain Git status with the Session Start baseline.
-
-Equal status permits Stop. Documentation changes require a current Docs marker. Other changes require current clean Review and Docs markers.
-
-The hook is a reminder. It does not prove commit identity or invalidate earlier messages after each content edit.
 
 ## Installation
 

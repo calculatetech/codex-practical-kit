@@ -2,7 +2,7 @@
 
 Codex Practical Kit installs a small working agreement for personal repositories. It favors direct code, clear documentation, and bounded review.
 
-Version `0.9.1` initializes Git and RepoWise when Codex starts in an empty project folder.
+Version `0.10.0` removes the Stop and Session End hooks. Agent instructions remain the review authority.
 
 ## Operating model
 
@@ -16,8 +16,6 @@ The toolkit uses these rules:
 - Add exceptional behavior only when the active task requires it.
 - Do not design for I/O faults, permissions, links, concurrency, interruption, retry, recovery, submodules, or outside influence by default.
 
-The Stop hook is a reminder. It is not a proof system.
-
 ## Included skills
 
 - `ponytail` keeps code small.
@@ -28,7 +26,7 @@ The Stop hook is a reminder. It is not a proof system.
 - `roadmap-maintainer` owns `docs/roadmap.md` lifecycle changes.
 - `adversarial-review` runs one supported-model correctness review per pass.
 
-The kit also installs Session Start, Stop, and Session End hooks.
+The kit also installs a Session Start hook.
 
 ## Install
 
@@ -42,7 +40,7 @@ Run:
 
 The installer copies each skill to `~/.agents/skills/`. These copies belong to the toolkit. Do not edit them directly.
 
-The installer also adds managed blocks to `~/.codex/AGENTS.md` and `$CODEX_HOME/config.toml`. It adds managed hook entries to `~/.codex/hooks.json`.
+The installer also adds managed blocks to `~/.codex/AGENTS.md` and `$CODEX_HOME/config.toml`. It adds a managed Session Start entry to `~/.codex/hooks.json`.
 
 The installer uses an existing `uv` command. If `uv` is absent, it installs pinned uv 0.12.4 from a verified upstream script. It then installs pinned RepoWise 0.41.0 as a persistent uv tool when necessary.
 
@@ -52,7 +50,7 @@ Version `0.4.0` removes the obsolete Task Brief skill when the prior toolkit man
 
 The installer also writes `$CODEX_HOME/PLANS.md`. This file is the default ExecPlan model for repositories that do not contain `.agent/PLANS.md`.
 
-Open a new Codex session after installation. Use `/hooks` to review and trust the hook commands.
+Open a new Codex session after installation. Use `/hooks` to review and trust the Session Start command.
 
 ## Normal workflow
 
@@ -133,37 +131,9 @@ Repository-root `docs/` contains prose and static documentation assets. Put sour
 
 Plan Mode is read-only. Inspect the repository and define the implementation. Do not edit tracked files, stage, commit, publish, or activate roadmap work.
 
-The Stop hook returns immediately in Plan Mode. It does not start an old continuation or change its Git-status baseline.
-
 After Plan Mode ends, reread the repository and roadmap. Activate the accepted task before implementation.
 
 For ExecPlan work, put the accepted Plan Mode result into the task ExecPlan after Plan Mode ends.
-
-## Stop hook
-
-Session Start stores `git status --porcelain=v1 --untracked-files=all`.
-
-At Stop, the hook compares current status with that baseline:
-
-- Equal status permits Stop.
-- Documentation-only status changes require a current `Docs:` line.
-- Other status changes require current clean `Review:` and `Docs:` lines.
-- Accepted markers replace the baseline with current status.
-- A stopped review permits human handoff without changing the baseline.
-
-The hook can miss a content edit when a file was already dirty and keeps the same Git status. This is intentional.
-
-Supported status examples:
-
-```text
-Review: clean — pass 1.
-Docs: no change needed — behavior is unchanged.
-```
-
-```text
-Review: clean after fixes — pass 2.
-Docs: updated README.md.
-```
 
 ## RepoWise
 
