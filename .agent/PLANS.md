@@ -14,7 +14,11 @@ When authoring an executable specification (ExecPlan), follow PLANS.md _to the l
 
 When implementing an executable specification (ExecPlan), do not prompt the user for "next steps"; simply proceed to the next milestone. Keep all sections up to date, add or split entries in the list at every stopping point to affirmatively state the progress made and next steps. Resolve ambiguities autonomously. Finalize documentation and review before the task commit.
 
-For non-trivial work, record the base branch, base commit, task branch, and isolation form in the ExecPlan. Local checkpoint commits are allowed on an isolated task branch. They do not authorize push, pull request creation, merge to `main`, or cleanup. Final review covers the cumulative diff from the recorded base commit.
+For non-trivial work, record the base branch, base commit, task branch, and isolation form in the ExecPlan. Local checkpoint commits are allowed on an isolated task branch. They do not authorize publication or cleanup. Final review covers the cumulative diff from the recorded base commit.
+
+PR mode is active only when `main` protection requires pull requests, required CI checks, and resolved conversations. CI must contain at least one workflow. Its workflows must supply every required check. If any condition is false, use direct integration. Require separate authorization for branch push and merge to `main`.
+
+When PR mode is active, one explicit `publish` request authorizes the pull request workflow through squash merge and integration verification. Require successful checks and a Codex thumbs-up reaction for the latest head. Require no requested changes, resolved conversations, and GitHub mergeability. Each push resets the required CI and Codex review gates. Cleanup always needs separate authorization.
 
 When a task changes the toolkit version, select the target after scope is fixed and record it in the ExecPlan. A local checkpoint commit does not change the version. Update all current-version owners and matching checksums before validation and review.
 

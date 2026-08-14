@@ -18,6 +18,8 @@ context = """Codex Practical Kit is active.
 - Use one ExecPlan for complex features, multi-file changes, and significant refactors.
 - On `main`, allow only bounded documentation, comments, formatting, and roadmap updates. Use a task branch for one writable implementation stream.
 - Use a worktree for independent writable streams, multiple implementation agents, or a main checkout that cannot switch safely.
+- PR mode requires protected `main`, required CI checks, resolved conversations, and workflows that supply those checks. Otherwise, use direct integration.
+- In PR mode, `publish` authorizes the path through squash merge. Require current CI, a current Codex thumbs-up, no requested changes, and resolved conversations. Each push resets the gates. Cleanup stays separate.
 - For toolkit releases, features increment the minor version. Fixes and published same-feature checkpoints increment the patch version.
 - Local checkpoint commits do not change the version. Use prerelease suffixes only for planned public testing.
 - Use research only for unfamiliar, current, high-impact, or hard-to-reverse choices.

@@ -530,14 +530,16 @@ class IntegrationTests(unittest.TestCase):
         self.assertIn("If tracked changes have mixed ownership, stop.", rules)
         self.assertIn("Do not stash, commit, discard, or change them.", rules)
         self.assertIn("coherent local checkpoint commits", rules)
-        self.assertIn("Require separate authorization for push", rules)
+        self.assertIn("When PR mode is off, require separate authorization", rules)
+        self.assertIn("Cleanup always needs separate authorization.", rules)
 
         self.assertIn("Use a task branch for one writable implementation stream.", session)
         self.assertIn("Use a worktree for independent writable streams", session)
 
         self.assertIn("base branch, base commit, task branch, and isolation form", plans)
         self.assertIn("cumulative diff from the recorded base commit", plans)
-        self.assertIn("Each action needs separate authorization.", manual)
+        self.assertIn("When PR mode is off, require separate authorization", manual)
+        self.assertIn("Cleanup always needs separate authorization.", manual)
 
     def test_version_policy_is_consistent(self):
         rules = (ROOT / "assets" / "AGENTS.block.md").read_text()
@@ -547,7 +549,7 @@ class IntegrationTests(unittest.TestCase):
         readme = (ROOT / "README.md").read_text()
         prompt = (ROOT / "CODEX-INSTALL-PROMPT.md").read_text()
 
-        self.assertEqual(kit.KIT_VERSION, "0.7.0")
+        self.assertEqual(kit.KIT_VERSION, "0.8.0")
         self.assertIn(f"Version `{kit.KIT_VERSION}`", readme)
         self.assertIn(f"version {kit.KIT_VERSION} or newer", prompt)
 
@@ -572,6 +574,33 @@ class IntegrationTests(unittest.TestCase):
         self.assertIn("Start initial development at `0.1.0`.", readme)
         self.assertIn("Local checkpoint commits do not change the version.", session)
         self.assertIn("select the target after scope is fixed", plans)
+
+    def test_pr_publication_policy_is_consistent(self):
+        rules = (ROOT / "assets" / "AGENTS.block.md").read_text()
+        session = (ROOT / "assets" / "hooks" / "session_start.py").read_text()
+        plans = (ROOT / ".agent" / "PLANS.md").read_text()
+        manual = (ROOT / "docs" / "OPERATING-MANUAL.md").read_text()
+
+        shared = [
+            "PR mode is active only when `main` protection requires pull requests, required CI checks, and resolved conversations.",
+            "CI must contain at least one workflow.",
+            "Its workflows must supply every required check.",
+            "If any condition is false, PR mode is off.",
+            "When PR mode is active, use a pull request for every change, including bounded documentation.",
+            "Each push resets the required CI and Codex review gates.",
+            "Squash-merge the pull request after all gates pass.",
+            "Cleanup always needs separate authorization.",
+        ]
+        for owner in [rules, manual]:
+            with self.subTest(owner=owner[:30]):
+                for statement in shared:
+                    self.assertIn(statement, owner)
+
+        self.assertIn("one explicit `publish` request authorizes", plans)
+        self.assertIn("a Codex thumbs-up reaction for the latest head", plans)
+        self.assertIn("Each push resets the required CI and Codex review gates.", plans)
+        self.assertIn("`publish` authorizes the path through squash merge", session)
+        self.assertIn("Each push resets the gates.", session)
 
     def test_review_closure_policy_is_consistent(self):
         owners = [

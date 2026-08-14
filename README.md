@@ -2,7 +2,7 @@
 
 Codex Practical Kit installs a small working agreement for personal repositories. It favors direct code, clear documentation, and bounded review.
 
-Version `0.7.0` defines feature, fix, checkpoint, prerelease, and release-boundary rules.
+Version `0.8.0` adds conditional pull request publication and conversation closure.
 
 ## Operating model
 
@@ -76,7 +76,17 @@ Use the repository's `.agent/PLANS.md` when present. Otherwise, use `$CODEX_HOME
 
 Keep `main` for bounded documentation, comments, formatting, and roadmap updates. Use a task branch for one writable implementation stream. Use a worktree for independent writable streams, multiple implementation agents, or a main checkout that cannot switch safely.
 
-Task implementation permits coherent local checkpoint commits on the isolated branch. It does not permit push, pull request creation, merge to `main`, or cleanup. Each action needs separate authorization.
+Task implementation permits coherent local checkpoint commits on the isolated branch. It does not authorize publication or cleanup.
+
+## Pull request publication
+
+PR mode is active only when `main` protection requires pull requests, required CI checks, and resolved conversations. CI workflows must supply every required check.
+
+If PR mode is off, use direct integration. Branch push and merge to `main` need separate authorization.
+
+If PR mode is active, use a pull request for every change. One `publish` request authorizes the path through squash merge and integration verification.
+
+Required CI and the Codex thumbs-up reaction must apply to the latest head. Requested changes or unresolved conversations block merge. Cleanup always needs separate authorization.
 
 ## Version policy
 

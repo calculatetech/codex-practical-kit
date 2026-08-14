@@ -63,8 +63,29 @@
 - Task implementation authorizes coherent local checkpoint commits on the isolated task branch.
 - Review the cumulative diff from the recorded base commit.
 - A checkpoint commit does not authorize push, pull request creation, merge to `main`, or cleanup.
-- Require separate authorization for push, pull request creation, merge to `main`, and cleanup.
+- When PR mode is off, require separate authorization for branch push and merge to `main`.
+- Cleanup always needs separate authorization.
 - Remove a worktree or branch only after integration is proven, its state is clean, and cleanup is authorized.
+
+### Publish through pull requests
+
+- PR mode is active only when `main` protection requires pull requests, required CI checks, and resolved conversations.
+- CI must contain at least one workflow. Its workflows must supply every required check.
+- If any condition is false, PR mode is off. Use the direct integration workflow and do not create a pull request.
+- When PR mode is active, use a pull request for every change, including bounded documentation.
+- In PR mode, one explicit `publish` request authorizes branch push, draft creation, readiness, and monitoring.
+- The same request authorizes in-scope fixes, squash merge, and integration verification.
+- Before readiness, verify the draft base, head, scope, title, and body.
+- Use the configured automatic Codex review. Do not request the review manually.
+- Before merge, require successful checks for the latest head, no requested changes, and GitHub mergeability.
+- Also require a Codex thumbs-up reaction after the latest push and resolve all conversations.
+- Each push resets the required CI and Codex review gates.
+- Respond to each conversation. Push a required fix before you resolve its conversation.
+- Apply the existing validation and pre-commit review rules to an in-scope code fix.
+- Stop when feedback changes accepted scope or requires an architecture decision.
+- Squash-merge the pull request after all gates pass.
+- Verify that `main` contains the result. Monitor required post-merge CI.
+- Publication ends after verified integration. It does not authorize cleanup.
 
 ### Select toolkit versions
 

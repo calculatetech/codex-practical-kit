@@ -43,9 +43,43 @@ If tracked changes on `main` belong only to the task, create the task branch and
 
 Record the base branch, base commit, task branch, and isolation form in the ExecPlan. The base HEAD is the first checkpoint. Do not create an empty checkpoint commit.
 
-Task implementation permits coherent local checkpoint commits on the isolated branch. Final review covers the cumulative diff from the recorded base commit. A checkpoint commit does not permit push, pull request creation, merge to `main`, or cleanup. Each action needs separate authorization.
+Task implementation permits coherent local checkpoint commits on the isolated branch. Final review covers the cumulative diff from the recorded base commit. A checkpoint commit does not authorize publication or cleanup.
+
+When PR mode is off, require separate authorization for branch push and merge to `main`. Cleanup always needs separate authorization.
 
 Remove a worktree or branch only when integration is proven, its state is clean, and cleanup is authorized.
+
+## Pull request publication
+
+PR mode means that GitHub enforces the pull request path.
+
+PR mode is active only when `main` protection requires pull requests, required CI checks, and resolved conversations.
+
+CI must contain at least one workflow. Its workflows must supply every required check. If any condition is false, PR mode is off.
+
+If PR mode is off, use direct integration. Do not create a pull request.
+
+When PR mode is active, use a pull request for every change, including bounded documentation.
+
+One explicit `publish` request authorizes branch push, draft creation, readiness, and monitoring. The same request authorizes in-scope fixes, squash merge, and integration verification.
+
+Push the task branch. Open a draft pull request. Verify its base, head, scope, title, and body. Then mark the draft ready.
+
+Use the configured automatic Codex review. Do not request the review manually.
+
+Before merge, require successful checks for the latest head. Require no requested changes and GitHub mergeability.
+
+Also require a Codex thumbs-up reaction after the latest push. Each push resets the required CI and Codex review gates.
+
+Respond to every conversation. Push a required fix before you resolve its conversation. Resolve all conversations before merge.
+
+Apply the existing validation and pre-commit review rules to an in-scope code fix.
+
+If feedback changes accepted scope, stop for human direction. If feedback requires an architecture decision, stop for human direction.
+
+Squash-merge the pull request after all gates pass. Verify that `main` contains the result. Monitor required post-merge CI.
+
+Publication ends after verified integration. It does not authorize branch or worktree cleanup.
 
 ## Version policy
 

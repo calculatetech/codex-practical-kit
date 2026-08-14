@@ -17,8 +17,7 @@ No task is active.
 
 ## Planned next
 
-- ⏭ **CPK-006 — Define PR publication.** State when work needs a pull request, when drafts become ready, and which checks gate publication.
-- ⏭ **CPK-007 — Close PR conversations.** Monitor CI and Codex review, detect approval reactions or findings, respond, and resolve all threads.
+No task is planned next.
 
 ## Planned later
 
@@ -41,6 +40,8 @@ No residual risk is accepted.
 - ✅ **CPK-003 — Reconcile adversarial review.** One fresh reviewer per pass applies the supported-model true or false gate before commit.
 - ✅ **CPK-004 — Define Git task isolation.** Branches isolate one implementation stream. Worktrees isolate independent writers. Main remains available for bounded documentation work.
 - ✅ **CPK-005 — Define version increments.** Initial development starts at 0.1.0. Features increment minor versions. Fixes and published same-feature checkpoints increment patch versions.
+- ✅ **CPK-006 — Define PR publication.** Repositories use PR mode only after CI and protected `main` enforce its gates. One `publish` request then authorizes the path through verified squash merge.
+- ✅ **CPK-007 — Close PR conversations.** Delivered through CPK-006. Current CI, a current Codex clean signal, and resolved conversations gate merge.
 - ✅ **CPK-010 — Restore deterministic least effort.** Copy-only installation with manifest-scoped ownership, one-attempt failure handling, plain Git status, and bounded review replace speculative recovery and proof machinery.
 - ✅ **CPK-002 — Make ExecPlan the durable task model.** The kit installs one global ExecPlan fallback, preserves repository overrides, and removes Task Brief as a competing owner.
 - ✅ **CPK-011 — Make RepoWise self-starting and self-updating.** The kit installs missing runtime tools, initializes Git repositories from Codex, enables RepoWise MCP calls, and maintains the wiki after commits.
