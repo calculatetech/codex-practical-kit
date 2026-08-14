@@ -24,7 +24,7 @@ from pathlib import Path
 from typing import Any, Iterable
 
 KIT_ID = "codex-practical-kit"
-KIT_VERSION = "0.10.0"
+KIT_VERSION = "0.11.0"
 REPOWISE_VERSION = "0.41.0"
 UV_VERSION = "0.12.4"
 UV_INSTALLER_URL = f"https://astral.sh/uv/{UV_VERSION}/install.sh"
@@ -652,6 +652,7 @@ def repowise_config_block(repowise: str, root: Path | None = None) -> str:
         'command = "/bin/sh"',
         f"args = [\"-c\", {toml_string(repowise_bootstrap(repowise))}]",
         'default_tools_approval_mode = "approve"',
+        "required = true",
         "startup_timeout_sec = 1800",
     ]
     if root is not None:
@@ -665,8 +666,8 @@ def repowise_agents_block() -> str:
 - This repository has a local RepoWise index in `.repowise`.
 - Use RepoWise MCP tools for repository overview, symbol context, callers, change risk, decision history, code health, dead code, and affected tests.
 - Read source before you treat an inferred relationship or generated page as authoritative.
-- If RepoWise is unavailable or stale, continue with native tools. Do not stop the task.
-- Refresh the index with `repowise update --no-agents`."""
+- If the index is stale, refresh it with `repowise update --no-agents` before broad exploration.
+- If RepoWise is unavailable or broken, stop and restore it. Do not continue without the required code graph."""
 
 
 def ensure_no_external_repowise_table(text: str) -> None:
@@ -853,7 +854,9 @@ def doctor(args: argparse.Namespace, paths: InstallPaths) -> int:
     global_text = read_text(global_config)
     ok &= check(
         REPOWISE_START in global_text
-        and 'default_tools_approval_mode = "approve"' in global_text,
+        and 'default_tools_approval_mode = "approve"' in global_text
+        and "required = true" in global_text
+        and "startup_timeout_sec = 1800" in global_text,
         "global RepoWise MCP config",
         str(global_config),
     )

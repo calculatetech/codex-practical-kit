@@ -30,7 +30,7 @@ The three-pass breaker remains. It stops recursive correction after three defect
 
 ## Repository knowledge
 
-RepoWise can provide leads about callers, decisions, and tests. The kit initializes it on first use and updates it after commits. Source remains authoritative, and native tools remain the fallback.
+RepoWise provides leads about callers, decisions, and tests. The kit requires its code graph, initializes it on first start, and updates it after commits. Source remains authoritative.
 
 ## What the toolkit does not become
 

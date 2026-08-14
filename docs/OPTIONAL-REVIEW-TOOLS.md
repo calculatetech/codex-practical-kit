@@ -128,7 +128,7 @@ License: MIT.
 
 ## RepoWise
 
-RepoWise is the kit's default repository context provider.
+RepoWise is the kit's required repository context provider.
 
 Use it before implementation and review for:
 
@@ -139,4 +139,4 @@ Use it before implementation and review for:
 - Affected tests.
 - Documentation and ownership clues.
 
-Confirm important claims in source. Continue with native tools when RepoWise fails.
+Confirm important claims in source. If RepoWise fails, stop and restore it.

@@ -320,6 +320,8 @@ class InstallerTests(unittest.TestCase):
             self.assertIn("mcp_servers.other", installed)
             self.assertIn(kit.HOOKS_START, installed)
             self.assertIn('default_tools_approval_mode = "approve"', installed)
+            self.assertIn("required = true", installed)
+            self.assertIn("startup_timeout_sec = 1800", installed)
             self.assertIn("hook install", installed)
             self.assertTrue(kit.uninstall_core(Namespace(purge=False), paths))
             self.assertEqual(config.read_text(), '[mcp_servers.other]\ncommand = "other"\n')
@@ -573,7 +575,7 @@ class IntegrationTests(unittest.TestCase):
         readme = (ROOT / "README.md").read_text()
         prompt = (ROOT / "CODEX-INSTALL-PROMPT.md").read_text()
 
-        self.assertEqual(kit.KIT_VERSION, "0.10.0")
+        self.assertEqual(kit.KIT_VERSION, "0.11.0")
         self.assertIn(f"Version `{kit.KIT_VERSION}`", readme)
         self.assertIn(f"version {kit.KIT_VERSION} or newer", prompt)
 
@@ -598,6 +600,27 @@ class IntegrationTests(unittest.TestCase):
         self.assertIn("Start initial development at `0.1.0`.", readme)
         self.assertIn("Local checkpoint commits do not change the version.", session)
         self.assertIn("select the target after scope is fixed", plans)
+
+    def test_repowise_is_required(self):
+        config = kit.repowise_config_block("/tmp/repowise")
+        rules = (ROOT / "assets" / "AGENTS.block.md").read_text()
+        session = (ROOT / "assets" / "hooks" / "session_start.py").read_text()
+        docs_skill = (ROOT / "assets" / "skills" / "docs-maintainer" / "SKILL.md").read_text()
+        research_skill = (ROOT / "assets" / "skills" / "research-first" / "SKILL.md").read_text()
+        review_packet = (ROOT / "assets" / "skills" / "adversarial-review" / "references" / "review-packet.md").read_text()
+        readme = (ROOT / "README.md").read_text()
+        notes = (ROOT / "docs" / "REPOWISE.md").read_text()
+        review_tools = (ROOT / "docs" / "OPTIONAL-REVIEW-TOOLS.md").read_text()
+
+        self.assertIn("required = true", config)
+        self.assertIn("startup_timeout_sec = 1800", config)
+        for owner in (rules, session, docs_skill, research_skill, review_packet, readme, notes, review_tools):
+            self.assertIn("RepoWise", owner)
+            self.assertNotIn("continue with native", owner)
+            self.assertNotIn("RepoWise is available", owner)
+            self.assertNotIn("Optional RepoWise", owner)
+        self.assertIn("required code graph", rules)
+        self.assertIn("code graph is required", session)
 
     def test_pr_publication_policy_is_consistent(self):
         rules = (ROOT / "assets" / "AGENTS.block.md").read_text()

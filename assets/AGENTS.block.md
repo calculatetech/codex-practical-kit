@@ -47,10 +47,10 @@
 
 ### Use repository knowledge before broad exploration
 
-- If RepoWise MCP tools are available and the index is current, use them before broad grep-and-read exploration.
+- Use RepoWise MCP tools before broad grep-and-read exploration.
 - Use RepoWise for overview, callers, change risk, decision history, health, dead code, and affected tests.
-- If RepoWise is unavailable, stale, or broken, continue with `rg`, Git, language tools, and direct file reads.
-- Never block the task only because an optional provider failed.
+- If the index is stale, refresh it with `repowise update --no-agents` before broad exploration.
+- If RepoWise is unavailable or broken, stop and restore it. Do not continue without the required code graph.
 
 ### Define the floor and ceiling before non-trivial work
 

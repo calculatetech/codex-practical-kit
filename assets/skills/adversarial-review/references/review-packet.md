@@ -43,6 +43,6 @@ For each command, include:
 
 Include only the AGENTS, CLAUDE, lint, test, architecture, or API rules that govern the reviewed files.
 
-## Optional RepoWise observations
+## RepoWise observations
 
 Include indexed revision and freshness status. Label every item as an observation until source confirms it.

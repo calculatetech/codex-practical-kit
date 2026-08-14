@@ -2,7 +2,7 @@
 
 RepoWise is the repository knowledge provider installed by the kit.
 
-## Why it is worth trying
+## What it provides
 
 Its keyless index combines:
 
@@ -54,11 +54,11 @@ The installer adds a user-level RepoWise MCP server. If Codex starts in a comple
 
 The first start in a Git repository initializes a no-prose index when `.repowise` is absent. It installs RepoWise's marker-delimited `post-commit` hook before it starts the MCP server.
 
-The managed Codex configuration approves RepoWise MCP calls without another prompt. This setting prevents Codex from canceling the first tool call before dispatch.
+The managed Codex configuration makes RepoWise required and approves its MCP calls. Codex waits up to 1,800 seconds for initialization.
 
 The hook starts a background update after each commit. RepoWise owns its queue marker, log, and single-flight update behavior.
 
-When RepoWise fails, use Git, `rg`, language tools, tests, and direct source reads. Continue the task.
+If the index is stale, run `repowise update --no-agents` before broad exploration. If RepoWise fails, stop and restore it.
 
 ## Day-to-day commands
 

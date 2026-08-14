@@ -2,7 +2,7 @@
 
 Codex Practical Kit installs a small working agreement for personal repositories. It favors direct code, clear documentation, and bounded review.
 
-Version `0.10.0` removes the Stop and Session End hooks. Agent instructions remain the review authority.
+Version `0.11.0` makes the RepoWise code graph a required part of Codex startup.
 
 ## Operating model
 
@@ -137,9 +137,11 @@ For ExecPlan work, put the accepted Plan Mode result into the task ExecPlan afte
 
 ## RepoWise
 
-The core install enables RepoWise for Git repositories. If Codex starts in a completely empty folder, the MCP command initializes Git first. It does not initialize Git in a non-empty folder.
+The core install requires RepoWise for Git repositories. If Codex starts in a completely empty folder, the MCP command initializes Git first. It does not initialize Git in a non-empty folder.
 
-On the first RepoWise tool call, the managed MCP command creates a no-prose `.repowise` index when necessary. It also installs RepoWise's `post-commit` hook. Later commits start a background wiki update.
+On the first start, the managed MCP command creates a no-prose `.repowise` index when necessary. Codex waits up to 1,800 seconds for RepoWise. It does not start or resume the session without the graph.
+
+The bootstrap installs RepoWise's `post-commit` hook. Later commits start a background wiki update.
 
 Use eager setup when you want the index before the next Codex session:
 
@@ -150,7 +152,7 @@ Use eager setup when you want the index before the next Codex session:
 
 The setup command initializes the index, installs or refreshes the Git hook, and adds managed RepoWise blocks to repository configuration. It does not create or replace `docs/roadmap.md`.
 
-If RepoWise is unavailable, continue with Git, `rg`, language tools, and direct source reads.
+If the index is stale, run `repowise update --no-agents` before broad exploration. If RepoWise is unavailable, stop and restore it.
 
 Opt out one repository with:
 

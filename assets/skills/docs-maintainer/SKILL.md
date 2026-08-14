@@ -41,7 +41,7 @@ A change to code, tests, dependencies, migrations, runtime configuration, build 
 
 ## RepoWise
 
-If RepoWise is available, use its context, decision, risk, or affected-test views to find related documentation and owners. Treat the result as evidence, not authority. Read the source before you change a durable claim.
+Use RepoWise context, decision, risk, or affected-test views to find related documentation and owners. Treat the result as evidence, not authority. Read the source before you change a durable claim.
 
 ## Do not update documentation when
 

@@ -25,7 +25,7 @@ Do not use this skill for a routine fix with a clear local answer.
 
 1. Read the current repository first.
    - Find the existing owner, dependency, pattern, and constraint.
-   - Use RepoWise when it is available and current.
+   - Use RepoWise when its current index can answer the repository question.
 2. Write the exact question in one sentence.
 3. List the constraints that decide the answer.
 4. Inspect two to four viable options. Do not create a long catalog.
