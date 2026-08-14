@@ -55,4 +55,4 @@ No residual risk is accepted.
 - ✅ **CPK-018 — Compact the global agent profile.** The managed policy is below 100 lines and defines safe coordinator, subagent, and reviewer roles.
 - ✅ **CPK-019 — Make direct publication integrate final work.** In direct mode, one `publish` request now authorizes the path through verified integration into `main`. Tags, releases, and cleanup remain separate.
 - ✅ **CPK-020 — Protect full-set invariants from bounded samples.** Implementation policy, Design Preflight, and correctness review now reject success derived from bounded raw-input samples.
-- ✅ **CPK-021 — Diagnose severe defects at review stop gates.** Each stop finding gets a separate decision handoff. Severe defects run one automatic clean-context diagnostic, then halt for human action.
+- ✅ **CPK-021 — Diagnose severe defects at review stop gates.** Each stop finding gets a separate decision handoff. The same final response includes the complete diagnostic before the human halt.

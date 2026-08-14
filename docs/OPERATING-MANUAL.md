@@ -170,9 +170,11 @@ Use another lens only when the active task names that risk. Do not spawn a separ
 
 If no severe stop applies, fix each validated in-scope finding. Only passes with implementation defects advance the three-defect breaker. Documentation and review-housekeeping findings remain actionable, but they neither increment nor reset the three-defect count.
 
-A P0, P1, unsafe architecture finding, or third counted implementation defect causes a severe stop. Present each stop finding as a separate decision handoff.
+A P0, P1, unsafe architecture finding, or third counted implementation defect causes a severe stop.
 
-Close the reviewer. Run one clean-context `defect-diagnostic`. Present its portable toolkit-correction summary. Then halt for human direction.
+Close the reviewer. Complete and validate one clean-context `defect-diagnostic` before the final response.
+
+The final response contains each separate decision handoff, the complete diagnostic, its portable summary, and the final status. Then halt for human direction.
 
 After the halt, do not edit, run checks, review, commit, publish, run CI, change task state, or create follow-up work.
 

@@ -120,7 +120,7 @@ Drop the finding when any answer is false. Do not record it as residual risk.
 
 Each pass uses one fresh read-only reviewer. If no severe stop applies, fix each validated in-scope finding. Only implementation defects advance the three-defect breaker. Documentation and review-housekeeping findings remain actionable, but they neither increment nor reset the three-defect count.
 
-A P0, P1, unsafe architecture finding, or third counted implementation defect causes a severe stop. Present each stop finding as a separate decision handoff. Then run one clean-context `defect-diagnostic` and halt for human direction.
+A P0, P1, unsafe architecture finding, or third counted implementation defect causes a severe stop. Complete one clean-context `defect-diagnostic` before the final response. That response contains each separate decision handoff, the complete diagnostic, its portable summary, and the final status. Then halt for human direction.
 
 ## Documentation order
 

@@ -70,7 +70,9 @@ These results cause a severe stop:
 
 At every stop, present each validated stop finding as a separate decision handoff. Do not combine findings into one handoff.
 
-For a severe stop, close the reviewer. Run one clean-context `defect-diagnostic`. Present its portable summary. Then halt for human direction.
+For a severe stop, close the reviewer. Complete and validate one clean-context `defect-diagnostic` before the final response.
+
+The final response contains each decision handoff, the complete diagnostic, its portable summary, and the final status. Then halt for human direction.
 
 After the halt, do not edit, run checks, start review, commit, publish, run CI, change task state, or create follow-up work.
 

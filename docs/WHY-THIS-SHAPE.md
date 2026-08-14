@@ -28,7 +28,7 @@ One fresh reviewer checks correctness in the supported model. The coordinator dr
 
 The three-defect breaker stops recursive implementation correction after three counted passes. P0, P1, and unsafe architecture findings stop earlier. Documentation and review-housekeeping findings remain actionable, but they neither increment nor reset the three-defect count.
 
-Each stop finding gets its own decision handoff. A severe stop runs one clean-context defect diagnostic, produces a portable process summary, and halts for human action.
+Each stop finding gets its own decision handoff. A severe stop completes one clean-context diagnostic before the final response. That response includes the complete diagnostic and portable process summary before the halt.
 
 ## Repository knowledge
 

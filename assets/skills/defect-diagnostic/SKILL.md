@@ -36,6 +36,8 @@ Classify each relevant rule as `contributed`, `neutral`, or `violated`. Do not b
 
 ## Present and halt
 
-Present the completed diagnostic after the separate stop-finding handoffs. Preserve the portable summary so the user can paste it into a toolkit-correction task.
+Complete and validate the diagnostic before the coordinator composes the final response. Progress commentary can state that the diagnostic is running.
+
+Return one final response. Present the separate stop-finding handoffs first. Then present the complete diagnostic, including its portable summary. Put the final `Review:` and `Docs:` status lines last. Do not return a finding question or final response before the diagnostic is ready.
 
 After the diagnostic, halt. Do not edit files, run checks, start review, spawn another subagent, commit, publish, run CI, change lifecycle state, or create follow-up work. Wait for explicit human direction.

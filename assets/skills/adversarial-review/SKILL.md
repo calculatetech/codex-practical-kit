@@ -83,10 +83,14 @@ For a severe stop:
 
 1. Do not fix any finding.
 2. Close the reviewer.
-3. Render each stop finding through `references/stop-finding-format.md`.
-4. Invoke `defect-diagnostic` automatically.
-5. Present its portable summary.
-6. Halt for human direction.
+3. Invoke `defect-diagnostic` automatically and validate its result.
+4. Compose one final response only after the diagnostic is complete.
+5. In that response, render each stop finding through `references/stop-finding-format.md`.
+6. Then present the complete diagnostic, including its portable summary.
+7. Put the final `Review:` and `Docs:` status lines after the diagnostic.
+8. Halt for human direction.
+
+Progress commentary can state that the diagnostic is running. Do not return a finding question or final response before the diagnostic is ready.
 
 After the halt, do not edit, test, review, spawn another subagent, commit, publish, run CI, change lifecycle state, or create follow-up work.
 

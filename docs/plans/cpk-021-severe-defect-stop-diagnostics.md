@@ -4,7 +4,7 @@ This ExecPlan is a living document. Maintain it according to the repository's `.
 
 ## Purpose / Big Picture
 
-After this change, every validated finding that causes a review stop gets its own human decision block. A severe stop also runs one fresh read-only model diagnostic. The diagnostic retraces how the defect entered and escaped the work. It produces a portable summary, then the coordinator halts for human action.
+After this change, every validated finding that causes a review stop gets its own human decision block. A severe stop also runs one fresh read-only model diagnostic. The coordinator includes the complete diagnostic in the same final response before the halt.
 
 ## Progress
 
@@ -16,6 +16,9 @@ After this change, every validated finding that causes a review stop gets its ow
 - [x] (2026-08-14 20:43Z) Forward-tested the diagnostic skill with a duplicate-prefix severe defect.
 - [x] (2026-08-14 20:43Z) Validated the complete pre-review candidate.
 - [x] (2026-08-14 20:49Z) Completed clean-context review with no findings. Prepared the candidate for a local checkpoint.
+- [x] (2026-08-14 21:32Z) Reopened CPK-021 after a real stop returned the handoffs without the required diagnostic.
+- [x] (2026-08-14 21:39Z) Validated one atomic response with two handoffs, two diagnostic findings, one portable summary, and final status lines.
+- [x] (2026-08-14 21:45Z) Completed fresh correctness review with no findings. Prepared the correction checkpoint.
 
 ## Surprises & Discoveries
 
@@ -23,6 +26,8 @@ After this change, every validated finding that causes a review stop gets its ow
   Evidence: `adversarial-review` defines reviewer JSON and a final status line. It does not define per-finding stop output.
 - Observation: The toolkit already has the required model-query mechanism.
   Evidence: Adversarial Review uses one fresh read-only subagent per pass. A diagnostic can use the same coordinator capability after the reviewer closes.
+- Observation: Component checks did not prove one complete severe-stop response.
+  Evidence: A real third-pass stop returned the decision handoffs and status before it returned the diagnostic.
 
 ## Decision Log
 
@@ -41,16 +46,19 @@ After this change, every validated finding that causes a review stop gets its ow
 - Decision: Keep version 0.11.0.
   Rationale: No `0.11.0` tag or GitHub release exists. A local checkpoint does not change the version.
   Date/Author: 2026-08-14 / Codex
+- Decision: Complete and validate the diagnostic before composing the severe-stop final response.
+  Rationale: This makes diagnostic delivery a precondition of the halt status while preserving the required output order.
+  Date/Author: 2026-08-14 / user and Codex
 
 ## Outcomes & Retrospective
 
-Implementation, validation, forward-testing, and clean-context review are complete. The first correctness pass found no validated defects. Publication is not authorized. The candidate is ready for a local checkpoint.
+The atomic-response correction, validation, forward test, and clean-context review are complete. The fresh review found no validated defects. Publication is not authorized.
 
 ## Context and Orientation
 
 The task uses branch `cpk-021-severe-defect-stop-diagnostics`. Its base branch is `cpk-020-protect-full-set-invariants`, and its base commit is `8f542e45e295`. The branch is stacked because CPK-020 is not integrated into `main`.
 
-`assets/skills/adversarial-review/SKILL.md` owns review validation and stop behavior. `references/finding-format.md` owns reviewer JSON. The global communication rule in `assets/AGENTS.block.md` owns the human decision labels. No file currently connects these owners at a stop gate.
+`assets/skills/adversarial-review/SKILL.md` owns review validation, stop behavior, and final response assembly. `references/finding-format.md` owns reviewer JSON. The global communication rule in `assets/AGENTS.block.md` owns the human decision labels.
 
 The new `assets/skills/defect-diagnostic/` skill owns clean-context defect reconstruction. `kit.py` owns custom-skill installation. The coordinator remains the only agent that can spawn and close the diagnostic subagent.
 
@@ -58,11 +66,11 @@ The new `assets/skills/defect-diagnostic/` skill owns clean-context defect recon
 
 After the coordinator validates findings, a P0 or P1 finding stops automatic correction on any pass. An implementation defect on the third counted pass also stops automatic correction.
 
-At either severe stop, close the reviewer. Present each stop-causing finding in its own `Decision`, optional `Term`, `Trigger`, `Likelihood`, `Current exposure`, `Options`, `Recommendation`, and `Question` block. Do not combine findings into one handoff.
+At either severe stop, close the reviewer. Complete and validate the diagnostic before composing the final response.
 
 Run `defect-diagnostic` automatically. Give one fresh read-only subagent the raw requirement, implementation diff, source, checks, review history, and finding evidence. Omit reviewer fix directions. Do not give it the coordinator's diagnosis or proposed fix. The subagent retraces the decision sequence and produces the summary in the skill reference.
 
-After the summary, halt. Do not edit, test, review, commit, publish, run CI, change task state, or create follow-up work. Wait for explicit human direction.
+In one final response, present each separate decision handoff first. Then present the complete diagnostic, its portable summary, and the final status lines. After that response, halt. Do not edit, test, review, commit, publish, run CI, change task state, or create follow-up work.
 
 ## Scope Ceiling
 
@@ -95,7 +103,7 @@ Record results in `.agent/test-results/cpk-021-severe-defect-stop-diagnostics.md
 
 The focused test must fail if the stop path combines findings, omits a communication label, skips the diagnostic trigger, permits a severe automatic fix, or omits the final halt. It must also fail if the new skill is absent from installation.
 
-A clean-context forward test must produce a chronological defect trace and portable toolkit-correction summary from raw evidence. The test must not edit files or propose automatic implementation after the halt.
+A clean-context forward test must return one response with two separate handoffs, two diagnostic findings, one portable summary, and final status lines. The response must not end after a handoff question.
 
 ## Idempotence and Recovery
 
@@ -109,4 +117,4 @@ Preserve `.mcp.json`, `.repowise/`, and `.vscode/`. They are untracked environme
 
 `defect-diagnostic` is a new custom skill. It uses the coordinator's existing subagent capability. It has no code dependency or external service.
 
-Revision note: Created after third-pass findings were returned as a cumulative status instead of separate human decision handoffs.
+Revision note: Created after third-pass findings were returned as a cumulative status instead of separate human decision handoffs. Reopened after the handoffs were correct but the final response omitted the diagnostic.
