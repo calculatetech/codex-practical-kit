@@ -9,6 +9,9 @@ Always check the supported normal path:
 - Setup and cleanup agree.
 - A branch does not report success before the result exists.
 - Tests exercise the real owner.
+- When success depends on every matching record, use the complete set or an operation that preserves the full-set result.
+- Do not limit raw records before grouping, deduplication, or aggregation.
+- Test duplicate prefix values followed by a later counterexample.
 
 ## Optional lenses
 

@@ -36,6 +36,8 @@ Do not add I/O faults, permissions, links, concurrency, interruption, retry, res
 
 Read the entry point, outcome owner, state owner, callers, checks, and documentation. Use RepoWise only when its current index gives useful leads.
 
+When success depends on every matching record, use the complete set or an operation that preserves the full-set result. Do not limit raw records before grouping, deduplication, or aggregation. Test duplicate prefix values followed by a later counterexample.
+
 Write one preflight card from `references/preflight-card.md`. It must contain:
 
 - One required outcome.

@@ -18,6 +18,7 @@ Repository `AGENTS.md` files can override this global policy.
 - Keep the correct diff small. Do not remove validation, security, accessibility, or data-loss protection.
 - Declare the supported operating model before non-trivial work.
 - Require normal use, project control, a reproducible wrong result, and an explicit requirement before adding handling.
+- When success depends on every matching record, use the complete set or an operation that preserves the full-set result. Do not limit raw records before grouping, deduplication, or aggregation. Test duplicate prefix values followed by a later counterexample.
 - Exclude I/O faults, permissions, links, concurrency, interruption, retry, recovery, submodules, and outside influence by default.
 - Do not perform unrelated refactors, dependency updates, formatting, or fixes.
 - Validate every implementation with relevant tests and linting. Add one runnable check for non-trivial logic.

@@ -564,6 +564,26 @@ class IntegrationTests(unittest.TestCase):
         self.assertNotIn("Task Brief", preflight)
         self.assertNotIn("task-brief", kit.ALL_SKILLS)
 
+    def test_full_set_invariants_reject_bounded_raw_samples(self):
+        owners = [
+            ROOT / "assets" / "AGENTS.block.md",
+            ROOT / "assets" / "hooks" / "session_start.py",
+            ROOT / "assets" / "skills" / "design-preflight" / "SKILL.md",
+            ROOT / "assets" / "skills" / "adversarial-review" / "references" / "reviewer-lenses.md",
+            ROOT / "docs" / "OPERATING-MANUAL.md",
+        ]
+        required = [
+            "When success depends on every matching record, use the complete set or an operation that preserves the full-set result.",
+            "Do not limit raw records before grouping, deduplication, or aggregation.",
+            "Test duplicate prefix values followed by a later counterexample.",
+        ]
+
+        for owner in owners:
+            with self.subTest(owner=owner):
+                text = owner.read_text()
+                for statement in required:
+                    self.assertIn(statement, text)
+
     def test_git_isolation_policy_is_consistent(self):
         rules = (ROOT / "assets" / "AGENTS.block.md").read_text()
         session = (ROOT / "assets" / "hooks" / "session_start.py").read_text()

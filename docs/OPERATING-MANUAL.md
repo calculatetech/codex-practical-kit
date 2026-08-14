@@ -10,6 +10,8 @@ Use Design Preflight for a multi-file change, public interface, persistent produ
 
 State the supported operating model. Define the normal-use behavior floor and hard scope ceiling.
 
+When success depends on every matching record, use the complete set or an operation that preserves the full-set result. Do not limit raw records before grouping, deduplication, or aggregation. Test duplicate prefix values followed by a later counterexample.
+
 For each exceptional condition, require four true answers:
 
 1. Does it occur during supported normal use?

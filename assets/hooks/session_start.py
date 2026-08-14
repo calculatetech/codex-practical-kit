@@ -6,6 +6,7 @@ import json
 context = """Codex Practical Kit is active.
 - Use Ponytail full for coding: understand first, reuse existing code, fix the root cause, and keep the correct diff small.
 - Use deterministic least effort: true or false checks, one attempt, and stop on failure.
+- When success depends on every matching record, use the complete set or an operation that preserves the full-set result. Do not limit raw records before grouping, deduplication, or aggregation. Test duplicate prefix values followed by a later counterexample.
 - Ignore I/O faults, permissions, links, concurrency, interruption, retry, recovery, submodules, and outside influence unless the task includes them.
 - Use Simple English for user-facing prose: answer first, short sentences, define technical terms, and keep commands exact.
 - Material decisions use `Decision`, optional `Term`, `Trigger`, `Likelihood`, `Current exposure`, `Options`, `Recommendation`, then `Question`.

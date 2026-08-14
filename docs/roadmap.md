@@ -54,3 +54,4 @@ No residual risk is accepted.
 - ✅ **CPK-017 — Count only implementation defects toward the review breaker.** Documentation and review-housekeeping findings remain actionable but do not advance or reset the three-defect count.
 - ✅ **CPK-018 — Compact the global agent profile.** The managed policy is below 100 lines and defines safe coordinator, subagent, and reviewer roles.
 - ✅ **CPK-019 — Make direct publication integrate final work.** In direct mode, one `publish` request now authorizes the path through verified integration into `main`. Tags, releases, and cleanup remain separate.
+- ✅ **CPK-020 — Protect full-set invariants from bounded samples.** Implementation policy, Design Preflight, and correctness review now reject success derived from bounded raw-input samples.
