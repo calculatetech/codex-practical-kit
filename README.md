@@ -25,6 +25,7 @@ The toolkit uses these rules:
 - `docs-maintainer` keeps existing documentation true.
 - `roadmap-maintainer` owns `docs/roadmap.md` lifecycle changes.
 - `adversarial-review` runs one supported-model correctness review per pass.
+- `defect-diagnostic` retraces severe defects and forces a human stop.
 
 The kit also installs a Session Start hook.
 
@@ -117,7 +118,9 @@ Every finding must pass four checks:
 
 Drop the finding when any answer is false. Do not record it as residual risk.
 
-Each pass uses one fresh read-only reviewer. Fix every validated in-scope finding. Only implementation defects advance the three-defect breaker. Documentation and review-housekeeping findings remain actionable, but they neither increment nor reset the three-defect count. The third consecutive counted implementation-defect pass stops for human direction.
+Each pass uses one fresh read-only reviewer. If no severe stop applies, fix each validated in-scope finding. Only implementation defects advance the three-defect breaker. Documentation and review-housekeeping findings remain actionable, but they neither increment nor reset the three-defect count.
+
+A P0, P1, unsafe architecture finding, or third counted implementation defect causes a severe stop. Present each stop finding as a separate decision handoff. Then run one clean-context `defect-diagnostic` and halt for human direction.
 
 ## Documentation order
 

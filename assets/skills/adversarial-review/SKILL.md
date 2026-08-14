@@ -59,6 +59,8 @@ Select only the lenses that the change needs. Always select correctness. Add ano
 
 The reviewer returns the format in `references/finding-format.md`. It must cite source and give a normal-use wrong outcome.
 
+At every review stop gate, read `references/stop-finding-format.md` completely. Render each validated stop finding as its own human decision block. Do not combine findings into one handoff.
+
 ## Validate findings
 
 Read each cited source location. Apply the four true or false questions. Do not spawn a refuter.
@@ -71,7 +73,22 @@ Documentation and review-housekeeping findings remain actionable, but they neith
 
 ## Three-defect breaker
 
-Before you fix a finding, stop if the pass produces the third consecutive counted implementation defect. Do not apply another automatic fix.
+Treat these results as severe stops:
+
+- A validated P0 or P1 finding on any pass.
+- A validated architecture flaw that makes a local patch unsafe.
+- An implementation defect on the third consecutive counted pass.
+
+For a severe stop:
+
+1. Do not fix any finding.
+2. Close the reviewer.
+3. Render each stop finding through `references/stop-finding-format.md`.
+4. Invoke `defect-diagnostic` automatically.
+5. Present its portable summary.
+6. Halt for human direction.
+
+After the halt, do not edit, test, review, spawn another subagent, commit, publish, run CI, change lifecycle state, or create follow-up work.
 
 Otherwise, for any validated in-scope finding:
 
@@ -85,5 +102,6 @@ Use one final status line:
 
 - `Review: clean — pass N.`
 - `Review: clean after fixes — pass N.`
+- `Review: stopped — severe defect diagnostic complete; human direction required.`
 - `Review: stopped — implementation defects found in three counted passes; human direction required.`
 - `Review: stopped — architecture decision required on pass N.`

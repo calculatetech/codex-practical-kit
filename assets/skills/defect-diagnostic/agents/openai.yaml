@@ -1,0 +1,6 @@
+interface:
+  display_name: "Defect Diagnostic"
+  short_description: "Retrace severe defects and force a halt"
+  default_prompt: "Use $defect-diagnostic to retrace this severe defect and produce a toolkit-correction summary."
+policy:
+  allow_implicit_invocation: true

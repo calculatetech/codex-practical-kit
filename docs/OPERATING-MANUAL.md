@@ -168,7 +168,13 @@ Apply the four true or false checks to each finding. Drop a finding when one ans
 
 Use another lens only when the active task names that risk. Do not spawn a separate refuter.
 
-Fix every validated in-scope finding. Only passes with implementation defects advance the three-defect breaker. Documentation and review-housekeeping findings remain actionable, but they neither increment nor reset the three-defect count. If the third consecutive counted pass finds an implementation defect, stop for human direction.
+If no severe stop applies, fix each validated in-scope finding. Only passes with implementation defects advance the three-defect breaker. Documentation and review-housekeeping findings remain actionable, but they neither increment nor reset the three-defect count.
+
+A P0, P1, unsafe architecture finding, or third counted implementation defect causes a severe stop. Present each stop finding as a separate decision handoff.
+
+Close the reviewer. Run one clean-context `defect-diagnostic`. Present its portable toolkit-correction summary. Then halt for human direction.
+
+After the halt, do not edit, run checks, review, commit, publish, run CI, change task state, or create follow-up work.
 
 Review closure does not invalidate a clean review. It records the review result, the roadmap transition, publication status, and matching integrity metadata.
 

@@ -58,11 +58,21 @@ Do not use a separate refuter. The coordinator reads the cited source and applie
 
 A validated P0, P1, or P2 correctness defect in executable source, tests, migrations, dependencies, or runtime, build, or security configuration makes a counted implementation-defect pass.
 
-Fix every validated in-scope finding with the smallest shared correction. Add one focused check. Finalize documentation again. Then use a new reviewer.
+If no severe stop applies, fix each validated in-scope finding. Use the smallest shared correction. Add one focused check. Finalize documentation again. Then use a new reviewer.
 
 Documentation and review-housekeeping findings remain actionable, but they neither increment nor reset the three-defect count.
 
-If the third consecutive counted pass finds an implementation defect, stop. Wait for human direction.
+These results cause a severe stop:
+
+- A validated P0 or P1 finding on any pass.
+- An architecture flaw that makes a local patch unsafe.
+- An implementation defect on the third consecutive counted pass.
+
+At every stop, present each validated stop finding as a separate decision handoff. Do not combine findings into one handoff.
+
+For a severe stop, close the reviewer. Run one clean-context `defect-diagnostic`. Present its portable summary. Then halt for human direction.
+
+After the halt, do not edit, run checks, start review, commit, publish, run CI, change task state, or create follow-up work.
 
 ## Final markers
 
@@ -78,5 +88,10 @@ Docs: updated README.md.
 
 ```text
 Review: stopped — implementation defects found in three counted passes; human direction required.
+Docs: no change needed — implementation is not accepted.
+```
+
+```text
+Review: stopped — severe defect diagnostic complete; human direction required.
 Docs: no change needed — implementation is not accepted.
 ```

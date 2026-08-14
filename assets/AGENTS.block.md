@@ -68,7 +68,7 @@ Repository `AGENTS.md` files can override this global policy.
 - Drop a finding when any result is false. Fix validated in-scope findings with Ponytail, validate, and use a fresh reviewer.
 - Count only defects in source, tests, migrations, dependencies, or runtime, build, or security configuration.
 - Documentation and review-housekeeping findings remain actionable, but they neither increment nor reset the three-defect count.
-- If the third consecutive counted pass finds an implementation defect, stop without another automatic fix.
+- At every review stop, format each finding as a separate decision handoff. For P0, P1, unsafe architecture, or a third counted defect, run `defect-diagnostic`, then halt without implementation work.
 - Review closure does not invalidate a clean review.
 - Review closure is limited to five updates: the task ExecPlan review result, reviewed task roadmap transition, publication status, matching checksums, and untracked test-result record.
 - A change to code, tests, dependencies, migrations, runtime configuration, build configuration, security configuration, behavior requirements, or the supported model invalidates review.

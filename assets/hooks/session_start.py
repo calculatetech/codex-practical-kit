@@ -25,7 +25,7 @@ context = """Codex Practical Kit is active.
 - Use research only for unfamiliar, current, high-impact, or hard-to-reverse choices.
 - When docs/roadmap.md exists, use roadmap-maintainer before implementation and at each task transition.
 - Finalize documentation and the roadmap before adversarial-review and commit.
-- Use one fresh supported-model correctness reviewer. Never make a post-commit documentation change.
+- Use one fresh supported-model correctness reviewer. At a severe stop, format each finding separately, run `defect-diagnostic`, then halt. Never make a post-commit documentation change.
 - End with one `Review:` line and one `Docs:` line.
 """
 

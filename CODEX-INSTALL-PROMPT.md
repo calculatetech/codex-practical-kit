@@ -13,7 +13,7 @@ Run `./run-tests.sh`. Then run `./install.sh`. Review the resulting changes in `
 
 The installer must reuse `uv` when present or install pinned uv when absent. It must install pinned RepoWise as a persistent uv tool when absent. If I am in a Git repository, run `./setup-repo.sh .`. Do not enable model-written RepoWise prose unless I explicitly say yes. Confirm that `.git/hooks/post-commit` contains RepoWise's managed block.
 
-Do not install Spec Kit, Compound Engineering, Superpowers, Trail of Bits skills, ADHD, or NeuroArxiv during this task. They are optional. The core kit already contains the small design-preflight and adversarial-review skills.
+Do not install Spec Kit, Compound Engineering, Superpowers, Trail of Bits skills, ADHD, or NeuroArxiv during this task. They are optional. The core kit already contains the small design-preflight, adversarial-review, and defect-diagnostic skills.
 
 Finish by running `./doctor.sh` and, when you are in a Git repository, `./doctor.sh --repo .`. Report exact files changed, commands run, and any manual step that remains.
 ```

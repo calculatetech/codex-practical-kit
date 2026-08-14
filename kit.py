@@ -43,6 +43,7 @@ CUSTOM_SKILLS = (
     "research-first",
     "design-preflight",
     "adversarial-review",
+    "defect-diagnostic",
 )
 OBSOLETE_SKILLS = ("task-brief",)
 UPSTREAM_SKILLS = ("ponytail", "simple-english")

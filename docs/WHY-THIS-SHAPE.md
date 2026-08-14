@@ -26,7 +26,9 @@ Both finish before review and commit. Documentation never changes after the task
 
 One fresh reviewer checks correctness in the supported model. The coordinator drops every finding that fails one true or false check.
 
-The three-defect breaker stops recursive implementation correction after three counted passes. Documentation and review-housekeeping findings remain actionable, but they neither increment nor reset the three-defect count.
+The three-defect breaker stops recursive implementation correction after three counted passes. P0, P1, and unsafe architecture findings stop earlier. Documentation and review-housekeeping findings remain actionable, but they neither increment nor reset the three-defect count.
+
+Each stop finding gets its own decision handoff. A severe stop runs one clean-context defect diagnostic, produces a portable process summary, and halts for human action.
 
 ## Repository knowledge
 

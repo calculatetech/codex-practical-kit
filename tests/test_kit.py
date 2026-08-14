@@ -769,6 +769,65 @@ class IntegrationTests(unittest.TestCase):
                 self.assertIn(accounting, text)
                 self.assertNotIn("defects found in three consecutive passes", text)
 
+    def test_review_stop_diagnostics_are_per_finding_and_mandatory(self):
+        rules = (ROOT / "assets" / "AGENTS.block.md").read_text()
+        session = (ROOT / "assets" / "hooks" / "session_start.py").read_text()
+        review = (ROOT / "assets" / "skills" / "adversarial-review" / "SKILL.md").read_text()
+        formatter = (
+            ROOT
+            / "assets"
+            / "skills"
+            / "adversarial-review"
+            / "references"
+            / "stop-finding-format.md"
+        ).read_text()
+        diagnostic = (ROOT / "assets" / "skills" / "defect-diagnostic" / "SKILL.md").read_text()
+        summary = (
+            ROOT
+            / "assets"
+            / "skills"
+            / "defect-diagnostic"
+            / "references"
+            / "diagnostic-summary.md"
+        ).read_text()
+        metadata = (
+            ROOT / "assets" / "skills" / "defect-diagnostic" / "agents" / "openai.yaml"
+        ).read_text()
+
+        self.assertIn("defect-diagnostic", kit.CUSTOM_SKILLS)
+        self.assertIn("allow_implicit_invocation: true", metadata)
+        self.assertIn("At every review stop, format each finding as a separate decision handoff.", rules)
+        self.assertIn("At a severe stop, format each finding separately", session)
+        self.assertIn("references/stop-finding-format.md", review)
+        self.assertIn("Invoke `defect-diagnostic` automatically.", review)
+        self.assertIn("A validated P0 or P1 finding on any pass.", review)
+        self.assertIn("An implementation defect on the third consecutive counted pass.", review)
+
+        labels = [
+            "Decision",
+            "Term",
+            "Trigger",
+            "Likelihood",
+            "Current exposure",
+            "Options",
+            "Recommendation",
+            "Question",
+        ]
+        positions = [formatter.index(f"\n{label}\n") for label in labels]
+        self.assertEqual(positions, sorted(positions))
+        self.assertEqual(formatter.count("\nQuestion\n"), 1)
+        self.assertIn("Repeat the complete block for each finding.", formatter)
+        self.assertIn("Do not use cumulative", formatter)
+
+        self.assertIn("Spawn one fresh read-only diagnostic subagent.", diagnostic)
+        self.assertIn("Omit reviewer fix directions and all proposed corrections.", diagnostic)
+        self.assertIn("Do not give it a diagnosis, preferred fix, or toolkit correction.", diagnostic)
+        self.assertIn("After the diagnostic, halt.", diagnostic)
+        self.assertIn("Do not edit files, run checks, start review", diagnostic)
+        self.assertIn("Repeat the complete finding section for every validated stop finding.", summary)
+        self.assertIn("Portable summary", summary)
+        self.assertIn("Human direction is required. Do not continue implementation.", summary)
+
 
 if __name__ == "__main__":
     unittest.main()
