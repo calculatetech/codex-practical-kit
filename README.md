@@ -2,7 +2,7 @@
 
 Codex Practical Kit installs a small working agreement for personal repositories. It favors direct code, clear documentation, and bounded review.
 
-Version `0.5.0` makes RepoWise self-starting and keeps its wiki current after commits.
+Version `0.6.0` defines when Codex uses a task branch or worktree and keeps `main` for bounded documentation work.
 
 ## Operating model
 
@@ -73,6 +73,10 @@ Use Design Preflight for multi-file changes, public interfaces, persistent produ
 Use one ExecPlan for complex features, multi-file changes, and significant refactors. Store it in `docs/plans/`.
 
 Use the repository's `.agent/PLANS.md` when present. Otherwise, use `$CODEX_HOME/PLANS.md`. Merge accepted Plan Mode and Design Preflight decisions into the ExecPlan.
+
+Keep `main` for bounded documentation, comments, formatting, and roadmap updates. Use a task branch for one writable implementation stream. Use a worktree for independent writable streams, multiple implementation agents, or a main checkout that cannot switch safely.
+
+Task implementation permits coherent local checkpoint commits on the isolated branch. It does not permit push, pull request creation, merge to `main`, or cleanup. Each action needs separate authorization.
 
 ## Supported-model review
 

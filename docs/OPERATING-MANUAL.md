@@ -31,6 +31,22 @@ Plan Mode and Design Preflight prepare the ExecPlan. Merge their accepted decisi
 
 The roadmap owns task priority and lifecycle state. The ExecPlan owns implementation decisions and progress.
 
+## Git task isolation
+
+Keep `main` for bounded documentation, comments, formatting, roadmap additions, and roadmap lifecycle updates. Use a task branch for a feature, refactor, test, configuration change, policy change, specification change, or large documentation rewrite.
+
+Use a task branch when one writer implements a task. Use a worktree when independent writers need separate directories. Also use a worktree for multiple implementation agents or when the main checkout cannot switch safely. A read-only reviewer is not a writer.
+
+At task start, check Git status and fetch `origin` once. Local `main` must equal `origin/main`. If they differ, stop. Do not pull, merge, rebase, or reset automatically.
+
+If tracked changes on `main` belong only to the task, create the task branch and carry the changes to it. If tracked changes have mixed ownership, stop. Do not stash, commit, discard, or change them. Preserve untracked files unless the task needs the same path.
+
+Record the base branch, base commit, task branch, and isolation form in the ExecPlan. The base HEAD is the first checkpoint. Do not create an empty checkpoint commit.
+
+Task implementation permits coherent local checkpoint commits on the isolated branch. Final review covers the cumulative diff from the recorded base commit. A checkpoint commit does not permit push, pull request creation, merge to `main`, or cleanup. Each action needs separate authorization.
+
+Remove a worktree or branch only when integration is proven, its state is clean, and cleanup is authorized.
+
 ## Roadmap lifecycle
 
 Use `docs/roadmap.md` as the only roadmap authority. Record accepted work before implementation. Make one task Active before its first implementation edit.

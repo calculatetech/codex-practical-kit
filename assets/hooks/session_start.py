@@ -16,6 +16,8 @@ context = """Codex Practical Kit is active.
 - Use RepoWise before broad exploration when its MCP tools are available and current. Fall back to native tools when it is unavailable.
 - Before non-trivial implementation, use design-preflight to define the normal-use floor, scope ceiling, owner, and exact checks.
 - Use one ExecPlan for complex features, multi-file changes, and significant refactors.
+- On `main`, allow only bounded documentation, comments, formatting, and roadmap updates. Use a task branch for one writable implementation stream.
+- Use a worktree for independent writable streams, multiple implementation agents, or a main checkout that cannot switch safely.
 - Use research only for unfamiliar, current, high-impact, or hard-to-reverse choices.
 - When docs/roadmap.md exists, use roadmap-maintainer before implementation and at each task transition.
 - Finalize documentation and the roadmap before adversarial-review and commit.

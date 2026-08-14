@@ -14,6 +14,8 @@ When authoring an executable specification (ExecPlan), follow PLANS.md _to the l
 
 When implementing an executable specification (ExecPlan), do not prompt the user for "next steps"; simply proceed to the next milestone. Keep all sections up to date, add or split entries in the list at every stopping point to affirmatively state the progress made and next steps. Resolve ambiguities autonomously. Finalize documentation and review before the task commit.
 
+For non-trivial work, record the base branch, base commit, task branch, and isolation form in the ExecPlan. Local checkpoint commits are allowed on an isolated task branch. They do not authorize push, pull request creation, merge to `main`, or cleanup. Final review covers the cumulative diff from the recorded base commit.
+
 Before review, record that validation is complete and review is pending.
 
 Review closure does not invalidate a clean review. Review closure is limited to five updates: the task ExecPlan review result, reviewed task roadmap transition, publication status, matching checksums, and untracked test-result record.

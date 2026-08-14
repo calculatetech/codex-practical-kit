@@ -47,6 +47,25 @@
 - Use Spec Kit only when the task needs it or the user asks for it. Its artifacts inform the ExecPlan but do not own implementation progress.
 - Stop for human direction only when supported normal use has duplicate authority, duplicate writers, or an unresolved public contract.
 
+### Isolate Git tasks
+
+- On `main`, allow only bounded documentation, comments, formatting, roadmap additions, and roadmap lifecycle updates.
+- Use a task branch for features, refactors, tests, configuration, policy, specification, and large documentation changes.
+- Use a task branch for one writable implementation stream.
+- Use a worktree for independent writable streams, multiple implementation agents, or a main checkout that cannot switch safely.
+- A read-only reviewer does not need a worktree.
+- Before task work, fetch `origin` once. Require local `main` to equal `origin/main`. Stop if they differ.
+- Do not pull, merge, rebase, or reset automatically.
+- If tracked changes on `main` belong only to the task, create its branch immediately and carry the changes to it.
+- If tracked changes have mixed ownership, stop. Do not stash, commit, discard, or change them.
+- Preserve untracked files unless the task needs the same path.
+- Treat the base HEAD as the first checkpoint. Do not create an empty checkpoint commit.
+- Task implementation authorizes coherent local checkpoint commits on the isolated task branch.
+- Review the cumulative diff from the recorded base commit.
+- A checkpoint commit does not authorize push, pull request creation, merge to `main`, or cleanup.
+- Require separate authorization for push, pull request creation, merge to `main`, and cleanup.
+- Remove a worktree or branch only after integration is proven, its state is clean, and cleanup is authorized.
+
 ### Research only when it changes the answer
 
 - Use the `research-first` skill for unfamiliar, current, high-impact, or hard-to-reverse choices.

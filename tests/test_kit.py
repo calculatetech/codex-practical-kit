@@ -517,6 +517,28 @@ class IntegrationTests(unittest.TestCase):
         self.assertNotIn("Task Brief", preflight)
         self.assertNotIn("task-brief", kit.ALL_SKILLS)
 
+    def test_git_isolation_policy_is_consistent(self):
+        rules = (ROOT / "assets" / "AGENTS.block.md").read_text()
+        session = (ROOT / "assets" / "hooks" / "session_start.py").read_text()
+        plans = (ROOT / ".agent" / "PLANS.md").read_text()
+        manual = (ROOT / "docs" / "OPERATING-MANUAL.md").read_text()
+
+        self.assertIn("On `main`, allow only bounded documentation", rules)
+        self.assertIn("Use a task branch for one writable implementation stream.", rules)
+        self.assertNotIn("Use a task branch for one writable stream.", rules)
+        self.assertIn("Use a worktree for independent writable streams", rules)
+        self.assertIn("If tracked changes have mixed ownership, stop.", rules)
+        self.assertIn("Do not stash, commit, discard, or change them.", rules)
+        self.assertIn("coherent local checkpoint commits", rules)
+        self.assertIn("Require separate authorization for push", rules)
+
+        self.assertIn("Use a task branch for one writable implementation stream.", session)
+        self.assertIn("Use a worktree for independent writable streams", session)
+
+        self.assertIn("base branch, base commit, task branch, and isolation form", plans)
+        self.assertIn("cumulative diff from the recorded base commit", plans)
+        self.assertIn("Each action needs separate authorization.", manual)
+
     def test_review_closure_policy_is_consistent(self):
         owners = [
             ROOT / ".agent" / "PLANS.md",
