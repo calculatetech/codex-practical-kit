@@ -80,8 +80,8 @@ Repository `AGENTS.md` files can override this global policy.
 - In PR mode, one explicit `publish` request authorizes push, draft, readiness, in-scope fixes, squash merge, and integration checks.
 - Each push resets the required CI and Codex review gates. Require latest-head checks, Codex approval, mergeability, and resolved conversations.
 - Squash-merge the pull request after all gates pass. Verify `main`, then monitor required post-merge CI.
-- When PR mode is off, require separate authorization for branch push and merge to `main`.
-- Commit and push do not authorize a pull request or release.
+- When PR mode is off, `publish` authorizes branch push, merge to `main`, integration verification, and required post-merge CI.
+- Commit and push do not authorize a pull request or release. `publish` does not authorize tag creation, a GitHub release, or cleanup.
 - Start initial development at `0.1.0`. Use `0.MINOR.PATCH` during initial development.
 - Before `1.0.0`, increment the minor number for a feature or breaking change. Increment the patch number for a bug fix or a published checkpoint in the same feature line.
 - After `1.0.0`, increment the major number for a breaking change. Increment the minor number for a feature. Increment the patch number for a fix.

@@ -80,7 +80,7 @@ Record the base branch, base commit, task branch, and isolation form in the Exec
 
 Task implementation permits coherent local checkpoint commits on the isolated branch. Final review covers the cumulative diff from the recorded base commit. A checkpoint commit does not authorize publication or cleanup.
 
-When PR mode is off, require separate authorization for branch push and merge to `main`. Cleanup always needs separate authorization.
+When PR mode is off, `publish` authorizes branch push, merge to `main`, integration verification, and required post-merge CI. Cleanup always needs separate authorization.
 
 Remove a worktree or branch only when integration is proven, its state is clean, and cleanup is authorized.
 
@@ -93,6 +93,10 @@ PR mode is active only when `main` protection requires pull requests, required C
 CI must contain at least one workflow. Its workflows must supply every required check. If any condition is false, PR mode is off.
 
 If PR mode is off, use direct integration. Do not create a pull request.
+
+When PR mode is off, `publish` authorizes branch push, merge to `main`, integration verification, and required post-merge CI.
+
+`publish` does not authorize tag creation, a GitHub release, or cleanup.
 
 When PR mode is active, use a pull request for every change, including bounded documentation.
 

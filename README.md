@@ -88,7 +88,9 @@ Routine facts, values, status questions, and minor preferences stay concise. Cod
 
 PR mode is active only when `main` protection requires pull requests, required CI checks, and resolved conversations. CI workflows must supply every required check.
 
-If PR mode is off, use direct integration. Branch push and merge to `main` need separate authorization.
+When PR mode is off, `publish` authorizes branch push, merge to `main`, integration verification, and required post-merge CI.
+
+`publish` does not authorize tag creation, a GitHub release, or cleanup.
 
 If PR mode is active, use a pull request for every change. One `publish` request authorizes the path through squash merge and integration verification.
 

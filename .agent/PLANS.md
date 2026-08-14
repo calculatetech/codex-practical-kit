@@ -16,7 +16,7 @@ When implementing an executable specification (ExecPlan), do not prompt the user
 
 For non-trivial work, record the base branch, base commit, task branch, and isolation form in the ExecPlan. Local checkpoint commits are allowed on an isolated task branch. They do not authorize publication or cleanup. Final review covers the cumulative diff from the recorded base commit.
 
-PR mode is active only when `main` protection requires pull requests, required CI checks, and resolved conversations. CI must contain at least one workflow. Its workflows must supply every required check. If any condition is false, use direct integration. Require separate authorization for branch push and merge to `main`.
+PR mode is active only when `main` protection requires pull requests, required CI checks, and resolved conversations. CI must contain at least one workflow. Its workflows must supply every required check. If any condition is false, use direct integration. When PR mode is off, `publish` authorizes branch push, merge to `main`, integration verification, and required post-merge CI. `publish` does not authorize tag creation, a GitHub release, or cleanup.
 
 When PR mode is active, one explicit `publish` request authorizes the pull request workflow through squash merge and integration verification. Require successful checks and a Codex thumbs-up reaction for the latest head. Require no requested changes, resolved conversations, and GitHub mergeability. Each push resets the required CI and Codex review gates. Cleanup always needs separate authorization.
 

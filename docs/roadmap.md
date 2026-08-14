@@ -53,3 +53,4 @@ No residual risk is accepted.
 - ✅ **CPK-016 — Require the RepoWise code graph.** Codex waits for automatic RepoWise initialization and does not continue without the required graph.
 - ✅ **CPK-017 — Count only implementation defects toward the review breaker.** Documentation and review-housekeeping findings remain actionable but do not advance or reset the three-defect count.
 - ✅ **CPK-018 — Compact the global agent profile.** The managed policy is below 100 lines and defines safe coordinator, subagent, and reviewer roles.
+- ✅ **CPK-019 — Make direct publication integrate final work.** In direct mode, one `publish` request now authorizes the path through verified integration into `main`. Tags, releases, and cleanup remain separate.

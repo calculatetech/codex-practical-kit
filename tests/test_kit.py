@@ -577,7 +577,7 @@ class IntegrationTests(unittest.TestCase):
         self.assertIn("If tracked changes have mixed ownership, stop.", rules)
         self.assertIn("Do not stash, commit, discard, or change them.", rules)
         self.assertIn("coherent local checkpoint commits", rules)
-        self.assertIn("When PR mode is off, require separate authorization", rules)
+        self.assertIn("When PR mode is off, `publish` authorizes", rules)
         self.assertIn("Cleanup always needs separate authorization.", rules)
 
         self.assertIn("Use a task branch for one writable implementation stream.", session)
@@ -585,7 +585,7 @@ class IntegrationTests(unittest.TestCase):
 
         self.assertIn("base branch, base commit, task branch, and isolation form", plans)
         self.assertIn("cumulative diff from the recorded base commit", plans)
-        self.assertIn("When PR mode is off, require separate authorization", manual)
+        self.assertIn("When PR mode is off, `publish` authorizes", manual)
         self.assertIn("Cleanup always needs separate authorization.", manual)
 
     def test_version_policy_is_consistent(self):
@@ -648,6 +648,7 @@ class IntegrationTests(unittest.TestCase):
         session = (ROOT / "assets" / "hooks" / "session_start.py").read_text()
         plans = (ROOT / ".agent" / "PLANS.md").read_text()
         manual = (ROOT / "docs" / "OPERATING-MANUAL.md").read_text()
+        readme = (ROOT / "README.md").read_text()
 
         shared = [
             "PR mode is active only when `main` protection requires pull requests, required CI checks, and resolved conversations.",
@@ -669,6 +670,12 @@ class IntegrationTests(unittest.TestCase):
         self.assertIn("Each push resets the required CI and Codex review gates.", plans)
         self.assertIn("`publish` authorizes the path through squash merge", session)
         self.assertIn("Each push resets the gates.", session)
+        direct = "When PR mode is off, `publish` authorizes branch push, merge to `main`, integration verification, and required post-merge CI."
+        excluded = "`publish` does not authorize tag creation, a GitHub release, or cleanup."
+        for owner in [rules, session, plans, manual, readme]:
+            with self.subTest(direct_owner=owner[:30]):
+                self.assertIn(direct, owner)
+                self.assertIn(excluded, owner)
 
     def test_material_decision_handoff_policy_is_consistent(self):
         rules = (ROOT / "assets" / "AGENTS.block.md").read_text()
