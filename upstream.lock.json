@@ -1,0 +1,90 @@
+{
+  "generated_on": "2026-08-13",
+  "optional_tools": {
+    "adhd": {
+      "install_mode": "optional Agent Skill; not bundled",
+      "license": "MIT",
+      "repository": "https://github.com/UditAkhourii/adhd"
+    },
+    "compound-engineering": {
+      "commit": "05f3b798b0e5fb76c6bb1830bee7cbc84ff6c4c4",
+      "install_mode": "optional Codex plugin; not bundled",
+      "license": "MIT",
+      "repository": "https://github.com/EveryInc/compound-engineering-plugin"
+    },
+    "neuroarxiv": {
+      "install_mode": "optional Agent Skill; not bundled",
+      "license": "MIT",
+      "repository": "https://github.com/UditAkhourii/neuroarxiv"
+    },
+    "repowise": {
+      "install_mode": "external uvx process; not bundled",
+      "license": "AGPL-3.0-only",
+      "repository": "https://github.com/repowise-dev/repowise",
+      "version": "0.41.0"
+    },
+    "spec-kit": {
+      "install_mode": "optional user-installed tool; not bundled or enabled by default",
+      "license": "MIT",
+      "repository": "https://github.com/github/spec-kit"
+    },
+    "superpowers": {
+      "commit": "b36e0829c6d0140e93cfef2ca599b1b07d4a7797",
+      "install_mode": "optional plugin or skill source; not bundled",
+      "license": "MIT",
+      "repository": "https://github.com/obra/superpowers"
+    },
+    "trailofbits-skills": {
+      "install_mode": "optional Codex marketplace; not bundled",
+      "license": "CC-BY-SA-4.0",
+      "repository": "https://github.com/trailofbits/skills"
+    }
+  },
+  "schema_version": 1,
+  "skills": {
+    "ponytail": {
+      "commit": "2ed6c52c9d7e5e56942508591085fd45dea277d3",
+      "files": [
+        {
+          "destination": "ponytail/SKILL.md",
+          "git_blob_sha1": "02c0712c86277d49d18a77da3a2b825657bf02d1",
+          "path": "skills/ponytail/SKILL.md"
+        },
+        {
+          "destination": "ponytail/LICENSE",
+          "git_blob_sha1": "715d483338cea4365f0d91a27799cf61226d6bcf",
+          "path": "LICENSE"
+        }
+      ],
+      "license": "MIT",
+      "repository": "https://github.com/DietrichGebert/ponytail"
+    },
+    "simple-english": {
+      "commit": "59bf6702197a5aadc96d197ea17f290d8d50dcd3",
+      "files": [
+        {
+          "destination": "simple-english/SKILL.md",
+          "git_blob_sha1": "7c41a83908b8adac6a83571df38ef4b731a0a532",
+          "path": "skills/simple-english/SKILL.md"
+        },
+        {
+          "destination": "simple-english/references/checklist.md",
+          "git_blob_sha1": "727536d895f51a977237c61335848aec4cc77602",
+          "path": "skills/simple-english/references/checklist.md"
+        },
+        {
+          "destination": "simple-english/references/use-cases.md",
+          "git_blob_sha1": "61036a228be7e7f2b017ffbbfdc034900bc1bf24",
+          "path": "skills/simple-english/references/use-cases.md"
+        },
+        {
+          "destination": "simple-english/LICENSE",
+          "git_blob_sha1": "e3dd42a3e6dc3ba07a742a83d27b5377a719e814",
+          "path": "LICENSE"
+        }
+      ],
+      "license": "MIT",
+      "repository": "https://github.com/AminBlg/SimpleEnglish"
+    }
+  }
+}
