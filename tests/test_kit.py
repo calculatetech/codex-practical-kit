@@ -766,11 +766,17 @@ class IntegrationTests(unittest.TestCase):
 
     def test_focused_policy_package_and_version(self):
         rules_root = ROOT / "assets" / "skills" / "codex-practical-kit-rules" / "references"
+        publication = (rules_root / "publication.md").read_text()
         self.assertIn("codex-practical-kit-rules", kit.CUSTOM_SKILLS)
         self.assertEqual(len(list(rules_root.glob("*.md"))), 13)
-        self.assertEqual(kit.KIT_VERSION, "0.12.0")
-        self.assertNotIn("Version `0.12.0`", (ROOT / "README.md").read_text())
-        self.assertNotIn("version 0.12.0", (ROOT / "CODEX-INSTALL-PROMPT.md").read_text())
+        self.assertIn("Before Codex Practical Kit publication", publication)
+        self.assertIn("`./install.sh`", publication)
+        self.assertIn("`./doctor.sh`", publication)
+        self.assertIn("from the reviewed candidate", publication)
+        self.assertIn("`Result: ready`", publication)
+        self.assertEqual(kit.KIT_VERSION, "0.12.1")
+        self.assertNotIn("Version `0.12.1`", (ROOT / "README.md").read_text())
+        self.assertNotIn("version 0.12.1", (ROOT / "CODEX-INSTALL-PROMPT.md").read_text())
 
     def test_repowise_is_required(self):
         config = kit.repowise_config_block("/tmp/repowise")

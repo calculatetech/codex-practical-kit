@@ -33,6 +33,7 @@ No residual risk is accepted.
 
 ## Completed
 
+- ✅ **CPK-025 — Verify the live toolkit before publication.** Toolkit publication now requires live installation and a ready Doctor result from the reviewed candidate.
 - ✅ **CPK-024 — Bind reviews to documented product scope.** One scope owner now limits planning and review to documented product use cases and task-relevant owners.
 - ✅ **CPK-023 — Enforce single rule ownership.** Focused rule files are authoritative. AGENTS routes by task, and validation rejects duplicate owners and invalid routes.
 - ✅ **Minimal implementation discipline.** Ponytail, Simple English, repository-first inspection, and focused validation rules are installed.

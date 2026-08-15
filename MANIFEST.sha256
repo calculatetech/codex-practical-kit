@@ -18,7 +18,7 @@ feea0d2cdfc01f5bd12bc328c51ce574f4a8ce5b2d7117c6679efdf86a5449ad  ./assets/skill
 cee400d6adb5930d2648f214a3e50bca58c9a87e0370608abea4718c20edefaa  ./assets/skills/codex-practical-kit-rules/references/full-set-results.md
 3bb7f7e5b80692cbb313e6be5bb3ebdae4377c8710634c5a0b25d57c54886d07  ./assets/skills/codex-practical-kit-rules/references/git-isolation.md
 a80dd0e6d13bd9fc8530b037a4c7b965a47f2d5834aabcdb6ae71928be6ed3ff  ./assets/skills/codex-practical-kit-rules/references/owner-composition.md
-693dd31ccb56e5c877e3b96ce963f8a95a95b5e92e1861f7e9044aed0d9f4ec8  ./assets/skills/codex-practical-kit-rules/references/publication.md
+2bb48a3acdf44a92166579c7703be80493cd61415836ae01b3fe011e1f37aa5f  ./assets/skills/codex-practical-kit-rules/references/publication.md
 3e2b3b4d7193549cf3bc1a33f98b358c3787bc5fe9e9756760df48335ba60fdb  ./assets/skills/codex-practical-kit-rules/references/repository-knowledge.md
 0d0045d094aea77cc0dea5bd887e07973f7e1aecac90219354c83ef999755504  ./assets/skills/codex-practical-kit-rules/references/review-closure.md
 750e77bc10757d057dee7c95fadf1eff0af4bd790b68b46244eb06de049a36b7  ./assets/skills/codex-practical-kit-rules/references/rule-ownership.md
@@ -64,12 +64,12 @@ dc82f98131ca0fd910050e23e639de1dcc7a9e2ddd045b1887b274432932f443  ./docs/plans/c
 0492c24f6d5a56c8a1bbf22337ec3ba2e3249bed3b0aef2c82a218ff54684cc5  ./docs/plans/cpk-022-systematic-runtime-scenarios.md
 679e58c47dd9b6587a73ba2feb02a8a8f836bf17c9c6eccb93ec017f66d8fa8f  ./docs/plans/cpk-023-owner-composition-proof.md
 3ebce389027c377b304aa6101c53fb4aceb6c4fc48ba201ec0fde92e5e2fbd2d  ./docs/plans/cpk-024-product-scope-boundaries.md
-2a6fc5a0010cdafcceff98bbe7aaddec67935a72aefc2cb84d4f6a21558a118d  ./docs/roadmap.md
+35a83e08ed28f9296e913cfe7acbb6ff6d80021e8c5c14b3620b3c07ea1b9bf3  ./docs/roadmap.md
 ab56a88d9188979f06ea142d1f58ea0d6ad9088e83a965bd324209d83da513ad  ./doctor.sh
 3466d2e34145cfdaa83d793960794b2aefc96f3d9c48d22fd2af930ec819e9c4  ./install.sh
-fb9d8d45285bfb4250339ef8f65d2484b0d6a65780847177eefb5a427cb17d46  ./kit.py
+4a321fbf418c574d5a4d2c7d2bf7d19c099a0502c8c3332001cdde8fb78a7ff1  ./kit.py
 aa6fc7c37c332f5c5f8d6eb2abdacdbba464895302ec51a60d2484530754ae68  ./run-tests.sh
 bdae5fdc5840e46ec70d4a0a9581974be65576bdf8a721262a9fa3792c455237  ./setup-repo.sh
-771e89f248582e3e40eae335f6bb2fad3e685df374de3bd527505e4d51d6514c  ./tests/test_kit.py
+68283d47afe29df398bf9674b4b78909bf80db2e0e8c9e15e46d594ee60b2c15  ./tests/test_kit.py
 f12cff94ef7f9b0ca489cbe43e1de737011476966e04c1578f4977177b0da217  ./uninstall.sh
 60f43425edbce4c5b67f9d1b1002fcc4e2430eb8bdd57e2f8c374bd20b0a52bb  ./upstream.lock.json

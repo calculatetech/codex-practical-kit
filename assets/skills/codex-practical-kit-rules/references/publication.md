@@ -2,8 +2,11 @@
 <!-- cpk-rule-guard: PR mode is active only when protected `main` requires pull requests, required CI checks, and resolved conversations. -->
 <!-- cpk-rule-guard: Before merge, require successful checks for the latest head. Require no requested changes and GitHub mergeability. -->
 <!-- cpk-rule-guard: Publication does not authorize tag creation, a GitHub release, or cleanup. -->
+<!-- cpk-rule-guard: Before Codex Practical Kit publication, run `./install.sh` and `./doctor.sh` from the reviewed candidate. Require `Result: ready`. -->
 
 # Publication
+
+Before Codex Practical Kit publication, run `./install.sh` and `./doctor.sh` from the reviewed candidate. Require `Result: ready`.
 
 PR mode is active only when protected `main` requires pull requests, required CI checks, and resolved conversations.
 
