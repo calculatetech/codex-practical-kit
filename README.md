@@ -46,6 +46,7 @@ Read only the rule that applies to the task:
 - [Rule ownership](assets/skills/codex-practical-kit-rules/references/rule-ownership.md)
 - [Coordination](assets/skills/codex-practical-kit-rules/references/coordination.md)
 - [Supported model](assets/skills/codex-practical-kit-rules/references/supported-model.md)
+- [Scope boundaries](assets/skills/codex-practical-kit-rules/references/scope-boundaries.md)
 - [Decision handoffs](assets/skills/codex-practical-kit-rules/references/decision-handoffs.md)
 - [Repository knowledge](assets/skills/codex-practical-kit-rules/references/repository-knowledge.md)
 - [Delivery lifecycle](assets/skills/codex-practical-kit-rules/references/delivery-lifecycle.md)

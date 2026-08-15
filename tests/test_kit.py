@@ -604,6 +604,7 @@ class IntegrationTests(unittest.TestCase):
             "execplans",
             "coordination",
             "supported-model",
+            "scope-boundaries",
             "decision-handoffs",
             "repository-knowledge",
             "delivery-lifecycle",
@@ -652,7 +653,11 @@ class IntegrationTests(unittest.TestCase):
             "## Supported operating model\n\nExpanded shared rule.\n\n",
             1,
         )
-        mutated_body = next(body for body in section_pattern.findall(mutated) if route_pattern.search(body))
+        mutated_body = next(
+            body
+            for body in section_pattern.findall(mutated)
+            if route_pattern.findall(body) == ["supported-model"]
+        )
         self.assertEqual(len([line for line in mutated_body.splitlines() if line.strip()]), 3)
 
         prompt = (ROOT / "CODEX-INSTALL-PROMPT.md").read_text()
@@ -732,13 +737,40 @@ class IntegrationTests(unittest.TestCase):
             self.assertIn("owner-composition.md", route)
             self.assertIn("full-set-results.md", route)
 
+    def test_product_scope_boundaries_gate_preflight_and_review(self):
+        rules_root = ROOT / "assets" / "skills" / "codex-practical-kit-rules" / "references"
+        owner = (rules_root / "scope-boundaries.md").read_text()
+        preflight = (ROOT / "assets" / "skills" / "design-preflight" / "SKILL.md").read_text()
+        card = (
+            ROOT / "assets" / "skills" / "design-preflight" / "references" / "preflight-card.md"
+        ).read_text()
+        result = (
+            ROOT / "assets" / "skills" / "design-preflight" / "references" / "preflight-review.md"
+        ).read_text()
+        review = (ROOT / "assets" / "skills" / "adversarial-review" / "SKILL.md").read_text()
+        packet = (
+            ROOT / "assets" / "skills" / "adversarial-review" / "references" / "review-packet.md"
+        ).read_text()
+        finding = (
+            ROOT / "assets" / "skills" / "adversarial-review" / "references" / "finding-format.md"
+        ).read_text()
+
+        self.assertIn("cpk-rule-owner: scope-boundaries", owner)
+        for route in (preflight, card, result, review, packet, finding):
+            self.assertIn("scope-boundaries.md", route)
+        self.assertLess(review.index("## Scope gate"), review.index("## Supported-model gate"))
+        self.assertIn('"classification": "composes | opaque | deferred"', result)
+        self.assertIn('"classification": "composes | opaque"', finding)
+        self.assertIn('"changed_production_entry_point"', finding)
+        self.assertIn('"task_visible_wrong_result"', finding)
+
     def test_focused_policy_package_and_version(self):
         rules_root = ROOT / "assets" / "skills" / "codex-practical-kit-rules" / "references"
         self.assertIn("codex-practical-kit-rules", kit.CUSTOM_SKILLS)
-        self.assertEqual(len(list(rules_root.glob("*.md"))), 12)
-        self.assertEqual(kit.KIT_VERSION, "0.11.1")
-        self.assertNotIn("Version `0.11.1`", (ROOT / "README.md").read_text())
-        self.assertNotIn("version 0.11.1", (ROOT / "CODEX-INSTALL-PROMPT.md").read_text())
+        self.assertEqual(len(list(rules_root.glob("*.md"))), 13)
+        self.assertEqual(kit.KIT_VERSION, "0.12.0")
+        self.assertNotIn("Version `0.12.0`", (ROOT / "README.md").read_text())
+        self.assertNotIn("version 0.12.0", (ROOT / "CODEX-INSTALL-PROMPT.md").read_text())
 
     def test_repowise_is_required(self):
         config = kit.repowise_config_block("/tmp/repowise")

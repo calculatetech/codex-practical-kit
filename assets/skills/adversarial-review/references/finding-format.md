@@ -1,5 +1,12 @@
 # Finding format
 
+## Product scope
+
+<!-- cpk-rule-route-only: scope-boundaries -->
+[Scope boundaries](../../codex-practical-kit-rules/references/scope-boundaries.md)
+
+## Result
+
 Return JSON only.
 
 ```json
@@ -15,6 +22,12 @@ Return JSON only.
       "trigger": "Supported normal-use trigger",
       "execution_path": ["Step 1", "Step 2"],
       "wrong_outcome": "Observable requirement violation",
+      "task_scope": {
+        "classification": "composes | opaque",
+        "boundary_source": "path:line-line",
+        "changed_production_entry_point": "path:line-line",
+        "task_visible_wrong_result": "Observable requirement violation"
+      },
       "supported_model": {
         "normal_use": true,
         "project_controls_it": true,

@@ -11,6 +11,7 @@ The review skill is the sole owner of the review procedure:
 These focused shared rules also apply:
 
 - [Supported model](../assets/skills/codex-practical-kit-rules/references/supported-model.md)
+- [Scope boundaries](../assets/skills/codex-practical-kit-rules/references/scope-boundaries.md)
 - [Owner composition](../assets/skills/codex-practical-kit-rules/references/owner-composition.md)
 - [Full-set results](../assets/skills/codex-practical-kit-rules/references/full-set-results.md)
 - [Review closure](../assets/skills/codex-practical-kit-rules/references/review-closure.md)

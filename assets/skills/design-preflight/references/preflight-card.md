@@ -6,6 +6,21 @@ Keep the complete card under 80 lines.
 
 State one observable outcome.
 
+## Product boundary
+
+<!-- cpk-rule-route-only: scope-boundaries -->
+[Scope boundaries](../../codex-practical-kit-rules/references/scope-boundaries.md)
+
+## Task boundary facts
+
+- Authoritative product specification:
+- Current production use cases:
+- Inherited-specification conflicts:
+
+| Relevant owner | Classification | Linked product fact |
+| --- | --- | --- |
+|  |  |  |
+
 ## Supported operating model
 
 <!-- cpk-rule-route-only: supported-model -->
@@ -37,7 +52,7 @@ Name the existing owner to change and the minimum supporting edits.
 
 Apply [Owner composition](../../codex-practical-kit-rules/references/owner-composition.md) and [Full-set results](../../codex-practical-kit-rules/references/full-set-results.md) when they are applicable.
 
-For each runtime outcome, record:
+For each runtime outcome classified `composes`, record:
 
 - Requirement and source.
 - Entry point, relevant gates, and terminal owner.

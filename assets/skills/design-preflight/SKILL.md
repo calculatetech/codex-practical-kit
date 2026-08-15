@@ -21,6 +21,11 @@ Use it for a multi-file change, a public interface, persistent product state, an
 
 Skip it for a small change with one proven owner and one direct check.
 
+## Scope gate
+
+<!-- cpk-rule-route-only: scope-boundaries -->
+[Scope boundaries](../codex-practical-kit-rules/references/scope-boundaries.md)
+
 ## Supported-model gate
 
 <!-- cpk-rule-route-only: supported-model -->
@@ -43,6 +48,7 @@ Use source predicates and requirements. Select the minimum cases that exercise e
 Write one preflight card from `references/preflight-card.md`. It must contain:
 
 - One required outcome.
+- The product boundary source and owner classifications.
 - The existing owner.
 - The normal-use behavior floor.
 - The hard scope ceiling.

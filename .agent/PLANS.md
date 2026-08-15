@@ -19,6 +19,8 @@ When implementing an ExecPlan, proceed through its milestones. Keep all required
 
 Record task-specific facts and accepted decisions. Link applicable toolkit rules instead of copying them into the plan.
 
+Record the accepted product boundary facts and owner classifications from Design Preflight. Link its Scope boundaries owner.
+
 When discussing an executable specification (ExecPlan), record decisions in a log in the spec for posterity; it should be unambiguously clear why any change to the specification was made. ExecPlans are living documents, and it should always be possible to restart from _only_ the ExecPlan and no other work.
 
 When researching a design with challenging requirements or significant unknowns, use milestones to implement proof of concepts, "toy implementations", etc., that allow validating whether the user's proposal is feasible. Read the source code of libraries by finding or acquiring them, research deeply, and include prototypes to guide a fuller implementation.
@@ -56,6 +58,8 @@ Anchor the plan with observable outcomes. State what the user can do after imple
 Specify repository context explicitly. Name files with full repository-relative paths, name functions and modules precisely, and describe where new files should be created. If touching multiple areas, include a short orientation paragraph that explains how those parts fit together so a novice can navigate confidently. When running commands, show the working directory and exact command line. When outcomes depend on environment, state the assumptions and provide alternatives when reasonable.
 
 Record the accepted supported operating model. Link the applicable rule owner and state task-specific inclusions or exclusions.
+
+Record the accepted product boundary source and relevant owner classifications.
 
 For non-trivial runtime behavior, include the accepted Scenario Proof. Link its focused rule owners and record only the task-specific cases and checks.
 
@@ -127,6 +131,10 @@ Prefer additive code changes followed by subtractions that keep tests passing. P
     ## Context and Orientation
 
     Describe the current state relevant to this task as if the reader knows nothing. Name the key files and modules by full path. Define any non-obvious term you will use. Do not refer to prior plans.
+
+    ## Product Boundary
+
+    Link the applicable Scope boundaries owner. Record the authoritative product source, current production use cases, relevant owner classifications, and resolved specification conflicts.
 
     ## Scenario Proof
 

@@ -1,5 +1,10 @@
 # Reviewer lenses
 
+## Product scope
+
+<!-- cpk-rule-route-only: scope-boundaries -->
+[Scope boundaries](../../codex-practical-kit-rules/references/scope-boundaries.md)
+
 ## Correctness
 
 Always check the supported normal path:

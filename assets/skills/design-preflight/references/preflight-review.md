@@ -1,10 +1,29 @@
 # Preflight review result
 
+## Product scope
+
+<!-- cpk-rule-route-only: scope-boundaries -->
+[Scope boundaries](../../codex-practical-kit-rules/references/scope-boundaries.md)
+
+## Result
+
 Return JSON only.
 
 ```json
 {
   "reviewer": "normal-use-scenarios",
+  "product_boundary": {
+    "sources": ["path:line-line"],
+    "current_production_use_cases": ["Documented use case"],
+    "owners": [
+      {
+        "owner": "Owner name",
+        "classification": "composes | opaque | deferred",
+        "source": "path:line-line"
+      }
+    ],
+    "inherited_specification_conflicts": []
+  },
   "scenarios": [
     {
       "id": "S1",

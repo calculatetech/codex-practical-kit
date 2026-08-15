@@ -20,6 +20,11 @@ Apply [Delivery lifecycle](../codex-practical-kit-rules/references/delivery-life
 
 Apply [Review closure](../codex-practical-kit-rules/references/review-closure.md) after a clean result.
 
+## Scope gate
+
+<!-- cpk-rule-route-only: scope-boundaries -->
+[Scope boundaries](../codex-practical-kit-rules/references/scope-boundaries.md)
+
 ## Supported-model gate
 
 <!-- cpk-rule-route-only: supported-model -->
@@ -32,6 +37,7 @@ Use one newly spawned clean-context reviewer. The reviewer is read-only and must
 Give the reviewer:
 
 - The accepted requirement.
+- The product boundary source and owner classifications.
 - The actual diff.
 - Relevant source and callers.
 - Applicable project rules.

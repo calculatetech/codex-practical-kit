@@ -13,6 +13,24 @@ Quote or link the accepted requirement, ExecPlan, specification, or user request
 - Changed paths:
 - Excluded paths and reason:
 
+## Product boundary
+
+<!-- cpk-rule-route-only: scope-boundaries -->
+[Scope boundaries](../../codex-practical-kit-rules/references/scope-boundaries.md)
+
+## Task boundary facts
+
+- Authoritative product specification:
+- Current production use cases:
+- Inherited-specification conflicts resolved:
+
+| Relevant owner | Classification | Linked product fact |
+| --- | --- | --- |
+|  |  |  |
+
+- Changed production entry points:
+- Task-visible outcomes:
+
 ## Diff
 
 Give the reviewer the actual relevant diff. Do not replace it with prose.
