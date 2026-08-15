@@ -1,5 +1,6 @@
 import json
 import os
+import re
 import subprocess
 import tempfile
 import tomllib
@@ -83,15 +84,11 @@ class InstallerTests(unittest.TestCase):
 
             installed = agents.read_text()
             self.assertTrue(installed.startswith("# User preference\n- Keep me.\n"))
-            self.assertLess(len(installed.splitlines()), 100)
-            self.assertIn("Only the active coordinator can delegate", installed)
-            self.assertIn("A subagent performs only its assigned task", installed)
-            self.assertIn("A subagent does not delegate", installed)
-            self.assertIn("A read-only reviewer does not edit files.", installed)
-            self.assertIn(
-                "Remove a worktree or branch only after integration is proven and its state is clean.",
-                installed,
-            )
+            self.assertLess(len(installed.splitlines()), 40)
+            self.assertIn(paths.skills_home.as_posix(), installed)
+            self.assertIn((paths.codex_home / "PLANS.md").as_posix(), installed)
+            self.assertNotIn("{{", installed)
+            self.assertNotIn("Only the active coordinator can delegate", installed)
 
     def test_reinstall_accepts_existing_config_toml_hook(self):
         def fake_stage(destination: Path):
@@ -211,11 +208,15 @@ class InstallerTests(unittest.TestCase):
             return {name: {"commit": "test"} for name in kit.UPSTREAM_SKILLS}
 
         with tempfile.TemporaryDirectory() as temp:
-            paths = self.paths(Path(temp))
+            paths = self.paths(Path(temp) / "custom paths")
             with mock.patch.object(kit, "stage_upstream_skills", fake_stage):
                 kit.install_core(Namespace(repo=None, repowise_prose=False), paths)
             plans = paths.codex_home / "PLANS.md"
             self.assertEqual(plans.read_text(), (ROOT / ".agent" / "PLANS.md").read_text())
+            agents = (paths.codex_home / "AGENTS.md").read_text()
+            targets = re.findall(r"]\(<([^>]+)>\)", agents)
+            self.assertTrue(targets)
+            self.assertTrue(all(Path(target).is_file() for target in targets))
             manifest = json.loads((paths.install_root / "install-manifest.json").read_text())
             self.assertEqual(manifest["plans_file"], str(plans))
             plans.write_text("changed\n")
@@ -539,6 +540,7 @@ class IntegrationTests(unittest.TestCase):
             self.assertIn("mcp_servers.other", (root / ".codex" / "config.toml").read_text())
             self.assertTrue(any(call[:2] == ("hook", "install") for call in calls))
             self.assertEqual((root / "docs" / "roadmap.md").read_text(), "sentinel\n")
+            self.assertEqual((root / "AGENTS.md").read_text(), "# Project rules\n")
             with mock.patch.object(kit, "repowise_command", fake_repowise), mock.patch.object(
                 kit, "ensure_repowise_runtime", return_value=("/usr/bin/uv", "/usr/bin/repowise")
             ):
@@ -547,46 +549,159 @@ class IntegrationTests(unittest.TestCase):
             self.assertIn("enabled = false", (root / ".codex" / "config.toml").read_text())
             self.assertTrue(any(call[:2] == ("hook", "uninstall") for call in calls))
 
-    def test_roadmap_contract_and_propagation(self):
+    def test_roadmap_contract_and_router(self):
         rules = (ROOT / "assets" / "AGENTS.block.md").read_text()
         template = (
             ROOT / "assets" / "skills" / "roadmap-maintainer" / "assets" / "roadmap-template.md"
         ).read_text()
-        self.assertIn("Activate its task before the first implementation edit", rules)
+        self.assertIn("roadmap-maintainer/SKILL.md", rules)
         self.assertEqual(template.count("## Active"), 1)
         self.assertIn("## Declined", template)
 
     def test_execplan_is_the_only_durable_task_model(self):
         rules = (ROOT / "assets" / "AGENTS.block.md").read_text()
+        plans = (ROOT / ".agent" / "PLANS.md").read_text()
         preflight = (ROOT / "assets" / "skills" / "design-preflight" / "SKILL.md").read_text()
-        self.assertIn("$CODEX_HOME/PLANS.md", rules)
-        self.assertNotIn("task-brief", rules.lower())
+        self.assertIn("{{PLANS_FILE}}", rules)
+        self.assertIn("cpk-rule-owner: execplans", plans)
         self.assertNotIn("Task Brief", preflight)
         self.assertNotIn("task-brief", kit.ALL_SKILLS)
 
-    def test_full_set_invariants_reject_bounded_raw_samples(self):
-        owners = [
+    def test_rule_owners_are_unique(self):
+        live = [
+            ROOT / ".agent" / "PLANS.md",
             ROOT / "assets" / "AGENTS.block.md",
             ROOT / "assets" / "hooks" / "session_start.py",
-            ROOT / "assets" / "skills" / "design-preflight" / "SKILL.md",
-            ROOT / "assets" / "skills" / "adversarial-review" / "references" / "reviewer-lenses.md",
+            ROOT / "README.md",
+            ROOT / "CODEX-INSTALL-PROMPT.md",
+            *(path for path in sorted((ROOT / "docs").glob("*.md")) if path.name != "roadmap.md"),
+            *sorted((ROOT / "assets" / "skills").rglob("*.md")),
+        ]
+        owner_pattern = re.compile(r"<!-- cpk-rule-owner: ([a-z0-9-]+) -->")
+        guard_pattern = re.compile(r"<!-- cpk-rule-guard: (.+?) -->")
+        section_pattern = re.compile(r"^## [^\n]+\n(.*?)(?=^## |\Z)", re.DOTALL | re.MULTILINE)
+        route_pattern = re.compile(r"<!-- cpk-rule-route-only: ([a-z0-9-]+) -->")
+        owners = {}
+        guards = []
+
+        for path in live:
+            content = path.read_text()
+            found = owner_pattern.findall(content)
+            self.assertLessEqual(len(found), 1, path)
+            if not found:
+                continue
+            owner = found[0]
+            self.assertNotIn(owner, owners)
+            owners[owner] = path
+            owner_guards = guard_pattern.findall(content)
+            self.assertTrue(owner_guards, path)
+            for guard in owner_guards:
+                self.assertGreaterEqual(content.count(guard), 2, (path, guard))
+                guards.append((path, guard))
+
+        expected = {
+            "routing",
+            "execplans",
+            "coordination",
+            "supported-model",
+            "decision-handoffs",
+            "repository-knowledge",
+            "delivery-lifecycle",
+            "git-isolation",
+            "full-set-results",
+            "owner-composition",
+            "review-closure",
+            "publication",
+            "versioning",
+            "rule-ownership",
+            "design-preflight",
+            "adversarial-review",
+            "docs-maintainer",
+            "roadmap-maintainer",
+            "research-first",
+            "defect-diagnostic",
+        }
+        self.assertEqual(set(owners), expected)
+
+        def assert_route(path, owner, line):
+            match = re.fullmatch(r"\[[^]]+\]\((?:<)?([^)>]+)(?:>)?\)", line)
+            self.assertIsNotNone(match, (path, line))
+            target = (path.parent / match.group(1)).resolve()
+            self.assertTrue(target.is_file(), (path, target))
+            self.assertEqual(owner_pattern.findall(target.read_text()), [owner], (path, target, owner))
+
+        for path in live:
+            checked_routes = 0
+            for body in section_pattern.findall(path.read_text()):
+                routes = route_pattern.findall(body)
+                if not routes:
+                    continue
+                checked_routes += len(routes)
+                self.assertEqual(len(routes), 1, (path, body))
+                owner = routes[0]
+                self.assertIn(owner, owners, (path, owner))
+                lines = [line for line in body.splitlines() if line.strip()]
+                self.assertEqual(len(lines), 2, (path, body))
+                self.assertEqual(lines[0], f"<!-- cpk-rule-route-only: {owner} -->")
+                assert_route(path, owner, lines[1])
+            self.assertEqual(checked_routes, len(route_pattern.findall(path.read_text())), path)
+
+        card = (ROOT / "assets" / "skills" / "design-preflight" / "references" / "preflight-card.md").read_text()
+        mutated = card.replace(
+            "## Supported operating model\n\n",
+            "## Supported operating model\n\nExpanded shared rule.\n\n",
+            1,
+        )
+        mutated_body = next(body for body in section_pattern.findall(mutated) if route_pattern.search(body))
+        self.assertEqual(len([line for line in mutated_body.splitlines() if line.strip()]), 3)
+
+        prompt = (ROOT / "CODEX-INSTALL-PROMPT.md").read_text()
+        prompt_body = next(body for body in section_pattern.findall(prompt) if route_pattern.search(body))
+        prompt_lines = [line for line in prompt_body.splitlines() if line.strip()]
+        with self.assertRaises(AssertionError):
+            assert_route(ROOT / "CODEX-INSTALL-PROMPT.md", "supported-model", "[Missing](missing.md)")
+        with self.assertRaises(AssertionError):
+            assert_route(
+                ROOT / "CODEX-INSTALL-PROMPT.md",
+                "supported-model",
+                prompt_lines[1].replace("supported-model.md", "rule-ownership.md"),
+            )
+
+        contents = {path: path.read_text() for path in live}
+        for owner_path, guard in guards:
+            for path, content in contents.items():
+                if path != owner_path:
+                    self.assertNotIn(guard, content, (owner_path, path, guard))
+
+    def test_rule_routes_are_complete_and_links_resolve(self):
+        rules_root = ROOT / "assets" / "skills" / "codex-practical-kit-rules" / "references"
+        route_sources = [
+            ROOT / "assets" / "AGENTS.block.md",
+            ROOT / ".agent" / "PLANS.md",
+            *sorted((ROOT / "assets" / "skills").rglob("*.md")),
+        ]
+        route_text = "\n".join(path.read_text() for path in route_sources)
+        for owner in rules_root.glob("*.md"):
+            self.assertIn(owner.name, route_text, owner)
+
+        link_pattern = re.compile(r"]\((?:<)?([^)>]+\.md)(?:>)?\)")
+        link_sources = [
+            ROOT / "README.md",
             ROOT / "docs" / "OPERATING-MANUAL.md",
+            ROOT / "docs" / "REMOVE-CBM.md",
+            ROOT / "docs" / "REPOWISE.md",
+            ROOT / "docs" / "REVIEW.md",
+            ROOT / "docs" / "SPEC-KIT.md",
+            ROOT / "docs" / "WHY-THIS-SHAPE.md",
+            *sorted((ROOT / "assets" / "skills").rglob("*.md")),
         ]
-        required = [
-            "When success depends on every matching record, use the complete set or an operation that preserves the full-set result.",
-            "Do not limit raw records before grouping, deduplication, or aggregation.",
-            "Test duplicate prefix values followed by a later counterexample.",
-        ]
+        for path in link_sources:
+            for target in link_pattern.findall(path.read_text()):
+                if "{{" in target or Path(target).is_absolute():
+                    continue
+                self.assertTrue((path.parent / target).resolve().is_file(), (path, target))
 
-        for owner in owners:
-            with self.subTest(owner=owner):
-                text = owner.read_text()
-                for statement in required:
-                    self.assertIn(statement, text)
-
-    def test_runtime_scenario_preflight_is_independent_and_durable(self):
-        rules = (ROOT / "assets" / "AGENTS.block.md").read_text()
-        session = (ROOT / "assets" / "hooks" / "session_start.py").read_text()
+    def test_runtime_scenario_preflight_has_one_rule_owner(self):
         skill = (ROOT / "assets" / "skills" / "design-preflight" / "SKILL.md").read_text()
         card = (
             ROOT / "assets" / "skills" / "design-preflight" / "references" / "preflight-card.md"
@@ -594,227 +709,58 @@ class IntegrationTests(unittest.TestCase):
         result = (
             ROOT / "assets" / "skills" / "design-preflight" / "references" / "preflight-review.md"
         ).read_text()
-        plans = (ROOT / ".agent" / "PLANS.md").read_text()
+        lens = (
+            ROOT / "assets" / "skills" / "adversarial-review" / "references" / "reviewer-lenses.md"
+        ).read_text()
+        owner = (
+            ROOT
+            / "assets"
+            / "skills"
+            / "codex-practical-kit-rules"
+            / "references"
+            / "owner-composition.md"
+        ).read_text()
 
-        self.assertIn("use one fresh planning challenger", rules)
-        self.assertIn("Stop on an unresolved normal-use contract.", rules)
-        self.assertIn("use one independent scenario challenge", session)
         self.assertIn("For non-trivial runtime behavior, derive a Scenario Proof", skill)
-        self.assertIn("Input domain:", skill)
-        self.assertIn("Path and transition:", skill)
-        self.assertIn("Collection semantics:", skill)
-        self.assertIn("Do not create a Cartesian product.", skill)
         self.assertIn("with no inherited task conversation", skill)
         self.assertIn("Do not give it the coordinator's card", skill)
-        self.assertIn("Record a contract gap when the first three answers are `true`", skill)
-        self.assertIn("A small change that skips Design Preflight also skips this challenge.", skill)
-        self.assertIn("Do not invent an outcome for a contract gap.", skill)
-        self.assertIn("condition or planned trigger occur without fault injection", skill)
-        self.assertIn("Every non-trivial runtime preflight requires one task ExecPlan.", skill)
-
-        self.assertIn("## Scenario Proof", card)
-        self.assertIn("Entry point, relevant gates, and terminal owner.", card)
-        self.assertIn("undefined — decision required", card)
-        self.assertIn("planned trigger is feasible without fault injection", card)
         self.assertIn('"reviewer": "normal-use-scenarios"', result)
-        self.assertIn('"feasible_without_fault_injection": true', result)
-        self.assertIn('"explicit_result_defined": true', result)
         self.assertIn('"contract_gaps"', result)
-        self.assertIn('"exclusions"', result)
-        self.assertIn('"coverage"', result)
-        self.assertIn("include the accepted Design Preflight Scenario Proof", plans)
-        self.assertIn("Do not start implementation while a supported normal-use result is undefined.", plans)
-        self.assertIn("every non-trivial runtime preflight", rules)
-        self.assertIn("every non-trivial runtime preflight", session)
+        self.assertEqual(owner.count("<!-- cpk-rule-guard:"), 3)
+        self.assertIn("full-set-results.md", owner)
+        for route in (skill, card, result, lens):
+            self.assertIn("owner-composition.md", route)
+            self.assertIn("full-set-results.md", route)
 
-    def test_git_isolation_policy_is_consistent(self):
-        rules = (ROOT / "assets" / "AGENTS.block.md").read_text()
-        session = (ROOT / "assets" / "hooks" / "session_start.py").read_text()
-        plans = (ROOT / ".agent" / "PLANS.md").read_text()
-        manual = (ROOT / "docs" / "OPERATING-MANUAL.md").read_text()
-
-        self.assertIn("On `main`, allow only bounded documentation", rules)
-        self.assertIn("Use a task branch for one writable implementation stream.", rules)
-        self.assertNotIn("Use a task branch for one writable stream.", rules)
-        self.assertIn("Use a worktree for independent writable streams", rules)
-        self.assertIn("If tracked changes have mixed ownership, stop.", rules)
-        self.assertIn("Do not stash, commit, discard, or change them.", rules)
-        self.assertIn("coherent local checkpoint commits", rules)
-        self.assertIn("When PR mode is off, `publish` authorizes", rules)
-        self.assertIn("Cleanup always needs separate authorization.", rules)
-
-        self.assertIn("Use a task branch for one writable implementation stream.", session)
-        self.assertIn("Use a worktree for independent writable streams", session)
-
-        self.assertIn("base branch, base commit, task branch, and isolation form", plans)
-        self.assertIn("cumulative diff from the recorded base commit", plans)
-        self.assertIn("When PR mode is off, `publish` authorizes", manual)
-        self.assertIn("Cleanup always needs separate authorization.", manual)
-
-    def test_version_policy_is_consistent(self):
-        rules = (ROOT / "assets" / "AGENTS.block.md").read_text()
-        session = (ROOT / "assets" / "hooks" / "session_start.py").read_text()
-        plans = (ROOT / ".agent" / "PLANS.md").read_text()
-        manual = (ROOT / "docs" / "OPERATING-MANUAL.md").read_text()
-        readme = (ROOT / "README.md").read_text()
-        prompt = (ROOT / "CODEX-INSTALL-PROMPT.md").read_text()
-
-        self.assertEqual(kit.KIT_VERSION, "0.11.0")
-        self.assertIn(f"Version `{kit.KIT_VERSION}`", readme)
-        self.assertIn(f"version {kit.KIT_VERSION} or newer", prompt)
-
-        shared = [
-            "Start initial development at `0.1.0`.",
-            "Use `0.MINOR.PATCH` during initial development.",
-            "increment the minor number for a feature or breaking change",
-            "Increment the patch number for a bug fix or a published checkpoint in the same feature line.",
-            "After `1.0.0`, increment the major number for a breaking change",
-            "Do not use alpha or beta suffixes by default.",
-            "Publish a normal `0.x` version as a full GitHub release.",
-            "Use source version `X.Y.Z` and Git tag `vX.Y.Z`.",
-            "A version is consumed when its tag reaches GitHub.",
-            "If publication fails before the remote tag exists",
-            "If publication fails after the remote tag exists",
-        ]
-        for owner in [rules, manual]:
-            with self.subTest(owner=owner[:30]):
-                for statement in shared:
-                    self.assertIn(statement, owner)
-
-        self.assertIn("Start initial development at `0.1.0`.", readme)
-        self.assertIn("Local checkpoint commits do not change the version.", session)
-        self.assertIn("select the target after scope is fixed", plans)
+    def test_focused_policy_package_and_version(self):
+        rules_root = ROOT / "assets" / "skills" / "codex-practical-kit-rules" / "references"
+        self.assertIn("codex-practical-kit-rules", kit.CUSTOM_SKILLS)
+        self.assertEqual(len(list(rules_root.glob("*.md"))), 12)
+        self.assertEqual(kit.KIT_VERSION, "0.11.1")
+        self.assertNotIn("Version `0.11.1`", (ROOT / "README.md").read_text())
+        self.assertNotIn("version 0.11.1", (ROOT / "CODEX-INSTALL-PROMPT.md").read_text())
 
     def test_repowise_is_required(self):
         config = kit.repowise_config_block("/tmp/repowise")
-        rules = (ROOT / "assets" / "AGENTS.block.md").read_text()
-        session = (ROOT / "assets" / "hooks" / "session_start.py").read_text()
+        owner = (
+            ROOT
+            / "assets"
+            / "skills"
+            / "codex-practical-kit-rules"
+            / "references"
+            / "repository-knowledge.md"
+        ).read_text()
         docs_skill = (ROOT / "assets" / "skills" / "docs-maintainer" / "SKILL.md").read_text()
         research_skill = (ROOT / "assets" / "skills" / "research-first" / "SKILL.md").read_text()
-        review_packet = (ROOT / "assets" / "skills" / "adversarial-review" / "references" / "review-packet.md").read_text()
-        readme = (ROOT / "README.md").read_text()
         notes = (ROOT / "docs" / "REPOWISE.md").read_text()
-        review_tools = (ROOT / "docs" / "OPTIONAL-REVIEW-TOOLS.md").read_text()
 
         self.assertIn("required = true", config)
         self.assertIn("startup_timeout_sec = 1800", config)
-        for owner in (rules, session, docs_skill, research_skill, review_packet, readme, notes, review_tools):
-            self.assertIn("RepoWise", owner)
-            self.assertNotIn("continue with native", owner)
-            self.assertNotIn("RepoWise is available", owner)
-            self.assertNotIn("Optional RepoWise", owner)
-        self.assertIn("required code graph", rules)
-        self.assertIn("code graph is required", session)
-
-    def test_pr_publication_policy_is_consistent(self):
-        rules = (ROOT / "assets" / "AGENTS.block.md").read_text()
-        session = (ROOT / "assets" / "hooks" / "session_start.py").read_text()
-        plans = (ROOT / ".agent" / "PLANS.md").read_text()
-        manual = (ROOT / "docs" / "OPERATING-MANUAL.md").read_text()
-        readme = (ROOT / "README.md").read_text()
-
-        shared = [
-            "PR mode is active only when `main` protection requires pull requests, required CI checks, and resolved conversations.",
-            "CI must contain at least one workflow.",
-            "Its workflows must supply every required check.",
-            "If any condition is false, PR mode is off.",
-            "When PR mode is active, use a pull request for every change, including bounded documentation.",
-            "Each push resets the required CI and Codex review gates.",
-            "Squash-merge the pull request after all gates pass.",
-            "Cleanup always needs separate authorization.",
-        ]
-        for owner in [rules, manual]:
-            with self.subTest(owner=owner[:30]):
-                for statement in shared:
-                    self.assertIn(statement, owner)
-
-        self.assertIn("one explicit `publish` request authorizes", plans)
-        self.assertIn("a Codex thumbs-up reaction for the latest head", plans)
-        self.assertIn("Each push resets the required CI and Codex review gates.", plans)
-        self.assertIn("`publish` authorizes the path through squash merge", session)
-        self.assertIn("Each push resets the gates.", session)
-        direct = "When PR mode is off, `publish` authorizes branch push, merge to `main`, integration verification, and required post-merge CI."
-        excluded = "`publish` does not authorize tag creation, a GitHub release, or cleanup."
-        for owner in [rules, session, plans, manual, readme]:
-            with self.subTest(direct_owner=owner[:30]):
-                self.assertIn(direct, owner)
-                self.assertIn(excluded, owner)
-
-    def test_material_decision_handoff_policy_is_consistent(self):
-        rules = (ROOT / "assets" / "AGENTS.block.md").read_text()
-        session = (ROOT / "assets" / "hooks" / "session_start.py").read_text()
-        manual = (ROOT / "docs" / "OPERATING-MANUAL.md").read_text()
-
-        shared = [
-            "A material decision changes scope, architecture, authority, exposure, or the delivered result.",
-            "Before you request direction on a material decision, investigate discoverable facts and exclude unsupported conditions.",
-            "Do not use the full handoff for discoverable facts, routine values, status questions, or minor preferences.",
-            "Use these labels in order: `Decision`, `Term` when needed, `Trigger`, `Likelihood`, `Current exposure`, `Options`, `Recommendation`, and `Question`.",
-            "Do not invent numeric probabilities.",
-            "Each option must state its effect.",
-            "If no real choice exists, state the required action instead of requesting direction.",
-        ]
-        for owner in [rules, manual]:
-            with self.subTest(owner=owner[:30]):
-                for statement in shared:
-                    self.assertIn(statement, owner)
-
-        labels = [
-            "`Decision`",
-            "`Term`",
-            "`Trigger`",
-            "`Likelihood`",
-            "`Current exposure`",
-            "`Options`",
-            "`Recommendation`",
-            "`Question`",
-        ]
-        order_line = next(line for line in rules.splitlines() if "Use these labels" in line)
-        positions = [order_line.index(label) for label in labels]
-        self.assertEqual(positions, sorted(positions))
-        self.assertIn("Material decisions use `Decision`", session)
-        self.assertIn("Skip the full handoff for routine inputs.", session)
-
-    def test_review_closure_policy_is_consistent(self):
-        owners = [
-            ROOT / ".agent" / "PLANS.md",
-            ROOT / "assets" / "AGENTS.block.md",
-            ROOT / "assets" / "skills" / "adversarial-review" / "SKILL.md",
-            ROOT / "assets" / "skills" / "docs-maintainer" / "SKILL.md",
-            ROOT / "assets" / "skills" / "roadmap-maintainer" / "SKILL.md",
-        ]
-        required = [
-            "Review closure does not invalidate a clean review.",
-            "Review closure is limited to five updates: the task ExecPlan review result, reviewed task roadmap transition, publication status, matching checksums, and untracked test-result record.",
-            "A change to code, tests, dependencies, migrations, runtime configuration, build configuration, security configuration, behavior requirements, or the supported model invalidates review.",
-        ]
-        for owner in owners:
-            text = owner.read_text()
-            with self.subTest(owner=owner):
-                for statement in required:
-                    self.assertIn(statement, text)
-                self.assertNotIn("If any candidate file changes", text)
-
-    def test_review_cycle_counts_only_implementation_defects(self):
-        owners = [
-            ROOT / "README.md",
-            ROOT / "assets" / "AGENTS.block.md",
-            ROOT / "assets" / "skills" / "adversarial-review" / "SKILL.md",
-            ROOT / "docs" / "OPERATING-MANUAL.md",
-            ROOT / "docs" / "REVIEW.md",
-            ROOT / "docs" / "WHY-THIS-SHAPE.md",
-        ]
-        accounting = "Documentation and review-housekeeping findings remain actionable, but they neither increment nor reset the three-defect count."
-
-        for owner in owners:
-            with self.subTest(owner=owner):
-                text = owner.read_text()
-                self.assertIn(accounting, text)
-                self.assertNotIn("defects found in three consecutive passes", text)
+        self.assertIn("cpk-rule-owner: repository-knowledge", owner)
+        for route in (docs_skill, research_skill, notes):
+            self.assertIn("repository-knowledge.md", route)
 
     def test_review_stop_diagnostics_are_per_finding_and_mandatory(self):
-        rules = (ROOT / "assets" / "AGENTS.block.md").read_text()
-        session = (ROOT / "assets" / "hooks" / "session_start.py").read_text()
         review = (ROOT / "assets" / "skills" / "adversarial-review" / "SKILL.md").read_text()
         formatter = (
             ROOT
@@ -839,16 +785,16 @@ class IntegrationTests(unittest.TestCase):
 
         self.assertIn("defect-diagnostic", kit.CUSTOM_SKILLS)
         self.assertIn("allow_implicit_invocation: true", metadata)
-        self.assertIn("At every review stop, format each finding as a separate decision handoff.", rules)
-        self.assertIn("At a severe stop, complete `defect-diagnostic`", session)
-        self.assertIn("include its result with the separate finding handoffs", session)
         self.assertIn("references/stop-finding-format.md", review)
         self.assertIn("Invoke `defect-diagnostic` automatically and validate its result.", review)
         self.assertIn("Compose one final response only after the diagnostic is complete.", review)
         self.assertIn("Then present the complete diagnostic, including its portable summary.", review)
         self.assertIn("Put the final `Review:` and `Docs:` status lines after the diagnostic.", review)
-        self.assertIn("A validated P0 or P1 finding on any pass.", review)
-        self.assertIn("An implementation defect on the third consecutive counted pass.", review)
+        self.assertIn("Only defects in executable production code can increment", review)
+        self.assertIn("Tests, test fixtures, documentation, static configuration", review)
+        self.assertIn("A validated P0 or P1 defect in executable production code on any pass.", review)
+        self.assertIn("A production-code defect on the third consecutive counted pass.", review)
+        self.assertNotIn("executable source, tests", review)
 
         labels = [
             "Decision",

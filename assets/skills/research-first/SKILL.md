@@ -8,6 +8,9 @@ description: >
 license: MIT
 ---
 
+<!-- cpk-rule-owner: research-first -->
+<!-- cpk-rule-guard: Research must reduce uncertainty. It must not create ceremony. -->
+
 # Research first
 
 Research must reduce uncertainty. It must not create ceremony.
@@ -25,7 +28,7 @@ Do not use this skill for a routine fix with a clear local answer.
 
 1. Read the current repository first.
    - Find the existing owner, dependency, pattern, and constraint.
-   - Use RepoWise when its current index can answer the repository question.
+   - Apply [Repository knowledge](../codex-practical-kit-rules/references/repository-knowledge.md).
 2. Write the exact question in one sentence.
 3. List the constraints that decide the answer.
 4. Inspect two to four viable options. Do not create a long catalog.

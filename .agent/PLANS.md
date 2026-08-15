@@ -1,3 +1,6 @@
+<!-- cpk-rule-owner: execplans -->
+<!-- cpk-rule-guard: An ExecPlan is the only durable implementation plan for a task. -->
+
 # Codex Execution Plans (ExecPlans):
 
 This document describes the requirements for an execution plan ("ExecPlan"), a design document that a coding agent can follow to deliver a working feature or system change. Treat the reader as a complete beginner to this repository: they have only the current working tree and the single ExecPlan file you provide. There is no memory of prior plans and no external context.
@@ -12,21 +15,9 @@ Plan Mode and Design Preflight are preparation stages. Merge their accepted deci
 
 When authoring an executable specification (ExecPlan), follow PLANS.md _to the letter_. If it is not in your context, refresh your memory by reading the entire PLANS.md file. Be thorough in reading (and re-reading) source material to produce an accurate specification. When creating a spec, start from the skeleton and flesh it out as you do your research.
 
-When implementing an executable specification (ExecPlan), do not prompt the user for "next steps"; simply proceed to the next milestone. Keep all sections up to date, add or split entries in the list at every stopping point to affirmatively state the progress made and next steps. Resolve ambiguities autonomously. Finalize documentation and review before the task commit.
+When implementing an ExecPlan, proceed through its milestones. Keep all required sections current at each stopping point.
 
-For non-trivial work, record the base branch, base commit, task branch, and isolation form in the ExecPlan. Local checkpoint commits are allowed on an isolated task branch. They do not authorize publication or cleanup. Final review covers the cumulative diff from the recorded base commit.
-
-PR mode is active only when `main` protection requires pull requests, required CI checks, and resolved conversations. CI must contain at least one workflow. Its workflows must supply every required check. If any condition is false, use direct integration. When PR mode is off, `publish` authorizes branch push, merge to `main`, integration verification, and required post-merge CI. `publish` does not authorize tag creation, a GitHub release, or cleanup.
-
-When PR mode is active, one explicit `publish` request authorizes the pull request workflow through squash merge and integration verification. Require successful checks and a Codex thumbs-up reaction for the latest head. Require no requested changes, resolved conversations, and GitHub mergeability. Each push resets the required CI and Codex review gates. Cleanup always needs separate authorization.
-
-When a task changes the toolkit version, select the target after scope is fixed and record it in the ExecPlan. A local checkpoint commit does not change the version. Update all current-version owners and matching checksums before validation and review.
-
-Before review, record that validation is complete and review is pending.
-
-Review closure does not invalidate a clean review. Review closure is limited to five updates: the task ExecPlan review result, reviewed task roadmap transition, publication status, matching checksums, and untracked test-result record.
-
-A change to code, tests, dependencies, migrations, runtime configuration, build configuration, security configuration, behavior requirements, or the supported model invalidates review. Do not make other file changes after a clean review.
+Record task-specific facts and accepted decisions. Link applicable toolkit rules instead of copying them into the plan.
 
 When discussing an executable specification (ExecPlan), record decisions in a log in the spec for posterity; it should be unambiguously clear why any change to the specification was made. ExecPlans are living documents, and it should always be possible to restart from _only_ the ExecPlan and no other work.
 
@@ -64,9 +55,9 @@ Anchor the plan with observable outcomes. State what the user can do after imple
 
 Specify repository context explicitly. Name files with full repository-relative paths, name functions and modules precisely, and describe where new files should be created. If touching multiple areas, include a short orientation paragraph that explains how those parts fit together so a novice can navigate confidently. When running commands, show the working directory and exact command line. When outcomes depend on environment, state the assumptions and provide alternatives when reasonable.
 
-Describe the supported operating model. Add exceptional behavior only when normal use includes it and the project controls it. If an operation fails, the default procedure stops and reports the error. Specify retry, rollback, or recovery only when the task explicitly requires it.
+Record the accepted supported operating model. Link the applicable rule owner and state task-specific inclusions or exclusions.
 
-For non-trivial runtime behavior, include the accepted Design Preflight Scenario Proof. Record each requirement, entry point, relevant gate, terminal owner, retained scenario, expected result, and runnable check. Give one reason for each inapplicable input-domain, path-and-transition, or collection-semantics lens. Do not start implementation while a supported normal-use result is undefined.
+For non-trivial runtime behavior, include the accepted Scenario Proof. Link its focused rule owners and record only the task-specific cases and checks.
 
 Validation is not optional. Include instructions to run tests, to start the system if applicable, and to observe it doing something useful. Describe comprehensive testing for any new features or capabilities. Include expected outputs and error messages so a novice can tell success from failure. Where possible, show how to prove that the change is effective beyond compilation (for example, through a small end-to-end scenario, a CLI invocation, or an HTTP request/response transcript). State the exact test commands appropriate to the project’s toolchain and how to interpret their results.
 
@@ -139,7 +130,7 @@ Prefer additive code changes followed by subtractions that keep tests passing. P
 
     ## Scenario Proof
 
-    For non-trivial runtime behavior, record the accepted input-domain, path-and-transition, and collection-semantics scenarios. Name the expected result and runnable check for each scenario. Record an inapplicable lens with one reason. Stop planning when a supported normal-use result is undefined.
+    For non-trivial runtime behavior, link the accepted Scenario Proof rules. Record the task-specific cases, expected results, owners, and runnable checks.
 
     ## Plan of Work
 

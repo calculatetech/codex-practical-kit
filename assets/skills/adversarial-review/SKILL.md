@@ -4,43 +4,26 @@ description: >
   Run one clean-context, supported-model correctness review after code or
   configuration changes. Reject findings about excluded conditions. Fix
   validated normal-use defects with Ponytail. Stop after three counted
-  implementation-defect passes.
+  production-code-defect passes.
 license: MIT
 ---
+
+<!-- cpk-rule-owner: adversarial-review -->
+<!-- cpk-rule-guard: Only defects in executable production code can increment the three-defect count or trigger a review stop. -->
+<!-- cpk-rule-guard: Tests, test fixtures, documentation, static configuration, dependencies, manifests, and review housekeeping never increment or reset the count and never trigger a review stop. -->
 
 # Adversarial review
 
 Review the behavior that the project supports. Do not expand the product through review.
 
-Code, tests, configuration, behavior requirements, supported-model rules, and roadmap content must be final before review. A review is read-only.
+Apply [Delivery lifecycle](../codex-practical-kit-rules/references/delivery-lifecycle.md) before review. A review is read-only.
 
-Review closure does not invalidate a clean review. Review closure is limited to five updates: the task ExecPlan review result, reviewed task roadmap transition, publication status, matching checksums, and untracked test-result record.
-
-A change to code, tests, dependencies, migrations, runtime configuration, build configuration, security configuration, behavior requirements, or the supported model invalidates review. Do not make other file changes after a clean review.
+Apply [Review closure](../codex-practical-kit-rules/references/review-closure.md) after a clean result.
 
 ## Supported-model gate
 
-For each finding, answer these questions with `true` or `false`:
-
-1. Does the trigger occur during supported normal use?
-2. Does the project control the trigger and result?
-3. Does current code reliably produce the wrong result without fault injection?
-4. Does the result violate an explicit requirement?
-
-Keep the finding only when all answers are `true`. Otherwise, drop it. Do not report it as residual risk. Do not add it to the roadmap.
-
-The default toolkit model has one personal user and one Codex writer. It uses normal local filesystems and Git.
-
-Exclude these conditions unless the active task explicitly includes one:
-
-- I/O failure.
-- Permission or ownership changes.
-- Link topology.
-- Concurrent or outside writers.
-- Interrupted or partial operations.
-- Retry, restart, or recovery.
-- Git submodules.
-- Hostile or contradictory completion-marker text.
+<!-- cpk-rule-route-only: supported-model -->
+[Supported model](../codex-practical-kit-rules/references/supported-model.md)
 
 ## Review pass
 
@@ -63,21 +46,27 @@ At every review stop gate, read `references/stop-finding-format.md` completely. 
 
 ## Validate findings
 
-Read each cited source location. Apply the four true or false questions. Do not spawn a refuter.
+Read each cited source location. Keep only `applicable` findings. Do not spawn a refuter.
 
 Ignore style advice, generic best practice, hypothetical environment failure, fault injection, and work outside the active task.
 
-A confirmed P0, P1, or P2 correctness defect in executable source, tests, migrations, dependencies, or runtime, build, or security configuration makes a counted implementation-defect pass. P3 advice does not.
+Only defects in executable production code can increment the three-defect count or trigger a review stop.
 
-Documentation and review-housekeeping findings remain actionable, but they neither increment nor reset the three-defect count. Review housekeeping includes plans, roadmap state, publication records, checksums, manifests, staging scope, and ignored test-result records.
+A confirmed P0, P1, or P2 correctness defect in executable production code makes a counted production-code-defect pass. P3 advice does not.
+
+Executable production code is code that the product or installer runs to provide supported behavior. It includes executable migration, build, runtime, and security code.
+
+Tests, test fixtures, documentation, static configuration, dependencies, manifests, and review housekeeping never increment or reset the count and never trigger a review stop.
+
+These findings remain actionable. Review housekeeping includes plans, roadmap state, publication records, checksums, staging scope, and ignored test-result records.
 
 ## Three-defect breaker
 
 Treat these results as severe stops:
 
-- A validated P0 or P1 finding on any pass.
-- A validated architecture flaw that makes a local patch unsafe.
-- An implementation defect on the third consecutive counted pass.
+- A validated P0 or P1 defect in executable production code on any pass.
+- A validated architecture flaw in executable production code that makes a local patch unsafe.
+- A production-code defect on the third consecutive counted pass.
 
 For a severe stop:
 

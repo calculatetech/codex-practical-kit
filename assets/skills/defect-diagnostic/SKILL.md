@@ -1,13 +1,15 @@
 ---
 name: defect-diagnostic
 description: >
-  Retrace how a severe implementation defect entered and escaped a task. Use
-  automatically after a validated P0 or P1 finding, an unsafe architecture
-  finding, or an implementation defect on the third counted review pass. Also
+  Retrace how a severe production-code defect entered and escaped a task. Use
+  automatically after a review result reaches a canonical severe-stop gate. Also
   use when the user requests a severe defect, process-failure, or escape
   analysis. Query one fresh read-only subagent, produce a portable correction
   summary, and force a halt for human action.
 ---
+
+<!-- cpk-rule-owner: defect-diagnostic -->
+<!-- cpk-rule-guard: Spawn one fresh read-only diagnostic subagent. -->
 
 # Defect diagnostic
 

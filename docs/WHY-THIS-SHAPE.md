@@ -1,41 +1,27 @@
 # Why this shape
 
-The toolkit solves one narrow problem. It helps Codex do useful work without adding speculative machinery.
+The toolkit solves one narrow problem. It helps Codex complete useful work without speculative machinery.
 
-## Before code
+## Focused rules
 
-Design Preflight defines the supported operating model, normal-use behavior, owner, scope ceiling, and exact checks.
+The managed AGENTS block is a router. It does not carry a compact copy of each rule.
 
-The four true or false checks prevent possible conditions from becoming automatic requirements.
+Each shared rule has one focused owner. Skills link to shared owners when their procedures need the same requirement.
 
-For runtime behavior, one independent challenger derives input, path, transition, and collection scenarios. An undefined normal-use result stops planning before code.
+This structure prevents compact summaries from losing required facts. It also prevents tests from making several policy copies mandatory.
 
-One ExecPlan records durable implementation decisions and progress. Plan Mode and Design Preflight feed it instead of creating competing records.
+See [Rule ownership](../assets/skills/codex-practical-kit-rules/references/rule-ownership.md) for the enforceable contract.
 
-## During code
+## Task flow
 
-Ponytail reuses existing code and native features. It stops at the first solution that satisfies the accepted task.
+Design Preflight, ExecPlans, Docs Maintainer, Roadmap Maintainer, and Adversarial Review each own one stage. Their source files contain the complete procedures.
 
-The toolkit policy adds deterministic least effort. Operations try once and report failure. Exceptional behavior needs explicit authorization.
-
-## Before review
-
-Docs Maintainer makes user documentation true. Roadmap Maintainer records the final task state.
-
-Both finish before review and commit. Documentation never changes after the task commit.
-
-## Review
-
-One fresh reviewer checks correctness in the supported model. The coordinator drops every finding that fails one true or false check.
-
-The three-defect breaker stops recursive implementation correction after three counted passes. P0, P1, and unsafe architecture findings stop earlier. Documentation and review-housekeeping findings remain actionable, but they neither increment nor reset the three-defect count.
-
-Each stop finding gets its own decision handoff. A severe stop completes one clean-context diagnostic before the final response. That response includes the complete diagnostic and portable process summary before the halt.
+The Session Start hook only announces the router. An agent reads a linked procedure when the task reaches that stage.
 
 ## Repository knowledge
 
-RepoWise provides leads about callers, decisions, and tests. The kit requires its code graph, initializes it on first start, and updates it after commits. Source remains authoritative.
+RepoWise provides repository evidence. Source remains the authority for implementation decisions.
 
-## What the toolkit does not become
+## Limits
 
-The toolkit does not become a service, database, proof system, transaction manager, recovery framework, or universal risk model.
+The toolkit is not a service, database, transaction manager, recovery framework, or universal risk model.

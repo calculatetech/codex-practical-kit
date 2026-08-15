@@ -88,7 +88,7 @@ Look for:
 - Environmental speculation is dropped.
 - Fixes use Ponytail and target one root cause.
 - Each new pass uses fresh context.
-- A third defectful pass stops instead of creating another patch.
+- A third counted production-code-defect pass stops instead of creating another patch.
 
 ## 6. Roadmap lifecycle
 
@@ -98,7 +98,8 @@ Look for:
 
 - The task becomes the only Active task before the first implementation edit.
 - Task order, scope, and blockers change when the work changes.
-- Documentation and the terminal roadmap state are final before review.
+- Documentation is final before review.
+- The task stays Active until review is clean. Then it moves to a terminal section.
 - Installation and repository setup never create or replace the roadmap.
 
 ## 7. Architecture breaker
@@ -163,7 +164,7 @@ Preflight used: yes / no / not needed
 Useful RepoWise context: yes / no / unavailable
 Unneeded code avoided:
 Missed edge case before review:
-Validated defects by pass: 0 / 1 / 2 / 3-stop
+Validated production-code defects by pass: 0 / 1 / 2 / 3-stop
 Architecture breaker fired: yes / no
 Docs stayed correct: yes / no
 Explanation was clear: yes / no

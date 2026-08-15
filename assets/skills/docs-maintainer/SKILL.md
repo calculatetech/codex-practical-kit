@@ -10,6 +10,9 @@ description: >
 license: MIT
 ---
 
+<!-- cpk-rule-owner: docs-maintainer -->
+<!-- cpk-rule-guard: Update the smallest existing document that owns the fact. -->
+
 # Documentation maintainer
 
 Keep the documentation true. Do not write documentation to prove that you wrote documentation.
@@ -30,18 +33,12 @@ Keep the documentation true. Do not write documentation to prove that you wrote 
 6. Use the `simple-english` skill in pragmatic mode.
 7. Keep code, commands, paths, identifiers, and quoted errors exact.
 8. Make sure that examples can still run as written.
-9. If `docs/roadmap.md` exists, finish all other documentation first.
-10. Use `roadmap-maintainer` to mark the Active task ready for review.
-11. Reread the roadmap. Do not change its lifecycle fields through this skill.
-12. Finish before adversarial review and commit.
-
-Review closure does not invalidate a clean review. Review closure is limited to five updates: the task ExecPlan review result, reviewed task roadmap transition, publication status, matching checksums, and untracked test-result record.
-
-A change to code, tests, dependencies, migrations, runtime configuration, build configuration, security configuration, behavior requirements, or the supported model invalidates review. Do not make other file changes after a clean review.
+9. Apply [Delivery lifecycle](../codex-practical-kit-rules/references/delivery-lifecycle.md).
+10. Apply [Review closure](../codex-practical-kit-rules/references/review-closure.md) after a clean review.
 
 ## RepoWise
 
-Use RepoWise context, decision, risk, or affected-test views to find related documentation and owners. Treat the result as evidence, not authority. Read the source before you change a durable claim.
+Apply [Repository knowledge](../codex-practical-kit-rules/references/repository-knowledge.md) to related documentation and owners.
 
 ## Do not update documentation when
 

@@ -130,13 +130,4 @@ License: MIT.
 
 RepoWise is the kit's required repository context provider.
 
-Use it before implementation and review for:
-
-- Callers and dependencies.
-- Change risk.
-- Bug history and hidden coupling.
-- Architectural decisions.
-- Affected tests.
-- Documentation and ownership clues.
-
-Confirm important claims in source. If RepoWise fails, stop and restore it.
+Read the canonical [Repository knowledge](../assets/skills/codex-practical-kit-rules/references/repository-knowledge.md) rule when a task uses it.

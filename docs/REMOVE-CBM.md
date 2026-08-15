@@ -14,12 +14,15 @@ Do not run the broken CBM uninstall routine first.
 8. Remove a CBM data directory only after its name and owner are clear.
 9. Start a new Codex session. Run `codex mcp list` again.
 
-Attempt each operation once. If an operation fails, stop and report the command and error.
+## Operation handling
+
+<!-- cpk-rule-route-only: supported-model -->
+[Supported model](../assets/skills/codex-practical-kit-rules/references/supported-model.md)
 
 ## Codex prompt
 
 ```text
 Remove the broken CBM integration without running its uninstall routine first.
 
-Inspect global and project Codex configuration, hooks, plugins, skills, AGENTS files, running processes, package records, and CBM data directories. Remove only CBM-owned entries. Preserve unrelated entries. Attempt each operation once. Stop and report the first error. Verify with `codex mcp list` and a new Codex session. Do not install a replacement during this task.
+First read assets/skills/codex-practical-kit-rules/references/supported-model.md. Inspect global and project Codex configuration, hooks, plugins, skills, AGENTS files, running processes, package records, and CBM data directories. Remove only CBM-owned entries. Preserve unrelated entries. Apply the supported-model rules. Verify with `codex mcp list` and a new Codex session. Do not install a replacement during this task.
 ```

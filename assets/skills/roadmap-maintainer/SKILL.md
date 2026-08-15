@@ -8,6 +8,9 @@ description: >
 license: MIT
 ---
 
+<!-- cpk-rule-owner: roadmap-maintainer -->
+<!-- cpk-rule-guard: Use `docs/roadmap.md` as the only roadmap authority. -->
+
 # Roadmap maintainer
 
 Keep `docs/roadmap.md` accurate at each work transition. This file is the human interface for accepted work.
@@ -84,9 +87,7 @@ After a clean review, move the reviewed Active task to one terminal section.
 4. Never put one identifier in more than one terminal section.
 5. Reread the complete roadmap and make sure that no task is incorrectly Active.
 
-Review closure does not invalidate a clean review. Review closure is limited to five updates: the task ExecPlan review result, reviewed task roadmap transition, publication status, matching checksums, and untracked test-result record.
-
-A change to code, tests, dependencies, migrations, runtime configuration, build configuration, security configuration, behavior requirements, or the supported model invalidates review. Do not make other file changes after a clean review.
+Apply [Review closure](../codex-practical-kit-rules/references/review-closure.md) after a clean review.
 
 ## Template
 

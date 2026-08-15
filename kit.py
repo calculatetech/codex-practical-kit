@@ -24,7 +24,7 @@ from pathlib import Path
 from typing import Any, Iterable
 
 KIT_ID = "codex-practical-kit"
-KIT_VERSION = "0.11.0"
+KIT_VERSION = "0.11.1"
 REPOWISE_VERSION = "0.41.0"
 UV_VERSION = "0.12.4"
 UV_INSTALLER_URL = f"https://astral.sh/uv/{UV_VERSION}/install.sh"
@@ -38,6 +38,7 @@ HOOKS_START = "# >>> codex-practical-kit:hooks >>>"
 HOOKS_END = "# <<< codex-practical-kit:hooks <<<"
 INSTALLED_HOOK_BASENAMES = {"session_start.py"}
 CUSTOM_SKILLS = (
+    "codex-practical-kit-rules",
     "docs-maintainer",
     "roadmap-maintainer",
     "research-first",
@@ -288,10 +289,22 @@ def install_skills(
 # ---------- AGENTS.md ----------
 
 
+def global_agents_body(paths: InstallPaths) -> str:
+    body = (ROOT / "assets" / "AGENTS.block.md").read_text(encoding="utf-8").rstrip()
+    replacements = {
+        "{{SKILLS_HOME}}": paths.skills_home.as_posix(),
+        "{{PLANS_FILE}}": plans_path(paths).as_posix(),
+    }
+    for token, value in replacements.items():
+        body = body.replace(token, value)
+    if re.search(r"{{[A-Z_]+}}", body):
+        raise KitError("Global AGENTS template contains an unknown path token.")
+    return body
+
+
 def install_global_agents(paths: InstallPaths) -> None:
     agents = paths.codex_home / "AGENTS.md"
-    body = (ROOT / "assets" / "AGENTS.block.md").read_text(encoding="utf-8").rstrip()
-    updated = marker_block(read_text(agents), AGENTS_START, AGENTS_END, body)
+    updated = marker_block(read_text(agents), AGENTS_START, AGENTS_END, global_agents_body(paths))
     write_file(agents, updated)
 
 
@@ -661,16 +674,6 @@ def repowise_config_block(repowise: str, root: Path | None = None) -> str:
     return "\n".join(lines)
 
 
-def repowise_agents_block() -> str:
-    return """## RepoWise index
-
-- This repository has a local RepoWise index in `.repowise`.
-- Use RepoWise MCP tools for repository overview, symbol context, callers, change risk, decision history, code health, dead code, and affected tests.
-- Read source before you treat an inferred relationship or generated page as authoritative.
-- If the index is stale, refresh it with `repowise update --no-agents` before broad exploration.
-- If RepoWise is unavailable or broken, stop and restore it. Do not continue without the required code graph."""
-
-
 def ensure_no_external_repowise_table(text: str) -> None:
     stripped = remove_marker_block(text, REPOWISE_START, REPOWISE_END)
     if re.search(r"(?m)^\s*\[mcp_servers\.repowise\]\s*$", stripped):
@@ -754,14 +757,17 @@ def setup_repo(args: argparse.Namespace, paths: InstallPaths) -> None:
         REPOWISE_END,
         repowise_config_block(repowise, root),
     )
-    agents_after = marker_block(
+    write_file(config, config_after)
+    agents_after = remove_marker_block(
         agents_before,
         AGENTS_START + ":repowise",
         AGENTS_END + ":repowise",
-        repowise_agents_block(),
     )
-    write_file(config, config_after)
-    write_file(agents, agents_after)
+    if agents_after != agents_before:
+        if agents_after:
+            write_file(agents, agents_after)
+        else:
+            agents.unlink()
     remove_path(root / ".codex-practical-kit")
 
 
@@ -831,7 +837,14 @@ def doctor(args: argparse.Namespace, paths: InstallPaths) -> int:
         dest = paths.skills_home / name
         ok &= check(dest.exists(), f"skill {name}", str(dest))
     agents = paths.codex_home / "AGENTS.md"
-    ok &= check(agents.exists() and AGENTS_START in read_text(agents), "global AGENTS block", str(agents))
+    agents_text = read_text(agents)
+    ok &= check(
+        agents.exists()
+        and AGENTS_START in agents_text
+        and global_agents_body(paths) in agents_text,
+        "global AGENTS block",
+        str(agents),
+    )
     plan = plans_path(paths)
     expected_plan = read_text(ROOT / ".agent" / "PLANS.md")
     plan_recorded = manifest.get("plans_file") if isinstance(manifest, dict) else None

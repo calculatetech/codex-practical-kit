@@ -45,4 +45,4 @@ Include only the AGENTS, CLAUDE, lint, test, architecture, or API rules that gov
 
 ## RepoWise observations
 
-Include indexed revision and freshness status. Label every item as an observation until source confirms it.
+Apply [Repository knowledge](../../codex-practical-kit-rules/references/repository-knowledge.md).

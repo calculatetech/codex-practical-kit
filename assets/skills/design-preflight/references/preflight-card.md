@@ -8,7 +8,8 @@ State one observable outcome.
 
 ## Supported operating model
 
-State the users, writers, platform, and normal environment. List an exceptional condition only when the task includes it.
+<!-- cpk-rule-route-only: supported-model -->
+[Supported model](../../codex-practical-kit-rules/references/supported-model.md)
 
 ## Existing owner
 
@@ -22,12 +23,7 @@ Cite source. Write `unknown` when source does not prove a claim.
 
 ## Normal-use behavior floor
 
-List only behavior that passes all four checks:
-
-- It occurs in supported normal use.
-- The project controls it.
-- The condition or planned trigger is feasible without fault injection.
-- An explicit requirement defines the result.
+List the task-specific `applicable` behavior and `contract-gap` results from Supported model.
 
 ## Scope ceiling
 
@@ -38,6 +34,8 @@ List work that must not exist. Include excluded conditions, abstractions, depend
 Name the existing owner to change and the minimum supporting edits.
 
 ## Scenario Proof
+
+Apply [Owner composition](../../codex-practical-kit-rules/references/owner-composition.md) and [Full-set results](../../codex-practical-kit-rules/references/full-set-results.md) when they are applicable.
 
 For each runtime outcome, record:
 

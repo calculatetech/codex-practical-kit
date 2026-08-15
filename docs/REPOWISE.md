@@ -40,9 +40,7 @@ Adversarial Review can use RepoWise for:
 - Impacted tests.
 - Architectural decisions.
 
-Every RepoWise result is an observation until source confirms it.
-
-The review packet must record the indexed revision. A stale index cannot prove absence.
+Agent evidence and review-packet rules are in [Repository knowledge](../assets/skills/codex-practical-kit-rules/references/repository-knowledge.md).
 
 ## Runtime ownership
 
@@ -58,7 +56,7 @@ The managed Codex configuration makes RepoWise required and approves its MCP cal
 
 The hook starts a background update after each commit. RepoWise owns its queue marker, log, and single-flight update behavior.
 
-If the index is stale, run `repowise update --no-agents` before broad exploration. If RepoWise fails, stop and restore it.
+Agent behavior is defined by [Repository knowledge](../assets/skills/codex-practical-kit-rules/references/repository-knowledge.md).
 
 ## Day-to-day commands
 

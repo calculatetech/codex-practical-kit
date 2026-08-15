@@ -45,10 +45,19 @@ Return JSON only.
   ],
   "coverage": {
     "input_domain": ["Source predicates inspected"],
-    "paths_and_transitions": ["Owners and gates inspected"],
+    "paths_and_transitions": ["Retained-work reopening, shared-owner event gates, and authoritative-result entry points inspected"],
     "collection_semantics": ["Applicable collection rules inspected"]
   }
 }
 ```
 
-Keep a scenario only when all four values are `true`. Put a case in `contract_gaps` only when the first three values are `true` and `explicit_result_defined` is `false`. Otherwise, put it in `exclusions`. Empty arrays are valid.
+Apply [Owner composition](../../codex-practical-kit-rules/references/owner-composition.md) and [Full-set results](../../codex-practical-kit-rules/references/full-set-results.md) to the independent result.
+
+The coordinator must add the applicable runnable checks to the accepted Scenario Proof. Do not create a Cartesian product.
+
+Use the canonical classifications to fill `scenarios`, `contract_gaps`, and `exclusions`. Empty arrays are valid.
+
+## Supported-model classification
+
+<!-- cpk-rule-route-only: supported-model -->
+[Supported model](../../codex-practical-kit-rules/references/supported-model.md)

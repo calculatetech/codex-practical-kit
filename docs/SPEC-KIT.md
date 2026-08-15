@@ -1,17 +1,8 @@
 # Optional Spec Kit
 
-Spec Kit is optional behavior input. ExecPlan remains the implementation owner.
+Spec Kit is an optional behavior source. The [ExecPlan rules](../.agent/PLANS.md) remain authoritative for implementation plans.
 
-Use Design Preflight first. Put accepted decisions into one ExecPlan.
-
-The ExecPlan records:
-
-- Goal.
-- Existing owner.
-- Must work.
-- Must not change.
-- Checks.
-- Unknowns.
+Use the managed AGENTS routes for Design Preflight and other task procedures.
 
 Add Spec Kit when the task needs more behavior detail. Good signals include:
 
@@ -32,17 +23,12 @@ specify init --here --integration codex --integration-options="--skills"
 
 Run `specify integration list` first when the installed release changes its integration names or options.
 
-## One owner rule
+## Ownership
 
-Do not use Spec Kit artifacts as a second implementation tracker.
+Apply [Rule ownership](../assets/skills/codex-practical-kit-rules/references/rule-ownership.md).
 
 When Spec Kit supplies the behavior specification:
 
 - Its specification is the durable behavior source.
-- The ExecPlan owns implementation decisions and progress.
-- Design Preflight reviews the Spec Kit artifacts and feeds accepted decisions into the ExecPlan.
-- Ponytail controls implementation size.
-- Adversarial Review checks the completed diff against the Spec Kit intent.
-- SimpleEnglish controls prose.
-- Docs Maintainer checks public documentation.
-- RepoWise remains repository evidence, not the specification owner.
+- The task ExecPlan records implementation decisions and progress.
+- Applicable managed skills link from AGENTS.
