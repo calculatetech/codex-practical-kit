@@ -24,7 +24,7 @@ from pathlib import Path
 from typing import Any, Iterable
 
 KIT_ID = "codex-practical-kit"
-KIT_VERSION = "0.15.0"
+KIT_VERSION = "0.15.1"
 REPOWISE_VERSION = "0.41.0"
 UV_VERSION = "0.12.4"
 UV_INSTALLER_URL = f"https://astral.sh/uv/{UV_VERSION}/install.sh"
@@ -37,6 +37,7 @@ REPOWISE_END = "# <<< codex-practical-kit:repowise <<<"
 HOOKS_START = "# >>> codex-practical-kit:hooks >>>"
 HOOKS_END = "# <<< codex-practical-kit:hooks <<<"
 INSTALLED_HOOK_BASENAMES = {"session_start.py"}
+MANAGED_HOOK_EVENTS = ("SessionStart", "UserPromptSubmit")
 CUSTOM_SKILLS = (
     "delivery-lifecycle",
     "repository-knowledge",
@@ -349,30 +350,35 @@ def hook_command(python: Path, script: Path) -> tuple[str, str]:
     return posix, windows
 
 
-def hooks_config_block(paths: InstallPaths) -> str:
+def hooks_config_block(
+    paths: InstallPaths, events: tuple[str, ...] = MANAGED_HOOK_EVENTS
+) -> str:
     command, command_windows = hook_command(
         Path(sys.executable).resolve(),
         paths.install_root / "hooks" / "session_start.py",
     )
-    return "\n".join(
-        [
-            "[[hooks.SessionStart]]",
-            'matcher = "startup|resume|clear|compact"',
+    blocks = []
+    for event in events:
+        lines = [f"[[hooks.{event}]]"]
+        if event == "SessionStart":
+            lines.append('matcher = "startup|resume|clear|compact"')
+        lines.extend([
             "",
-            "[[hooks.SessionStart.hooks]]",
+            f"[[hooks.{event}.hooks]]",
             'type = "command"',
             f"command = {toml_string(command)}",
             f"commandWindows = {toml_string(command_windows)}",
             'statusMessage = "Loading practical defaults"',
             "timeout = 10",
             "additionalContextLimit = 1200",
-        ]
-    )
+        ])
+        blocks.append("\n".join(lines))
+    return "\n\n".join(blocks)
 
 
-def session_start_hook_exists(paths: InstallPaths, text: str) -> bool:
+def configured_hook_events(paths: InstallPaths, text: str) -> set[str]:
     if not text.strip():
-        return False
+        return set()
     try:
         config = tomllib.loads(text)
     except tomllib.TOMLDecodeError as exc:
@@ -390,21 +396,34 @@ def session_start_hook_exists(paths: InstallPaths, text: str) -> bool:
         "timeout": 10,
         "additionalContextLimit": 1200,
     }
-    groups = config.get("hooks", {}).get("SessionStart", [])
-    return any(
-        all(handler.get(key) == value for key, value in expected.items())
-        for group in groups
-        for handler in group.get("hooks", [])
-    )
+    hooks = config.get("hooks", {})
+    return {
+        event
+        for event in MANAGED_HOOK_EVENTS
+        if any(
+            all(handler.get(key) == value for key, value in expected.items())
+            for group in hooks.get(event, [])
+            for handler in group.get("hooks", [])
+        )
+    }
 
 
 def install_hooks(paths: InstallPaths) -> None:
     config = paths.codex_home / "config.toml"
     text = read_text(config)
-    if not session_start_hook_exists(paths, text):
+    unmanaged = (
+        remove_marker_block(text, HOOKS_START, HOOKS_END)
+        if HOOKS_START in text
+        else text
+    )
+    configured = configured_hook_events(paths, unmanaged)
+    missing = tuple(event for event in MANAGED_HOOK_EVENTS if event not in configured)
+    if not missing and HOOKS_START in text:
+        write_file(config, unmanaged)
+    elif missing:
         write_file(
             config,
-            marker_block(text, HOOKS_START, HOOKS_END, hooks_config_block(paths)),
+            marker_block(text, HOOKS_START, HOOKS_END, hooks_config_block(paths, missing)),
         )
 
 
@@ -861,7 +880,7 @@ def doctor(args: argparse.Namespace, paths: InstallPaths) -> int:
     hook_root = paths.install_root / "hooks"
     installed_files = {path.name for path in hook_root.iterdir()} if hook_root.is_dir() else set()
     try:
-        hooks_ok = session_start_hook_exists(paths, hooks_text)
+        hooks_ok = configured_hook_events(paths, hooks_text) == set(MANAGED_HOOK_EVENTS)
     except KitError:
         hooks_ok = False
     hooks_ok = hooks_ok and installed_files == INSTALLED_HOOK_BASENAMES

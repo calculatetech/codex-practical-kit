@@ -16,7 +16,7 @@ See [Rule ownership](../assets/skills/toolkit-maintainer/SKILL.md) for the enfor
 
 Design Preflight, ExecPlans, Docs Maintainer, Roadmap Maintainer, and Adversarial Review each own one stage. Their source files contain the complete procedures.
 
-The Session Start hook only announces the router. An agent reads a linked procedure when the task reaches that stage.
+Session Start announces the router. Prompt submission selects normal mode before Plan-mode prompts. An agent reads a linked procedure when the task reaches that stage.
 
 ## Repository knowledge
 

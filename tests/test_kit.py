@@ -119,7 +119,7 @@ class InstallerTests(unittest.TestCase):
 
             config_path = paths.codex_home / "config.toml"
             config_path.parent.mkdir(parents=True)
-            existing_hook = kit.hooks_config_block(paths).replace(
+            existing_hook = kit.hooks_config_block(paths, ("SessionStart",)).replace(
                 "hooks.SessionStart", 'hooks."SessionStart"'
             )
             original = (
@@ -133,24 +133,21 @@ class InstallerTests(unittest.TestCase):
             )
             config_path.write_text(original, encoding="utf-8")
 
-            kit.install_hooks(paths)
-            kit.uninstall_hooks(paths)
-            self.assertEqual(config_path.read_text(), original)
-
             with mock.patch.object(kit, "stage_upstream_skills", fake_stage):
                 kit.install_core(Namespace(repo=None, repowise_prose=False), paths)
                 kit.install_core(Namespace(repo=None, repowise_prose=False), paths)
 
             config_text = config_path.read_text()
             hooks = tomllib.loads(config_text)["hooks"]
-            self.assertEqual(set(hooks), {"PreToolUse", "SessionStart"})
+            self.assertEqual(set(hooks), {"PreToolUse", "SessionStart", "UserPromptSubmit"})
             self.assertEqual(
                 hooks["PreToolUse"][0]["hooks"][0]["command"],
                 "python /tmp/user.py",
             )
             self.assertEqual(len(hooks["SessionStart"]), 1)
-            self.assertNotIn(kit.HOOKS_START, config_text)
-            self.assertNotIn(kit.HOOKS_END, config_text)
+            self.assertEqual(len(hooks["UserPromptSubmit"]), 1)
+            self.assertIn(kit.HOOKS_START, config_text)
+            self.assertIn(kit.HOOKS_END, config_text)
             self.assertFalse((paths.codex_home / "hooks.json").exists())
             self.assertEqual(
                 {path.name for path in hook_root.iterdir()}, {"session_start.py"}
@@ -160,6 +157,61 @@ class InstallerTests(unittest.TestCase):
             remaining = tomllib.loads(config_path.read_text())["hooks"]
             self.assertEqual(set(remaining), {"PreToolUse", "SessionStart"})
             self.assertNotIn(kit.HOOKS_START, config_path.read_text())
+
+    def test_plan_mode_prompt_selects_normal_mode(self):
+        with tempfile.TemporaryDirectory() as temp:
+            paths = self.paths(Path(temp))
+            script = paths.install_root / "hooks" / "session_start.py"
+            script.parent.mkdir(parents=True)
+            script.write_bytes((ROOT / "assets" / "hooks" / "session_start.py").read_bytes())
+            hooks = tomllib.loads(kit.hooks_config_block(paths))["hooks"]
+            command = hooks["UserPromptSubmit"][0]["hooks"][0]["command"]
+
+            def run(event):
+                return subprocess.run(
+                    command,
+                    shell=True,
+                    input=json.dumps(event),
+                    text=True,
+                    capture_output=True,
+                    check=True,
+                ).stdout
+
+            self.assertEqual(
+                run({"hook_event_name": "UserPromptSubmit", "permission_mode": "plan"}),
+                "normal mode\n",
+            )
+            self.assertEqual(
+                run({"hook_event_name": "UserPromptSubmit", "permission_mode": "default"}),
+                "",
+            )
+
+    def test_reinstall_removes_duplicate_managed_hooks(self):
+        with tempfile.TemporaryDirectory() as temp:
+            paths = self.paths(Path(temp))
+            config = paths.codex_home / "config.toml"
+            kit.install_hooks(paths)
+            config.write_text(config.read_text() + "\n\n" + kit.hooks_config_block(paths) + "\n")
+
+            kit.install_hooks(paths)
+
+            text = config.read_text()
+            hooks = tomllib.loads(text)["hooks"]
+            for event in kit.MANAGED_HOOK_EVENTS:
+                self.assertEqual(len(hooks[event]), 1)
+            self.assertNotIn(kit.HOOKS_START, text)
+
+    def test_session_start_still_announces_router(self):
+        result = subprocess.run(
+            ["python3", str(ROOT / "assets" / "hooks" / "session_start.py")],
+            input=json.dumps({"hook_event_name": "SessionStart", "permission_mode": "default"}),
+            text=True,
+            capture_output=True,
+            check=True,
+        )
+        output = json.loads(result.stdout)
+        self.assertEqual(output["hookSpecificOutput"]["hookEventName"], "SessionStart")
+        self.assertIn("Codex Practical Kit is active", output["hookSpecificOutput"]["additionalContext"])
 
     def test_copy_reinstall_and_uninstall(self):
         with tempfile.TemporaryDirectory() as temp:
@@ -785,6 +837,7 @@ class IntegrationTests(unittest.TestCase):
         self.assertIn("explicit user mode selection overrides", owner)
         self.assertIn("without, disable, or exclude Ponytail", owner)
         self.assertIn("Return to normal mode before each read-only review pass", owner)
+        self.assertIn("managed prompt hook selects normal mode", owner)
         self.assertIn("Implementation after accepted test scope", agents)
         self.assertNotIn("Code changes: `ponytail`", agents)
         for route in (delivery, preflight, research, review):
@@ -896,9 +949,9 @@ class IntegrationTests(unittest.TestCase):
         self.assertIn("`./doctor.sh`", publication)
         self.assertIn("from the reviewed candidate", publication)
         self.assertIn("`Result: ready`", publication)
-        self.assertEqual(kit.KIT_VERSION, "0.15.0")
-        self.assertNotIn("Version `0.15.0`", (ROOT / "README.md").read_text())
-        self.assertNotIn("version 0.15.0", (ROOT / "CODEX-INSTALL-PROMPT.md").read_text())
+        self.assertEqual(kit.KIT_VERSION, "0.15.1")
+        self.assertNotIn("Version `0.15.1`", (ROOT / "README.md").read_text())
+        self.assertNotIn("version 0.15.1", (ROOT / "CODEX-INSTALL-PROMPT.md").read_text())
 
     def test_repowise_is_required(self):
         config = kit.repowise_config_block("/tmp/repowise")

@@ -37,7 +37,7 @@ The installer copies managed skills to `~/.agents/skills/`. Do not edit installe
 
 The installer writes a managed block in `~/.codex/AGENTS.md`. It renders the absolute PLANS path and names installed skills.
 
-The installer also writes `$CODEX_HOME/PLANS.md` and a managed Session Start hook. The hook only announces that the AGENTS router is active.
+The installer also writes `$CODEX_HOME/PLANS.md` and managed Codex hooks. Session Start announces the AGENTS router. Prompt submission selects normal mode before Plan-mode prompts.
 
 An unrecorded destination skill is a conflict. The installer stops before it changes that directory.
 
