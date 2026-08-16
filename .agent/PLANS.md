@@ -15,13 +15,17 @@ Plan Mode and Design Preflight are preparation stages. Merge their accepted deci
 
 When authoring an executable specification (ExecPlan), follow PLANS.md _to the letter_. If it is not in your context, refresh your memory by reading the entire PLANS.md file. Be thorough in reading (and re-reading) source material to produce an accurate specification. When creating a spec, start from the skeleton and flesh it out as you do your research.
 
-When implementing an ExecPlan, proceed through its milestones. Keep all required sections current at each stopping point.
+When implementing an ExecPlan, proceed through its milestones. Keep all required sections current until review closure.
+
+An ExecPlan tracks implementation, validation, review, and final outcomes. Do not add a `Progress` item for a delivery action. Delivery actions include commit, CI, push, pull request, merge, release, and publication.
+
+Do not write a readiness or authorization statement. Record delivery progress and results outside tracked files.
 
 Record task-specific facts and accepted decisions. Link applicable toolkit rules instead of copying them into the plan.
 
 Record the accepted product boundary facts and owner classifications from Design Preflight. Link its Scope boundaries owner.
 
-When discussing an executable specification (ExecPlan), record decisions in a log in the spec for posterity; it should be unambiguously clear why any change to the specification was made. ExecPlans are living documents, and it should always be possible to restart from _only_ the ExecPlan and no other work.
+When discussing an executable specification (ExecPlan), record decisions in its log. State why each specification change occurred. An ExecPlan is a living document until review closure. Before closure, a new contributor must be able to restart from only the ExecPlan.
 
 When researching a design with challenging requirements or significant unknowns, use milestones to implement proof of concepts, "toy implementations", etc., that allow validating whether the user's proposal is feasible. Read the source code of libraries by finding or acquiring them, research deeply, and include prototypes to guide a fuller implementation.
 
@@ -30,7 +34,7 @@ When researching a design with challenging requirements or significant unknowns,
 NON-NEGOTIABLE REQUIREMENTS:
 
 * Every ExecPlan must be fully self-contained. Self-contained means that in its current form it contains all knowledge and instructions needed for a novice to succeed.
-* Every ExecPlan is a living document. Contributors are required to revise it as progress is made, as discoveries occur, and as design decisions are finalized. Each revision must remain fully self-contained.
+* Every ExecPlan is a living document until review closure. Before closure, revise it when progress, discoveries, or design decisions change. Each revision must remain fully self-contained.
 * Every ExecPlan must enable a complete novice to implement the feature end-to-end without prior knowledge of this repo.
 * Every ExecPlan must produce a demonstrably working behavior, not merely code changes to "meet a definition".
 * Every ExecPlan must define every term of art in plain language or do not use it.
@@ -75,7 +79,7 @@ Each milestone must be independently verifiable and incrementally implement the 
 
 ## Living plans and design decisions
 
-* ExecPlans are living documents. As you make key design decisions, update the plan to record both the decision and the thinking behind it. Record all decisions in the `Decision Log` section.
+* Before review closure, update the plan when you make a key design decision. Record the decision and its rationale in the `Decision Log` section.
 * ExecPlans must contain and maintain a `Progress` section, a `Surprises & Discoveries` section, a `Decision Log`, and an `Outcomes & Retrospective` section. These are not optional.
 * When you discover optimizer behavior, performance tradeoffs, unexpected bugs, or inverse/unapply semantics that shaped your approach, capture those observations in the `Surprises & Discoveries` section with short evidence snippets (test output is ideal).
 * If you change course mid-implementation, document why in the `Decision Log` and reflect the implications in `Progress`. Plans are guides for the next contributor as much as checklists for you.
@@ -91,7 +95,7 @@ Prefer additive code changes followed by subtractions that keep tests passing. P
 
     # <Short, action-oriented description>
 
-    This ExecPlan is a living document. The sections `Progress`, `Surprises & Discoveries`, `Decision Log`, and `Outcomes & Retrospective` must be kept up to date as work proceeds.
+    This ExecPlan is a living document until review closure. Keep `Progress`, `Surprises & Discoveries`, `Decision Log`, and `Outcomes & Retrospective` current until then.
 
     If PLANS.md file is checked into the repo, reference the path to that file here from the repository root and note that this document must be maintained in accordance with PLANS.md.
 
@@ -101,13 +105,13 @@ Prefer additive code changes followed by subtractions that keep tests passing. P
 
     ## Progress
 
-    Use a list with checkboxes to summarize granular steps. Every stopping point must be documented here, even if it requires splitting a partially completed task into two (“done” vs. “remaining”). This section must always reflect the actual current state of the work.
+    Use a list with checkboxes to summarize implementation, validation, and review. Every stopping point before review closure must be documented here. This section must reflect the current state of that work.
 
     - [x] (2025-10-01 13:00Z) Example completed step.
     - [ ] Example incomplete step.
     - [ ] Example partially completed step (completed: X; remaining: Y).
 
-    Use timestamps to measure rates of progress.
+    Use timestamps to measure rates of progress. The final list must not contain a future delivery action.
 
     ## Surprises & Discoveries
 
@@ -172,4 +176,4 @@ Prefer additive code changes followed by subtractions that keep tests passing. P
 
 If you follow the guidance above, a single, stateless agent -- or a human novice -- can read your ExecPlan from top to bottom and produce a working, observable result. That is the bar: SELF-CONTAINED, SELF-SUFFICIENT, NOVICE-GUIDING, OUTCOME-FOCUSED.
 
-When you revise a plan, you must ensure your changes are comprehensively reflected across all sections, including the living document sections, and you must write a note at the bottom of the plan describing the change and the reason why. ExecPlans must describe not just the what but the why for almost everything.
+Before review closure, make sure that each revision is consistent across all sections. Add a final note that describes the change and its reason. ExecPlans must describe the work and the reason for it.

@@ -285,7 +285,11 @@ class InstallerTests(unittest.TestCase):
             with mock.patch.object(kit, "stage_upstream_skills", fake_stage):
                 kit.install_core(Namespace(repo=None, repowise_prose=False), paths)
             plans = paths.codex_home / "PLANS.md"
-            self.assertEqual(plans.read_text(), (ROOT / ".agent" / "PLANS.md").read_text())
+            plans_text = plans.read_text()
+            self.assertEqual(plans_text, (ROOT / ".agent" / "PLANS.md").read_text())
+            for target in re.findall(r"]\(([^)]+)\)", plans_text):
+                if "://" not in target:
+                    self.assertTrue(Path(target.strip("<>")).is_absolute(), target)
             agents = (paths.codex_home / "AGENTS.md").read_text()
             targets = re.findall(r"]\(<([^>]+)>\)", agents)
             self.assertTrue(targets)
@@ -765,6 +769,41 @@ class IntegrationTests(unittest.TestCase):
         self.assertEqual(template.count("## Active"), 1)
         self.assertIn("## Declined", template)
 
+    def test_tracked_task_records_freeze_before_delivery(self):
+        delivery = (
+            ROOT / "assets" / "skills" / "delivery-lifecycle" / "references" / "delivery-lifecycle.md"
+        ).read_text()
+        roadmap = (ROOT / "assets" / "skills" / "roadmap-maintainer" / "SKILL.md").read_text()
+        plans = (ROOT / ".agent" / "PLANS.md").read_text()
+        closure = (
+            ROOT
+            / "assets"
+            / "skills"
+            / "adversarial-review"
+            / "references"
+            / "review-closure.md"
+        ).read_text()
+        publication = (
+            ROOT / "assets" / "skills" / "publication" / "references" / "publication.md"
+        ).read_text()
+
+        freeze = (
+            "Freeze every tracked task record before the task commit, CI, push, pull request, merge, "
+            "or publication."
+        )
+        self.assertIn(freeze, delivery)
+        for content in (roadmap, plans, closure, publication):
+            self.assertNotIn(freeze, content)
+
+        self.assertNotIn("review is pending", roadmap)
+        self.assertNotIn("Validation establishes a review candidate", roadmap)
+        self.assertIn("An ExecPlan is a living document until review closure", plans)
+        self.assertIn("Do not write a readiness or authorization statement", plans)
+        self.assertIn("Do not add a `Progress` item for a delivery action", plans)
+        self.assertIn("limited to four updates", closure)
+        self.assertNotIn("publication status", closure)
+        self.assertIn("cpk-rule-route-only: delivery-lifecycle", publication)
+
     def test_execplan_is_the_only_durable_task_model(self):
         rules = (ROOT / "assets" / "AGENTS.block.md").read_text()
         plans = (ROOT / ".agent" / "PLANS.md").read_text()
@@ -1095,9 +1134,9 @@ class IntegrationTests(unittest.TestCase):
         self.assertIn("`./doctor.sh`", publication)
         self.assertIn("from the reviewed candidate", publication)
         self.assertIn("`Result: ready`", publication)
-        self.assertEqual(kit.KIT_VERSION, "0.16.0")
-        self.assertNotIn("Version `0.16.0`", (ROOT / "README.md").read_text())
-        self.assertNotIn("version 0.16.0", (ROOT / "CODEX-INSTALL-PROMPT.md").read_text())
+        self.assertEqual(kit.KIT_VERSION, "0.16.1")
+        self.assertNotIn("Version `0.16.1`", (ROOT / "README.md").read_text())
+        self.assertNotIn("version 0.16.1", (ROOT / "CODEX-INSTALL-PROMPT.md").read_text())
 
     def test_repowise_is_required(self):
         config = kit.repowise_config_block(

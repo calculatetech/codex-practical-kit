@@ -13,7 +13,7 @@ license: MIT
 
 # Roadmap maintainer
 
-Keep `docs/roadmap.md` accurate at each work transition. This file is the human interface for accepted work.
+Keep `docs/roadmap.md` accurate at durable lifecycle transitions. This file is the human interface for accepted work.
 
 ## Authority
 
@@ -45,7 +45,6 @@ Update the roadmap when one of these events occurs:
 - Accepted scope changes.
 - Work becomes blocked or resumes.
 - The user accepts a residual risk.
-- Validation establishes a review candidate.
 
 Plan-only, audit-only, review-only, and documentation-only work does not become Active.
 
@@ -65,13 +64,14 @@ Record newly discovered work only when it is authorized or supported by concrete
 
 ## Prepare a task for review
 
-Documentation must be final before review and commit.
+Substantive documentation must be final before review. Review closure finalizes the roadmap before commit.
 
 1. Let Docs Maintainer finish all non-roadmap documentation.
 2. Keep the task Active.
-3. Update its text to state that validation is complete and review is pending.
-4. Let Docs Maintainer verify the roadmap without changing its lifecycle fields.
-5. Include this roadmap in the candidate that receives review.
+3. Keep its outcome text unchanged.
+4. Do not add review, commit, or delivery readiness to its text.
+5. Let Docs Maintainer verify the roadmap without changing its lifecycle fields.
+6. Include this roadmap in the candidate that receives review.
 
 If validation fails, keep the task Active and record the blocker. Do not claim a terminal state.
 
@@ -88,6 +88,8 @@ After a clean review, move the reviewed Active task to one terminal section.
 5. Reread the complete roadmap and make sure that no task is incorrectly Active.
 
 Apply [Review closure](../adversarial-review/references/review-closure.md) after a clean review.
+
+Publication does not change roadmap state.
 
 ## Template
 

@@ -6,6 +6,13 @@
 
 # Publication
 
+## Tracked state
+
+<!-- cpk-rule-route-only: delivery-lifecycle -->
+[Delivery lifecycle](../../delivery-lifecycle/references/delivery-lifecycle.md)
+
+## Procedure
+
 Before Codex Practical Kit publication, run `./install.sh` and `./doctor.sh` from the reviewed candidate. Require `Result: ready`.
 
 PR mode is active only when protected `main` requires pull requests, required CI checks, and resolved conversations.
