@@ -33,6 +33,7 @@ No residual risk is accepted.
 
 ## Completed
 
+- ✅ **CPK-030 — Make RepoWise index-first and self-refreshing.** Exact lookups use indexed selectors, model synthesis remains optional, and active Codex sessions keep working-tree edits indexed without model calls.
 - ✅ **CPK-029 — Activate normal mode when Plan mode starts.** The managed prompt hook selects Ponytail normal mode before each Plan-mode prompt. Other modes keep their selected implementation mode.
 - ✅ **CPK-028 — Scope minimalism by lifecycle phase.** Planning, research, test-scope definition, and read-only review use normal mode. Implementation uses Ponytail after scenario obligations are fixed, and each retained runtime scenario maps to one production path, oracle, runnable check, and result.
 - ✅ **CPK-027 — Move rules into lifecycle skills.** AGENTS now routes tasks to lifecycle skills. Each shared rule remains in one focused owner, and upgrades remove the obsolete general package.

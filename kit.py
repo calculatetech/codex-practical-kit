@@ -24,7 +24,7 @@ from pathlib import Path
 from typing import Any, Iterable
 
 KIT_ID = "codex-practical-kit"
-KIT_VERSION = "0.15.1"
+KIT_VERSION = "0.16.0"
 REPOWISE_VERSION = "0.41.0"
 UV_VERSION = "0.12.4"
 UV_INSTALLER_URL = f"https://astral.sh/uv/{UV_VERSION}/install.sh"
@@ -34,6 +34,14 @@ AGENTS_START = "<!-- codex-practical-kit:start -->"
 AGENTS_END = "<!-- codex-practical-kit:end -->"
 REPOWISE_START = "# >>> codex-practical-kit:repowise >>>"
 REPOWISE_END = "# <<< codex-practical-kit:repowise <<<"
+
+REPOWISE_WATCH_PATCH = (
+    "from repowise.cli.commands import watch_cmd as w;"
+    "original=w._event_paths;"
+    "w._event_paths=lambda event,root:set() if getattr(event,'event_type','') in "
+    "{'opened','closed','closed_no_write'} else original(event,root);"
+    "w.watch_command.main(args=__import__('sys').argv[1:],standalone_mode=False)"
+)
 HOOKS_START = "# >>> codex-practical-kit:hooks >>>"
 HOOKS_END = "# <<< codex-practical-kit:hooks <<<"
 INSTALLED_HOOK_BASENAMES = {"session_start.py"}
@@ -658,10 +666,48 @@ def repowise_init_args(prose: bool) -> list[str]:
     return args
 
 
-def repowise_bootstrap(repowise: str) -> str:
+def repowise_watch_command(repowise: str) -> list[str]:
+    launcher = Path(repowise).resolve()
+    try:
+        first_line = launcher.read_bytes().splitlines()[0].decode("utf-8").strip()
+    except (IndexError, OSError, UnicodeDecodeError) as exc:
+        raise KitError(f"Cannot read the RepoWise launcher at {launcher}: {exc}") from exc
+    if not first_line.startswith("#!"):
+        raise KitError(f"RepoWise launcher has no Python shebang: {launcher}")
+    words = shlex.split(first_line[2:])
+    if not words:
+        raise KitError(f"RepoWise launcher has an empty shebang: {launcher}")
+    if Path(words[0]).name == "env":
+        interpreter = shutil.which(words[-1])
+    else:
+        interpreter = words[0]
+    if not interpreter or not Path(interpreter).is_file():
+        raise KitError(f"Cannot resolve the RepoWise Python interpreter: {first_line[2:]}")
+    return [interpreter, "-c", REPOWISE_WATCH_PATCH]
+
+
+def repowise_bootstrap(repowise: str, watcher: list[str] | None = None) -> str:
     command = shlex.quote(repowise)
     init = " ".join(
         [command, *map(shlex.quote, repowise_init_args(False)), '"$ROOT"']
+    )
+    update = " ".join(
+        [
+            command,
+            "update",
+            "--index-only",
+            "--no-agents",
+            "--no-workspace",
+            '"$ROOT"',
+        ]
+    )
+    watch = " ".join(
+        [
+            *map(shlex.quote, watcher or repowise_watch_command(repowise)),
+            "--index-only",
+            "--no-workspace",
+            '"$ROOT"',
+        ]
     )
     return "\n".join(
         [
@@ -677,16 +723,39 @@ def repowise_bootstrap(repowise: str) -> str:
             f"  {init} 1>&2",
             "fi",
             f'{command} hook install "$ROOT" --no-workspace 1>&2',
-            f'exec {command} mcp "$ROOT"',
+            "if git rev-parse --verify HEAD >/dev/null 2>&1; then",
+            f"  {update} 1>&2",
+            "fi",
+            'LOG="$ROOT/.repowise/.update.log"',
+            f'{watch} >> "$LOG" 2>&1 &',
+            "WATCH_PID=$!",
+            "sleep 1",
+            'if ! kill -0 "$WATCH_PID" 2>/dev/null; then',
+            '  wait "$WATCH_PID"',
+            "  exit 1",
+            "fi",
+            "cleanup() {",
+            '  kill "$WATCH_PID" 2>/dev/null || true',
+            '  wait "$WATCH_PID" 2>/dev/null || true',
+            "}",
+            "trap cleanup EXIT",
+            "trap 'exit 129' HUP",
+            "trap 'exit 130' INT",
+            "trap 'exit 143' TERM",
+            f'{command} mcp "$ROOT"',
         ]
     )
 
 
-def repowise_config_block(repowise: str, root: Path | None = None) -> str:
+def repowise_config_block(
+    repowise: str,
+    root: Path | None = None,
+    watcher: list[str] | None = None,
+) -> str:
     lines = [
         "[mcp_servers.repowise]",
         'command = "/bin/sh"',
-        f"args = [\"-c\", {toml_string(repowise_bootstrap(repowise))}]",
+        f"args = [\"-c\", {toml_string(repowise_bootstrap(repowise, watcher))}]",
         'default_tools_approval_mode = "approve"',
         "required = true",
         "startup_timeout_sec = 1800",
@@ -772,6 +841,20 @@ def setup_repo(args: argparse.Namespace, paths: InstallPaths) -> None:
         paths=paths,
         repowise=repowise,
     )
+    if (
+        run(["git", "rev-parse", "--verify", "HEAD"], cwd=root, check=False).returncode
+        == 0
+    ):
+        repowise_command(
+            root,
+            "update",
+            "--index-only",
+            "--no-agents",
+            "--no-workspace",
+            str(root),
+            paths=paths,
+            repowise=repowise,
+        )
 
     config_after = marker_block(
         config_before,

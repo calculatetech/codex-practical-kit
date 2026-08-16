@@ -17,6 +17,8 @@ Its keyless index combines:
 
 The first no-prose index does not need an API key. Higher-level prose can run through the authenticated Codex CLI subscription.
 
+The repository skill uses exact symbols and paths before natural-language synthesis. A user-configured model provider remains available for conceptual questions.
+
 ## How the kit uses it
 
 ### Before implementation
@@ -50,11 +52,13 @@ Core installation reuses `uv` when present. If it is absent, the kit installs pi
 
 The installer adds a user-level RepoWise MCP server. If Codex starts in a completely empty folder, the server command initializes Git first. It does not initialize Git in a non-empty folder.
 
-The first start in a Git repository initializes a no-prose index when `.repowise` is absent. It installs RepoWise's marker-delimited `post-commit` hook before it starts the MCP server.
+The first start in a Git repository initializes a no-prose index when `.repowise` is absent. Each start then installs RepoWise's marker-delimited `post-commit` hook and catches up the index.
+
+While MCP runs, an index-only watcher collects working-tree edits and uses RepoWise's debounce period. It does not make model calls. The launcher ignores file-open and file-close events because these events are not edits.
 
 The managed Codex configuration makes RepoWise required and approves its MCP calls. Codex waits up to 1,800 seconds for initialization.
 
-The hook starts a background update after each commit. RepoWise owns its queue marker, log, and single-flight update behavior.
+The hook starts a background update after each commit. RepoWise owns its queue marker, log, and single-flight update behavior. The active watcher stops when MCP stops.
 
 Agent behavior is defined by [Repository knowledge](../assets/skills/repository-knowledge/SKILL.md).
 

@@ -2,7 +2,7 @@
 15cefba6945d22a52b5b8ef6dd656fffcb698627b9fb23dacc5c8ec27ad1680d  ./.gitignore
 baf4f57635d6296a11aec1a9b0aeba01ca7d6a0707c39acf2644b66dfd81a057  ./CODEX-INSTALL-PROMPT.md
 6612129aca01053f15098204fb4bbaafdf85a667956202530bdcbc339e58e462  ./LICENSE
-d82726c742ffe0541b3a57f3a0f9eb6ac1613a3495414c8845caa4517c15970a  ./README.md
+4459c9c7105584c86258de3875635887fffa8a2149be71ed2d858208ee3b97d0  ./README.md
 69a6206080464a02398a6ec98174016a0571e731b4e7b501a3c427b5349c74ae  ./THIRD_PARTY.md
 1c1e4aeaeb37714253925219bcee86cfaff2bca00863809c8ffd217055cfd317  ./assets/AGENTS.block.md
 4860b95008e317329e9eacb5fd171743d55a5ab6ae57e34a5cf5fe9a7b337c64  ./assets/hooks/session_start.py
@@ -32,7 +32,7 @@ c1262c3a789474f328a6beb6b0e9369d156f4685cb7d4213026b96fed728af07  ./assets/skill
 5ac5175efb1ee5fcd32b14d120361d148c0c2983095dc4d0dc90fa6e8a27b756  ./assets/skills/publication/SKILL.md
 2bb48a3acdf44a92166579c7703be80493cd61415836ae01b3fe011e1f37aa5f  ./assets/skills/publication/references/publication.md
 b87078d33fa47da8a2f60b1b5155671f593b7dcf198e50e307c788bd42bc154c  ./assets/skills/publication/references/versioning.md
-b475ae7e9ba1ffa780258003008d6e9d5e28cf51735583fb39b077cd54320cc3  ./assets/skills/repository-knowledge/SKILL.md
+b70a7647d2c3cef04681e7056248fce5d9bf5f630c7a5d803d19b2f6eb05ec1d  ./assets/skills/repository-knowledge/SKILL.md
 cf5fc956a073f985eec85399057e44b51b2dd5dc00a2db03d3d5bac5a0881fae  ./assets/skills/research-first/SKILL.md
 4f0062d1adcffb322d35dc0cdaefb8404f9f057b31a9b1e8792ca26708ac9a4b  ./assets/skills/roadmap-maintainer/SKILL.md
 a8a3764af5e50240c687019e5bf56d927728a0e802ab4ce2168d3816e2b69cbd  ./assets/skills/roadmap-maintainer/assets/roadmap-template.md
@@ -41,7 +41,7 @@ a8a3764af5e50240c687019e5bf56d927728a0e802ab4ce2168d3816e2b69cbd  ./assets/skill
 cb52aa9be35754dcb08224117a22cb518645aa77f20a33a3b1735ae2b9e4b3e6  ./docs/OPERATING-MANUAL.md
 88fafb1a45e7f4c34978643129b8580a55812529b60a20b4b08e7b2655dd98f7  ./docs/OPTIONAL-REVIEW-TOOLS.md
 9bee78762d4d1f446cfb816878e36671cdd823ab62521d32833cc915a572796e  ./docs/REMOVE-CBM.md
-b0ee21483fb824367f4e3ff29bd5abf617f96a3430af04c6aa4355951e342089  ./docs/REPOWISE.md
+cda06b298e27a42865bcc6ab73e34f910222108315946da8e96ccb7a0ee76480  ./docs/REPOWISE.md
 e27b3d72ff47ebf7230a96b3a5f2d6ea3f410e22ef382f8e7d9cd27c7bb59892  ./docs/REVIEW.md
 a3c5ee9540c05ad05fb44ad5d6ab0dbcc1d376f111dc6f4ab220be4ead186234  ./docs/SPEC-KIT.md
 5ad67444a17bae0c0e06113de6be3537201bc9b70dfe2d0422619f0f1e891b5a  ./docs/WHY-THIS-SHAPE.md
@@ -70,12 +70,13 @@ dc82f98131ca0fd910050e23e639de1dcc7a9e2ddd045b1887b274432932f443  ./docs/plans/c
 8bde7290c880952c25616430a551ddba8a00a4c08a539811ed83890373584a92  ./docs/plans/cpk-027-lifecycle-skills.md
 50a753e5524adc0790a079391c0b5394c5ef02eb37681392588ee1c17d7dc5e4  ./docs/plans/cpk-028-phase-scoped-minimalism.md
 b36965e64f5d106061e619d2237074add2ee87e71b4aacbf1c08db27fbb3f88b  ./docs/plans/cpk-029-plan-mode-hook.md
-2dc370a9efe424c4e1403461842804eb300e8ac7fad5d0f8d47e0feb8602628b  ./docs/roadmap.md
+c0ce736dd17cb03d20e1e9b42cb2a5744e260b67bfc51c27a61c097e90d2399f  ./docs/plans/cpk-030-repowise-index-routing.md
+3550c2a9f69da71ca7caf3fb14f17161b51eef830c2edfd967c33d448d7a4bca  ./docs/roadmap.md
 ab56a88d9188979f06ea142d1f58ea0d6ad9088e83a965bd324209d83da513ad  ./doctor.sh
 3466d2e34145cfdaa83d793960794b2aefc96f3d9c48d22fd2af930ec819e9c4  ./install.sh
-e04fc2b05b7b3d84eb231285f42b5dcd8665be56edd61f19ce6729b5626d52a9  ./kit.py
+279c8ebdb9462f1d2f01834b48902ce675f0444c63a5d7de2c90b669adfc2855  ./kit.py
 aa6fc7c37c332f5c5f8d6eb2abdacdbba464895302ec51a60d2484530754ae68  ./run-tests.sh
 bdae5fdc5840e46ec70d4a0a9581974be65576bdf8a721262a9fa3792c455237  ./setup-repo.sh
-4b67445ef0acdb1187ec0f3fc6b4eed8783b49efd2bf09b0b94529cc67486b89  ./tests/test_kit.py
+a6a97782dbd357a6f06943ff71213883243dc549e6669da8fdd5c127fd4e5a63  ./tests/test_kit.py
 f12cff94ef7f9b0ca489cbe43e1de737011476966e04c1578f4977177b0da217  ./uninstall.sh
 60f43425edbce4c5b67f9d1b1002fcc4e2430eb8bdd57e2f8c374bd20b0a52bb  ./upstream.lock.json

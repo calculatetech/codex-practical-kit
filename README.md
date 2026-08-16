@@ -68,7 +68,7 @@ Skill-specific procedures remain in each skill. [ExecPlan rules](.agent/PLANS.md
 
 The core install provides pinned `uv` and RepoWise when they are absent. It configures one required user-level RepoWise MCP server.
 
-In a Git repository, the first MCP start creates the index and installs RepoWise's `post-commit` hook. A completely empty folder becomes a Git repository. A non-empty, non-Git folder remains unchanged.
+In a Git repository, the first MCP start creates the index and installs RepoWise's `post-commit` hook. Each MCP session catches up the index and watches working-tree edits without model calls. A completely empty folder becomes a Git repository. A non-empty, non-Git folder remains unchanged.
 
 Run eager setup when you need the index before the next Codex session:
 

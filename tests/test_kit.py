@@ -2,6 +2,7 @@ import json
 import os
 import re
 import subprocess
+import sys
 import tempfile
 import tomllib
 import unittest
@@ -40,11 +41,15 @@ class MarkerTests(unittest.TestCase):
             "# start\nold\n# end\n",
             "# start",
             "# end",
-            kit.repowise_config_block("/tmp/repowise"),
+            kit.repowise_config_block(
+                "/tmp/repowise", watcher=["/tmp/repowise", "watch"]
+            ),
         )
         self.assertEqual(
             tomllib.loads(updated)["mcp_servers"]["repowise"]["args"][1],
-            kit.repowise_bootstrap("/tmp/repowise"),
+            kit.repowise_bootstrap(
+                "/tmp/repowise", watcher=["/tmp/repowise", "watch"]
+            ),
         )
 
 
@@ -55,9 +60,16 @@ class InstallerTests(unittest.TestCase):
             "ensure_repowise_runtime",
             return_value=("/usr/bin/uv", "/usr/bin/repowise"),
         )
+        self.watcher = mock.patch.object(
+            kit,
+            "repowise_watch_command",
+            return_value=["/usr/bin/python3", "-c", kit.REPOWISE_WATCH_PATCH],
+        )
         self.runtime.start()
+        self.watcher.start()
 
     def tearDown(self):
+        self.watcher.stop()
         self.runtime.stop()
 
     def paths(self, base: Path) -> kit.InstallPaths:
@@ -428,6 +440,17 @@ class RepoWiseRuntimeTests(unittest.TestCase):
             base / "home", base / "codex", base / "skills", base / "kit"
         )
 
+    def test_watch_command_uses_repowise_python_and_filters_read_events(self):
+        with tempfile.TemporaryDirectory() as temp:
+            launcher = Path(temp) / "repowise"
+            launcher.write_text(f"#!{sys.executable}\n")
+
+            command = kit.repowise_watch_command(str(launcher))
+
+        self.assertEqual(command[:2], [sys.executable, "-c"])
+        for event in ("opened", "closed", "closed_no_write"):
+            self.assertIn(event, command[2])
+
     def test_runtime_pins_match_lock_file(self):
         runtime = json.loads((ROOT / "upstream.lock.json").read_text())["runtime_tools"]
         self.assertEqual(runtime["uv"]["version"], kit.UV_VERSION)
@@ -513,7 +536,7 @@ class RepoWiseRuntimeTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp) / "repo"
             root.mkdir()
-            GitFixture(root)
+            GitFixture(root).commit("sample.py", "value = 1\n")
             log = Path(temp) / "calls"
             fake = Path(temp) / "repowise"
             fake.write_text(
@@ -522,18 +545,55 @@ class RepoWiseRuntimeTests(unittest.TestCase):
                 "if [ \"$1\" = init ]; then\n"
                 "  for LAST do :; done\n"
                 "  mkdir -p \"$LAST/.repowise\"\n"
+                "elif [ \"$1\" = update ] && ! git rev-parse --verify HEAD >/dev/null 2>&1; then\n"
+                "  exit 7\n"
+                "elif [ \"$1\" = watch ]; then\n"
+                "  printf '%s\\n' \"$$\" >> \"$WATCH_PID_LOG\"\n"
+                "  trap 'exit 0' HUP INT TERM\n"
+                "  while :; do sleep 1; done\n"
                 "fi\n"
             )
             fake.chmod(0o755)
             env = os.environ.copy()
             env["CALL_LOG"] = str(log)
-            script = kit.repowise_bootstrap(str(fake))
-            subprocess.run(["/bin/sh", "-c", script], cwd=root, env=env, check=True)
-            subprocess.run(["/bin/sh", "-c", script], cwd=root, env=env, check=True)
+            watcher_pids = Path(temp) / "watcher-pids"
+            env["WATCH_PID_LOG"] = str(watcher_pids)
+            script = kit.repowise_bootstrap(str(fake), watcher=[str(fake), "watch"])
+            first = subprocess.run(
+                ["/bin/sh", "-c", script],
+                cwd=root,
+                env=env,
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+            subprocess.run(
+                ["/bin/sh", "-c", script], cwd=root, env=env, check=True
+            )
             calls = log.read_text().splitlines()
             self.assertEqual(sum(line.startswith("init ") for line in calls), 1)
             self.assertEqual(sum(line.startswith("hook install ") for line in calls), 2)
+            self.assertEqual(
+                sum(line.startswith("update --index-only ") for line in calls), 2
+            )
+            self.assertEqual(
+                sum(line.startswith("watch --index-only ") for line in calls), 2
+            )
             self.assertEqual(sum(line.startswith("mcp ") for line in calls), 2)
+            self.assertEqual(first.stdout, "")
+            self.assertLess(
+                calls.index(
+                    "update --index-only --no-agents --no-workspace " + str(root)
+                ),
+                calls.index("watch --index-only --no-workspace " + str(root)),
+            )
+            self.assertLess(
+                calls.index("watch --index-only --no-workspace " + str(root)),
+                calls.index("mcp " + str(root)),
+            )
+            for pid in map(int, watcher_pids.read_text().splitlines()):
+                with self.assertRaises(ProcessLookupError):
+                    os.kill(pid, 0)
 
     def test_bootstrap_initializes_only_empty_non_git_directory(self):
         with tempfile.TemporaryDirectory() as temp:
@@ -546,12 +606,17 @@ class RepoWiseRuntimeTests(unittest.TestCase):
                 "if [ \"$1\" = init ]; then\n"
                 "  for LAST do :; done\n"
                 "  mkdir -p \"$LAST/.repowise\"\n"
+                "elif [ \"$1\" = update ] && ! git rev-parse --verify HEAD >/dev/null 2>&1; then\n"
+                "  exit 7\n"
+                "elif [ \"$1\" = watch ]; then\n"
+                "  trap 'exit 0' HUP INT TERM\n"
+                "  while :; do sleep 1; done\n"
                 "fi\n"
             )
             fake.chmod(0o755)
             env = os.environ.copy()
             env["CALL_LOG"] = str(log)
-            script = kit.repowise_bootstrap(str(fake))
+            script = kit.repowise_bootstrap(str(fake), watcher=[str(fake), "watch"])
 
             empty = root / "empty"
             empty.mkdir()
@@ -560,6 +625,8 @@ class RepoWiseRuntimeTests(unittest.TestCase):
             empty_calls = log.read_text().splitlines()
             self.assertEqual(sum(line.startswith("init ") for line in empty_calls), 1)
             self.assertEqual(sum(line.startswith("hook install ") for line in empty_calls), 1)
+            self.assertEqual(sum(line.startswith("update --index-only ") for line in empty_calls), 0)
+            self.assertEqual(sum(line.startswith("watch --index-only ") for line in empty_calls), 1)
             self.assertIn(f"mcp {empty}", empty_calls)
 
             log.write_text("")
@@ -570,8 +637,73 @@ class RepoWiseRuntimeTests(unittest.TestCase):
             self.assertFalse((nonempty / ".git").exists())
             self.assertEqual(log.read_text().splitlines(), ["mcp"])
 
+    def test_bootstrap_stops_when_watcher_fails_to_start(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            GitFixture(root)
+            (root / ".repowise").mkdir()
+            log = root / "calls"
+            fake = root / "repowise"
+            fake.write_text(
+                "#!/bin/sh\n"
+                "printf '%s\\n' \"$*\" >> \"$CALL_LOG\"\n"
+                "if [ \"$1\" = watch ]; then exit 7; fi\n"
+            )
+            fake.chmod(0o755)
+            env = os.environ.copy()
+            env["CALL_LOG"] = str(log)
+
+            result = subprocess.run(
+                [
+                    "/bin/sh",
+                    "-c",
+                    kit.repowise_bootstrap(
+                        str(fake), watcher=[str(fake), "watch"]
+                    ),
+                ],
+                cwd=root,
+                env=env,
+                check=False,
+            )
+
+            self.assertEqual(result.returncode, 7)
+            self.assertFalse(
+                any(line.startswith("mcp ") for line in log.read_text().splitlines())
+            )
+
 
 class IntegrationTests(unittest.TestCase):
+    def test_setup_skips_catch_up_before_first_commit(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            GitFixture(root)
+            calls = []
+
+            def fake_repowise(repo: Path, *args: str, **_kwargs):
+                calls.append(args)
+                if args and args[0] == "init":
+                    (repo / ".repowise").mkdir(exist_ok=True)
+                return subprocess.CompletedProcess([], 0, "", "")
+
+            paths = kit.InstallPaths(
+                root, root / "codex", root / "skills", root / "kit"
+            )
+            with mock.patch.object(
+                kit, "repowise_command", fake_repowise
+            ), mock.patch.object(
+                kit,
+                "ensure_repowise_runtime",
+                return_value=("/usr/bin/uv", "/usr/bin/repowise"),
+            ), mock.patch.object(
+                kit,
+                "repowise_watch_command",
+                return_value=["/usr/bin/python3", "-c", kit.REPOWISE_WATCH_PATCH],
+            ):
+                kit.setup_repo(Namespace(repo=str(root), prose=False), paths)
+
+            self.assertTrue(any(call[0] == "init" for call in calls))
+            self.assertFalse(any(call[0] == "update" for call in calls))
+
     def test_setup_preserves_roadmap_and_unrelated_blocks(self):
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp) / "repo"
@@ -596,10 +728,24 @@ class IntegrationTests(unittest.TestCase):
             paths = kit.InstallPaths(root, root / "codex", root / "skills", root / "kit")
             with mock.patch.object(kit, "repowise_command", fake_repowise), mock.patch.object(
                 kit, "ensure_repowise_runtime", return_value=("/usr/bin/uv", "/usr/bin/repowise")
+            ), mock.patch.object(
+                kit,
+                "repowise_watch_command",
+                return_value=["/usr/bin/python3", "-c", kit.REPOWISE_WATCH_PATCH],
             ):
                 kit.setup_repo(Namespace(repo=str(root), prose=False), paths)
             self.assertIn("mcp_servers.other", (root / ".codex" / "config.toml").read_text())
             self.assertTrue(any(call[:2] == ("hook", "install") for call in calls))
+            self.assertIn(
+                (
+                    "update",
+                    "--index-only",
+                    "--no-agents",
+                    "--no-workspace",
+                    str(root),
+                ),
+                calls,
+            )
             self.assertEqual((root / "docs" / "roadmap.md").read_text(), "sentinel\n")
             self.assertEqual((root / "AGENTS.md").read_text(), "# Project rules\n")
             with mock.patch.object(kit, "repowise_command", fake_repowise), mock.patch.object(
@@ -949,12 +1095,14 @@ class IntegrationTests(unittest.TestCase):
         self.assertIn("`./doctor.sh`", publication)
         self.assertIn("from the reviewed candidate", publication)
         self.assertIn("`Result: ready`", publication)
-        self.assertEqual(kit.KIT_VERSION, "0.15.1")
-        self.assertNotIn("Version `0.15.1`", (ROOT / "README.md").read_text())
-        self.assertNotIn("version 0.15.1", (ROOT / "CODEX-INSTALL-PROMPT.md").read_text())
+        self.assertEqual(kit.KIT_VERSION, "0.16.0")
+        self.assertNotIn("Version `0.16.0`", (ROOT / "README.md").read_text())
+        self.assertNotIn("version 0.16.0", (ROOT / "CODEX-INSTALL-PROMPT.md").read_text())
 
     def test_repowise_is_required(self):
-        config = kit.repowise_config_block("/tmp/repowise")
+        config = kit.repowise_config_block(
+            "/tmp/repowise", watcher=["/tmp/repowise", "watch"]
+        )
         owner = (
             ROOT
             / "assets"
@@ -968,9 +1116,32 @@ class IntegrationTests(unittest.TestCase):
 
         self.assertIn("required = true", config)
         self.assertIn("startup_timeout_sec = 1800", config)
+        self.assertIn("update --index-only --no-agents --no-workspace", config)
+        self.assertIn("watch --index-only --no-workspace", config)
         self.assertIn("cpk-rule-owner: repository-knowledge", owner)
         for route in (docs_skill, research_skill, notes):
             self.assertIn("repository-knowledge", route)
+
+    def test_repowise_routes_indexed_queries(self):
+        owner = (
+            ROOT
+            / "assets"
+            / "skills"
+            / "repository-knowledge"
+            / "SKILL.md"
+        ).read_text()
+        agents = (ROOT / "assets" / "AGENTS.block.md").read_text()
+
+        for rule in (
+            'Resolve exact identifiers through `search_codebase(mode="symbol")` and `get_symbol` before native search.',
+            "A verified `get_symbol` body is source confirmation; do not read it again.",
+            "After `no-llm-provider`, do not call `get_answer` again in the same Codex session.",
+            "Use `get_answer` only for conceptual how or why questions.",
+            "make one more query with the strongest known identifier or path",
+            "Preserve ambiguous exact candidates",
+        ):
+            self.assertIn(rule, owner)
+            self.assertNotIn(rule, agents)
 
     def test_review_stop_diagnostics_are_per_finding_and_mandatory(self):
         review = (ROOT / "assets" / "skills" / "adversarial-review" / "SKILL.md").read_text()
