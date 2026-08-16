@@ -8,10 +8,22 @@ Quote or link the accepted requirement, ExecPlan, specification, or user request
 
 ## Scope
 
+- Review mode: `full | delta | coherence`
 - Base revision:
-- Current revision or working tree:
+- Previous reviewed tree, or `none`:
+- Current staged tree:
+- Diff command:
 - Changed paths:
 - Excluded paths and reason:
+
+## Checkpoint
+
+- Pre-stage tracked-change classification:
+- `git diff --quiet` result:
+- Prior validated findings:
+- Prior finding disposition:
+- Direct impact added for a delta review:
+- Checkpoint invalidation reason, or `none`:
 
 ## Product boundary
 

@@ -764,6 +764,28 @@ class IntegrationTests(unittest.TestCase):
         self.assertIn('"changed_production_entry_point"', finding)
         self.assertIn('"task_visible_wrong_result"', finding)
 
+    def test_review_checkpoints_limit_repeat_review(self):
+        root = ROOT / "assets" / "skills" / "adversarial-review"
+        review = (root / "SKILL.md").read_text()
+        packet = (root / "references" / "review-packet.md").read_text()
+        finding = (root / "references" / "finding-format.md").read_text()
+        lenses = (root / "references" / "reviewer-lenses.md").read_text()
+
+        self.assertIn("`git write-tree`", review)
+        self.assertIn("review only the staged-tree delta and its direct impact", review)
+        self.assertIn("Before staging a later candidate", review)
+        self.assertIn("unrelated tracked-file change invalidates the checkpoint", review)
+        self.assertIn("Do not repeat local correctness review of unchanged code", review)
+        self.assertIn("Run the coherence pass once", review)
+        self.assertIn("A clean fix delta before coherence is an intermediate result", review)
+        self.assertIn("clean delta review of a coherence correction", review)
+        self.assertIn("Previous reviewed tree", packet)
+        self.assertIn("Pre-stage tracked-change classification", packet)
+        self.assertIn("Checkpoint invalidation reason", packet)
+        self.assertIn('"review_mode": "full | delta | coherence"', finding)
+        self.assertIn("## Delta correctness", lenses)
+        self.assertIn("## Final coherence", lenses)
+
     def test_focused_policy_package_and_version(self):
         rules_root = ROOT / "assets" / "skills" / "codex-practical-kit-rules" / "references"
         publication = (rules_root / "publication.md").read_text()
@@ -774,9 +796,9 @@ class IntegrationTests(unittest.TestCase):
         self.assertIn("`./doctor.sh`", publication)
         self.assertIn("from the reviewed candidate", publication)
         self.assertIn("`Result: ready`", publication)
-        self.assertEqual(kit.KIT_VERSION, "0.12.1")
-        self.assertNotIn("Version `0.12.1`", (ROOT / "README.md").read_text())
-        self.assertNotIn("version 0.12.1", (ROOT / "CODEX-INSTALL-PROMPT.md").read_text())
+        self.assertEqual(kit.KIT_VERSION, "0.13.0")
+        self.assertNotIn("Version `0.13.0`", (ROOT / "README.md").read_text())
+        self.assertNotIn("version 0.13.0", (ROOT / "CODEX-INSTALL-PROMPT.md").read_text())
 
     def test_repowise_is_required(self):
         config = kit.repowise_config_block("/tmp/repowise")

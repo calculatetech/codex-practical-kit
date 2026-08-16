@@ -17,6 +17,14 @@ Always check the supported normal path:
 
 Apply [Owner composition](../../codex-practical-kit-rules/references/owner-composition.md) and [Full-set results](../../codex-practical-kit-rules/references/full-set-results.md) when they are applicable.
 
+## Delta correctness
+
+Inspect the candidate slice, direct-impact sources, and prior findings named in the review packet.
+
+## Final coherence
+
+Inspect the cross-component interactions and unresolved findings named in the review packet.
+
 ## Optional lenses
 
 Add one of these lenses to the same reviewer only when the active task names it:

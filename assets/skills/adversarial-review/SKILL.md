@@ -1,16 +1,18 @@
 ---
 name: adversarial-review
 description: >
-  Run one clean-context, supported-model correctness review after code or
-  configuration changes. Reject findings about excluded conditions. Fix
-  validated normal-use defects with Ponytail. Stop after three counted
-  production-code-defect passes.
+  Run clean-context, scope-bound correctness review after code or configuration
+  changes. Use staged-tree checkpoints so later passes inspect only fix deltas,
+  then run one final coherence pass. Stop after three counted production-code
+  defect passes.
 license: MIT
 ---
 
 <!-- cpk-rule-owner: adversarial-review -->
 <!-- cpk-rule-guard: Only defects in executable production code can increment the three-defect count or trigger a review stop. -->
 <!-- cpk-rule-guard: Tests, test fixtures, documentation, static configuration, dependencies, manifests, and review housekeeping never increment or reset the count and never trigger a review stop. -->
+<!-- cpk-rule-guard: After a full review finds defects, later correctness passes review only the staged-tree delta and its direct impact. -->
+<!-- cpk-rule-guard: Run one cumulative coherence pass after fix deltas are clean. Do not repeat local correctness review of unchanged code. -->
 
 # Adversarial review
 
@@ -18,7 +20,7 @@ Review the behavior that the project supports. Do not expand the product through
 
 Apply [Delivery lifecycle](../codex-practical-kit-rules/references/delivery-lifecycle.md) before review. A review is read-only.
 
-Apply [Review closure](../codex-practical-kit-rules/references/review-closure.md) after a clean result.
+Apply [Review closure](../codex-practical-kit-rules/references/review-closure.md) only after the checkpoint sequence has a final clean result.
 
 ## Scope gate
 
@@ -34,6 +36,28 @@ Apply [Review closure](../codex-practical-kit-rules/references/review-closure.md
 
 Use one newly spawned clean-context reviewer. The reviewer is read-only and must not delegate.
 
+Before staging a later candidate, inspect every tracked worktree change. Each change must fix a validated finding or its direct impact. Any other tracked change invalidates the checkpoint and requires a new full review.
+
+Stage the complete candidate. Require `git diff --quiet` to succeed so no tracked change is outside the index. Run `git write-tree` and record the returned tree hash in the ignored task result.
+
+Use these review modes:
+
+- `full`: Review the complete task diff from its base to the staged tree.
+- `delta`: Compare the last reviewed tree with the current staged tree. Review the changed lines, their owners, direct callers and callees, affected tests, and prior findings.
+- `coherence`: Review interactions across the complete task diff after all fix deltas are clean.
+
+After a full review finds defects, later correctness passes review only the staged-tree delta and its direct impact.
+
+A delta reviewer does not reopen unchanged code. It can inspect unchanged context only when the delta changes its contract or execution path. A requirement, scope, base, supported-model, or unrelated tracked-file change invalidates the checkpoint and requires a new full review.
+
+If the first full review is clean, finish without a coherence pass.
+
+Run one cumulative coherence pass after fix deltas are clean. Do not repeat local correctness review of unchanged code.
+
+The coherence reviewer checks cross-component interactions and unresolved findings only. Run the coherence pass once. If it finds a defect, review that correction in delta mode and do not repeat coherence.
+
+A clean fix delta before coherence is an intermediate result and does not trigger review closure. Final clean results are a clean first full review, a clean coherence review, or the clean delta review of a coherence correction.
+
 Give the reviewer:
 
 - The accepted requirement.
@@ -43,6 +67,8 @@ Give the reviewer:
 - Applicable project rules.
 - Completed checks.
 - The supported model and explicit exclusions.
+- The review mode, base revision, previous reviewed tree, and current staged tree.
+- Prior validated findings and their current disposition.
 
 Select only the lenses that the change needs. Always select correctness. Add another lens to the same reviewer only when the active task names that risk.
 
@@ -95,7 +121,8 @@ Otherwise, for any validated in-scope finding:
 2. Add or correct one focused check.
 3. Run the applicable checks.
 4. Finalize documentation again.
-5. Start a new pass with a fresh reviewer.
+5. Record the reviewed tree and validated findings.
+6. Start a delta pass with a fresh reviewer.
 
 Use one final status line:
 
