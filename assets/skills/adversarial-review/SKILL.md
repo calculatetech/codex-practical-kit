@@ -22,6 +22,11 @@ Apply [Delivery lifecycle](../delivery-lifecycle/references/delivery-lifecycle.m
 
 Apply [Review closure](references/review-closure.md) only after the checkpoint sequence has a final clean result.
 
+## Phase mode
+
+<!-- cpk-rule-route-only: implementation-modes -->
+[Implementation modes](../delivery-lifecycle/references/implementation-modes.md)
+
 ## Scope gate
 
 <!-- cpk-rule-route-only: scope-boundaries -->
@@ -69,6 +74,7 @@ Give the reviewer:
 - The supported model and explicit exclusions.
 - The review mode, base revision, previous reviewed tree, and current staged tree.
 - Prior validated findings and their current disposition.
+- The accepted scenario mapping with its production paths, required oracles, runnable checks, and results.
 
 Select only the lenses that the change needs. Always select correctness. Add another lens to the same reviewer only when the active task names that risk.
 
@@ -117,12 +123,12 @@ After the halt, do not edit, test, review, spawn another subagent, commit, publi
 
 Otherwise, for any validated in-scope finding:
 
-1. Fix the smallest shared cause with Ponytail.
+1. Enter the selected implementation mode and fix the smallest shared cause.
 2. Add or correct one focused check.
 3. Run the applicable checks.
 4. Finalize documentation again.
 5. Record the reviewed tree and validated findings.
-6. Start a delta pass with a fresh reviewer.
+6. Return to the selected read-only mode and start a delta pass with a fresh reviewer.
 
 Use one final status line:
 

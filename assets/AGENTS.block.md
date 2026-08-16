@@ -9,7 +9,7 @@ Use only the skills that match the current task. Follow the focused references s
 
 - Coordination, implementation, and delivery: `delivery-lifecycle`.
 - Repository inspection: `repository-knowledge`.
-- Code changes: `ponytail`.
+- Implementation after accepted test scope: `ponytail`.
 - Non-trivial design: `design-preflight` and [ExecPlans](<{{PLANS_FILE}}>).
 - Current or costly technical choices: `research-first`.
 - Roadmap changes: `roadmap-maintainer`.

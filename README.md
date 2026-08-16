@@ -54,6 +54,7 @@ An applicable skill selects only the rules needed for its task:
 - [Decision handoffs](assets/skills/delivery-lifecycle/references/decision-handoffs.md)
 - [Repository knowledge](assets/skills/repository-knowledge/SKILL.md)
 - [Delivery lifecycle](assets/skills/delivery-lifecycle/references/delivery-lifecycle.md)
+- [Implementation modes](assets/skills/delivery-lifecycle/references/implementation-modes.md)
 - [Git isolation](assets/skills/delivery-lifecycle/references/git-isolation.md)
 - [Full-set results](assets/skills/design-preflight/references/full-set-results.md)
 - [Owner composition](assets/skills/design-preflight/references/owner-composition.md)

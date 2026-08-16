@@ -617,6 +617,7 @@ class IntegrationTests(unittest.TestCase):
             "decision-handoffs",
             "repository-knowledge",
             "delivery-lifecycle",
+            "implementation-modes",
             "git-isolation",
             "full-set-results",
             "owner-composition",
@@ -693,6 +694,7 @@ class IntegrationTests(unittest.TestCase):
             "delivery-lifecycle": (
                 "coordination.md",
                 "delivery-lifecycle.md",
+                "implementation-modes.md",
                 "git-isolation.md",
                 "decision-handoffs.md",
             ),
@@ -756,11 +758,76 @@ class IntegrationTests(unittest.TestCase):
         self.assertIn("Do not give it the coordinator's card", skill)
         self.assertIn('"reviewer": "normal-use-scenarios"', result)
         self.assertIn('"contract_gaps"', result)
-        self.assertEqual(owner.count("<!-- cpk-rule-guard:"), 3)
+        self.assertEqual(owner.count("<!-- cpk-rule-guard:"), 4)
         self.assertIn("full-set-results.md", owner)
         for route in (skill, card, result, lens):
             self.assertIn("owner-composition.md", route)
             self.assertIn("full-set-results.md", route)
+
+    def test_implementation_modes_are_phase_scoped(self):
+        root = ROOT / "assets" / "skills"
+        owner = (
+            root
+            / "delivery-lifecycle"
+            / "references"
+            / "implementation-modes.md"
+        ).read_text()
+        agents = (ROOT / "assets" / "AGENTS.block.md").read_text()
+        delivery = (root / "delivery-lifecycle" / "SKILL.md").read_text()
+        preflight = (root / "design-preflight" / "SKILL.md").read_text()
+        research = (root / "research-first" / "SKILL.md").read_text()
+        review = (root / "adversarial-review" / "SKILL.md").read_text()
+
+        self.assertIn("cpk-rule-owner: implementation-modes", owner)
+        self.assertIn("Keep normal mode active through accepted test scope", owner)
+        self.assertIn("requirements, planning, research, Scenario Proof", owner)
+        self.assertIn("test code, production code, or an accepted review correction", owner)
+        self.assertIn("explicit user mode selection overrides", owner)
+        self.assertIn("without, disable, or exclude Ponytail", owner)
+        self.assertIn("Return to normal mode before each read-only review pass", owner)
+        self.assertIn("Implementation after accepted test scope", agents)
+        self.assertNotIn("Code changes: `ponytail`", agents)
+        for route in (delivery, preflight, research, review):
+            self.assertIn("implementation-modes.md", route)
+        self.assertNotIn("Apply Ponytail", research)
+
+    def test_scenario_proof_maps_transition_closed_checks(self):
+        root = ROOT / "assets" / "skills"
+        owner = (
+            root
+            / "design-preflight"
+            / "references"
+            / "owner-composition.md"
+        ).read_text()
+        preflight = (root / "design-preflight" / "SKILL.md").read_text()
+        card = (
+            root / "design-preflight" / "references" / "preflight-card.md"
+        ).read_text()
+        result = (
+            root / "design-preflight" / "references" / "preflight-review.md"
+        ).read_text()
+        packet = (
+            root / "adversarial-review" / "references" / "review-packet.md"
+        ).read_text()
+        lenses = (
+            root / "adversarial-review" / "references" / "reviewer-lenses.md"
+        ).read_text()
+
+        self.assertIn("scenario set is open while a supported event", owner)
+        self.assertIn("until the terminal owner produces the required oracle", owner)
+        self.assertIn("Component checks do not satisfy", owner)
+        self.assertIn("Before implementation", preflight)
+        self.assertIn("Before review", preflight)
+        self.assertIn("suite pass or test count does not replace", preflight)
+        self.assertIn(
+            "| Scenario | Production path | Required oracle | Runnable test or command | Result |",
+            card,
+        )
+        for field in ('"production_path"', '"required_oracle"', '"planned_check"'):
+            self.assertIn(field, result)
+        self.assertIn("accepted Scenario Proof mapping", packet)
+        self.assertIn("aggregate suite result is supporting evidence only", packet)
+        self.assertIn("required oracle in the named runnable check", lenses)
 
     def test_product_scope_boundaries_gate_preflight_and_review(self):
         rules_root = ROOT / "assets" / "skills" / "design-preflight" / "references"
@@ -829,9 +896,9 @@ class IntegrationTests(unittest.TestCase):
         self.assertIn("`./doctor.sh`", publication)
         self.assertIn("from the reviewed candidate", publication)
         self.assertIn("`Result: ready`", publication)
-        self.assertEqual(kit.KIT_VERSION, "0.14.0")
-        self.assertNotIn("Version `0.14.0`", (ROOT / "README.md").read_text())
-        self.assertNotIn("version 0.14.0", (ROOT / "CODEX-INSTALL-PROMPT.md").read_text())
+        self.assertEqual(kit.KIT_VERSION, "0.15.0")
+        self.assertNotIn("Version `0.15.0`", (ROOT / "README.md").read_text())
+        self.assertNotIn("version 0.15.0", (ROOT / "CODEX-INSTALL-PROMPT.md").read_text())
 
     def test_repowise_is_required(self):
         config = kit.repowise_config_block("/tmp/repowise")

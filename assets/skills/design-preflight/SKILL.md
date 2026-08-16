@@ -15,6 +15,11 @@ license: MIT
 
 Understand the normal path before implementation. Do not turn possible environmental conditions into requirements.
 
+## Phase mode
+
+<!-- cpk-rule-route-only: implementation-modes -->
+[Implementation modes](../delivery-lifecycle/references/implementation-modes.md)
+
 ## Use this skill when
 
 Use it for a multi-file change, a public interface, persistent product state, an external service, or unclear ownership.
@@ -43,6 +48,8 @@ For non-trivial runtime behavior, derive a Scenario Proof with three lenses:
 
 Apply [Owner composition](references/owner-composition.md) to the path-and-transition lens. Apply [Full-set results](references/full-set-results.md) to collection semantics.
 
+Close each retained path-and-transition scenario over every supported event that can act on its state until the required terminal result. Do not split one stateful sequence into component scenarios.
+
 Use source predicates and requirements. Select the minimum cases that exercise each distinct outcome or disprove an invariant. Do not create a Cartesian product.
 
 Write one preflight card from `references/preflight-card.md`. It must contain:
@@ -54,7 +61,7 @@ Write one preflight card from `references/preflight-card.md`. It must contain:
 - The hard scope ceiling.
 - Applicable failures only.
 - The Scenario Proof for non-trivial runtime behavior.
-- Exact checks.
+- A planned production path, required oracle, and runnable check for each retained scenario.
 
 Every non-trivial runtime preflight requires one task ExecPlan. Merge the accepted card into it before implementation. For other ExecPlan work, do the same. Do not preserve a second planning artifact.
 
@@ -69,6 +76,8 @@ Do not give it the coordinator's card, Scenario Proof, implementation, known edg
 Require the JSON in `references/preflight-review.md`. Compare its independent result with the coordinator's derivation once. Merge supported scenarios into the card and ExecPlan. Do not start a review loop.
 
 Use the canonical classifications. Merge `applicable` scenarios. Record `contract-gap` scenarios. Omit `excluded` scenarios.
+
+Before implementation, each retained scenario must have a planned runnable check and oracle. Before review, update the mapping with the actual test or command and its result. A suite pass or test count does not replace this mapping.
 
 For a non-runtime preflight, use this same single challenge only when normal-use ownership or scope remains unclear.
 

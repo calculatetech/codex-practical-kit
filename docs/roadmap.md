@@ -33,6 +33,7 @@ No residual risk is accepted.
 
 ## Completed
 
+- ✅ **CPK-028 — Scope minimalism by lifecycle phase.** Planning, research, test-scope definition, and read-only review use normal mode. Implementation uses Ponytail after scenario obligations are fixed, and each retained runtime scenario maps to one production path, oracle, runnable check, and result.
 - ✅ **CPK-027 — Move rules into lifecycle skills.** AGENTS now routes tasks to lifecycle skills. Each shared rule remains in one focused owner, and upgrades remove the obsolete general package.
 - ✅ **CPK-026 — Add content-addressed review checkpoints.** Later correctness passes review only fix deltas and direct impact. One final coherence pass checks the complete task after fixes.
 - ✅ **CPK-025 — Verify the live toolkit before publication.** Toolkit publication now requires live installation and a ready Doctor result from the reviewed candidate.

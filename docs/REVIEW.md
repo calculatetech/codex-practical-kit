@@ -13,6 +13,7 @@ These focused shared rules also apply:
 - [Supported model](../assets/skills/design-preflight/references/supported-model.md)
 - [Scope boundaries](../assets/skills/design-preflight/references/scope-boundaries.md)
 - [Owner composition](../assets/skills/design-preflight/references/owner-composition.md)
+- [Implementation modes](../assets/skills/delivery-lifecycle/references/implementation-modes.md)
 - [Full-set results](../assets/skills/design-preflight/references/full-set-results.md)
 - [Review closure](../assets/skills/adversarial-review/references/review-closure.md)
 - [Decision handoffs](../assets/skills/delivery-lifecycle/references/decision-handoffs.md)

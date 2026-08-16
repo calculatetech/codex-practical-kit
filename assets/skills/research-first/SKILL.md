@@ -15,6 +15,11 @@ license: MIT
 
 Research must reduce uncertainty. It must not create ceremony.
 
+## Phase mode
+
+<!-- cpk-rule-route-only: implementation-modes -->
+[Implementation modes](../delivery-lifecycle/references/implementation-modes.md)
+
 ## Use this skill when
 
 - The task depends on a library, standard, product, law, protocol, or tool that can have changed.
@@ -41,7 +46,7 @@ Do not use this skill for a routine fix with a clear local answer.
 6. Check dates, versions, licenses, maintenance, and failure modes.
 7. Select one option. State why it wins for this repository.
 8. Name the rejected options and the condition that can change the decision.
-9. Apply Ponytail. Reuse an existing solution when it satisfies the constraints.
+9. Reuse an existing solution when it satisfies the constraints.
 
 ## Durable note
 

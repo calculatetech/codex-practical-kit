@@ -14,6 +14,8 @@ Always check the supported normal path:
 - Setup and cleanup agree.
 - A branch does not report success before the result exists.
 - Tests exercise the real owner.
+- Each retained Scenario Proof row follows its production path to the required oracle in the named runnable check.
+- A suite count does not substitute for a scenario result.
 
 Apply [Owner composition](../../design-preflight/references/owner-composition.md) and [Full-set results](../../design-preflight/references/full-set-results.md) when they are applicable.
 
@@ -23,7 +25,7 @@ Inspect the candidate slice, direct-impact sources, and prior findings named in 
 
 ## Final coherence
 
-Inspect the cross-component interactions and unresolved findings named in the review packet.
+Inspect the cross-component interactions, transition-closed scenario mappings, and unresolved findings named in the review packet.
 
 ## Optional lenses
 

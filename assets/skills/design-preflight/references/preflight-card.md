@@ -58,14 +58,19 @@ For each runtime outcome classified `composes`, record:
 - Entry point, relevant gates, and terminal owner.
 - Applicable input-domain, path-and-transition, and collection cases.
 - Expected result, or `undefined — decision required`.
-- One runnable check for each retained case.
 - One short reason for each inapplicable lens.
 
 Do not create a Cartesian product of inputs.
 
+Before implementation, complete the first four columns for each retained scenario. Before review, record the actual runnable test or command and its result.
+
+| Scenario | Production path | Required oracle | Runnable test or command | Result |
+| --- | --- | --- | --- | --- |
+|  |  |  |  |  |
+
 ## Checks
 
-List exact commands and normal-use scenarios. Each check must name the behavior that it can fail on.
+List supporting commands. Do not replace the scenario mapping with an aggregate test count or suite result.
 
 ## Open decisions
 

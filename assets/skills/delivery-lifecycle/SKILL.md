@@ -15,5 +15,6 @@ Read [Coordination](references/coordination.md) for every use.
 Read only the other reference that matches the task:
 
 - Implementation and delivery: [Delivery lifecycle](references/delivery-lifecycle.md).
+- Planning, implementation, and review phase modes: [Implementation modes](references/implementation-modes.md).
 - Branch or worktree choice: [Git task isolation](references/git-isolation.md).
 - A material choice that needs user direction: [Decision handoffs](references/decision-handoffs.md).
