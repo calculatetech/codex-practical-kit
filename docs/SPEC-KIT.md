@@ -25,7 +25,7 @@ Run `specify integration list` first when the installed release changes its inte
 
 ## Ownership
 
-Apply [Rule ownership](../assets/skills/codex-practical-kit-rules/references/rule-ownership.md).
+Apply [Rule ownership](../assets/skills/toolkit-maintainer/SKILL.md).
 
 When Spec Kit supplies the behavior specification:
 

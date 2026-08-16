@@ -3,7 +3,7 @@
 ## Product scope
 
 <!-- cpk-rule-route-only: scope-boundaries -->
-[Scope boundaries](../../codex-practical-kit-rules/references/scope-boundaries.md)
+[Scope boundaries](scope-boundaries.md)
 
 ## Result
 
@@ -70,7 +70,7 @@ Return JSON only.
 }
 ```
 
-Apply [Owner composition](../../codex-practical-kit-rules/references/owner-composition.md) and [Full-set results](../../codex-practical-kit-rules/references/full-set-results.md) to the independent result.
+Apply [Owner composition](owner-composition.md) and [Full-set results](full-set-results.md) to the independent result.
 
 The coordinator must add the applicable runnable checks to the accepted Scenario Proof. Do not create a Cartesian product.
 
@@ -79,4 +79,4 @@ Use the canonical classifications to fill `scenarios`, `contract_gaps`, and `exc
 ## Supported-model classification
 
 <!-- cpk-rule-route-only: supported-model -->
-[Supported model](../../codex-practical-kit-rules/references/supported-model.md)
+[Supported model](supported-model.md)

@@ -4,18 +4,19 @@ The managed AGENTS block selects the rules for an agent. This manual does not co
 
 ## Task rules
 
-- [Coordination](../assets/skills/codex-practical-kit-rules/references/coordination.md)
-- [Supported model](../assets/skills/codex-practical-kit-rules/references/supported-model.md)
-- [Scope boundaries](../assets/skills/codex-practical-kit-rules/references/scope-boundaries.md)
-- [Decision handoffs](../assets/skills/codex-practical-kit-rules/references/decision-handoffs.md)
-- [Repository knowledge](../assets/skills/codex-practical-kit-rules/references/repository-knowledge.md)
-- [Delivery lifecycle](../assets/skills/codex-practical-kit-rules/references/delivery-lifecycle.md)
-- [Git isolation](../assets/skills/codex-practical-kit-rules/references/git-isolation.md)
-- [Full-set results](../assets/skills/codex-practical-kit-rules/references/full-set-results.md)
-- [Owner composition](../assets/skills/codex-practical-kit-rules/references/owner-composition.md)
-- [Review closure](../assets/skills/codex-practical-kit-rules/references/review-closure.md)
-- [Publication](../assets/skills/codex-practical-kit-rules/references/publication.md)
-- [Versioning](../assets/skills/codex-practical-kit-rules/references/versioning.md)
+- [Coordination](../assets/skills/delivery-lifecycle/references/coordination.md)
+- [Supported model](../assets/skills/design-preflight/references/supported-model.md)
+- [Scope boundaries](../assets/skills/design-preflight/references/scope-boundaries.md)
+- [Decision handoffs](../assets/skills/delivery-lifecycle/references/decision-handoffs.md)
+- [Repository knowledge](../assets/skills/repository-knowledge/SKILL.md)
+- [Delivery lifecycle](../assets/skills/delivery-lifecycle/references/delivery-lifecycle.md)
+- [Git isolation](../assets/skills/delivery-lifecycle/references/git-isolation.md)
+- [Full-set results](../assets/skills/design-preflight/references/full-set-results.md)
+- [Owner composition](../assets/skills/design-preflight/references/owner-composition.md)
+- [Review closure](../assets/skills/adversarial-review/references/review-closure.md)
+- [Publication](../assets/skills/publication/references/publication.md)
+- [Versioning](../assets/skills/publication/references/versioning.md)
+- [Rule ownership](../assets/skills/toolkit-maintainer/SKILL.md)
 
 ## Specialized procedures
 

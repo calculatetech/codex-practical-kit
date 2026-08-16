@@ -9,7 +9,7 @@ State one observable outcome.
 ## Product boundary
 
 <!-- cpk-rule-route-only: scope-boundaries -->
-[Scope boundaries](../../codex-practical-kit-rules/references/scope-boundaries.md)
+[Scope boundaries](scope-boundaries.md)
 
 ## Task boundary facts
 
@@ -24,7 +24,7 @@ State one observable outcome.
 ## Supported operating model
 
 <!-- cpk-rule-route-only: supported-model -->
-[Supported model](../../codex-practical-kit-rules/references/supported-model.md)
+[Supported model](supported-model.md)
 
 ## Existing owner
 
@@ -50,7 +50,7 @@ Name the existing owner to change and the minimum supporting edits.
 
 ## Scenario Proof
 
-Apply [Owner composition](../../codex-practical-kit-rules/references/owner-composition.md) and [Full-set results](../../codex-practical-kit-rules/references/full-set-results.md) when they are applicable.
+Apply [Owner composition](owner-composition.md) and [Full-set results](full-set-results.md) when they are applicable.
 
 For each runtime outcome classified `composes`, record:
 

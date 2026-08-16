@@ -18,19 +18,19 @@ license: MIT
 
 Review the behavior that the project supports. Do not expand the product through review.
 
-Apply [Delivery lifecycle](../codex-practical-kit-rules/references/delivery-lifecycle.md) before review. A review is read-only.
+Apply [Delivery lifecycle](../delivery-lifecycle/references/delivery-lifecycle.md) before review. A review is read-only.
 
-Apply [Review closure](../codex-practical-kit-rules/references/review-closure.md) only after the checkpoint sequence has a final clean result.
+Apply [Review closure](references/review-closure.md) only after the checkpoint sequence has a final clean result.
 
 ## Scope gate
 
 <!-- cpk-rule-route-only: scope-boundaries -->
-[Scope boundaries](../codex-practical-kit-rules/references/scope-boundaries.md)
+[Scope boundaries](../design-preflight/references/scope-boundaries.md)
 
 ## Supported-model gate
 
 <!-- cpk-rule-route-only: supported-model -->
-[Supported model](../codex-practical-kit-rules/references/supported-model.md)
+[Supported model](../design-preflight/references/supported-model.md)
 
 ## Review pass
 

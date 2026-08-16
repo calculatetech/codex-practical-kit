@@ -85,10 +85,19 @@ class InstallerTests(unittest.TestCase):
             installed = agents.read_text()
             self.assertTrue(installed.startswith("# User preference\n- Keep me.\n"))
             self.assertLess(len(installed.splitlines()), 40)
-            self.assertIn(paths.skills_home.as_posix(), installed)
             self.assertIn((paths.codex_home / "PLANS.md").as_posix(), installed)
+            for skill in (
+                "delivery-lifecycle",
+                "repository-knowledge",
+                "design-preflight",
+                "adversarial-review",
+                "publication",
+                "toolkit-maintainer",
+            ):
+                self.assertIn(f"`{skill}`", installed)
             self.assertNotIn("{{", installed)
             self.assertNotIn("Only the active coordinator can delegate", installed)
+            self.assertNotIn("codex-practical-kit-rules", installed)
 
     def test_reinstall_accepts_existing_config_toml_hook(self):
         def fake_stage(destination: Path):
@@ -554,7 +563,7 @@ class IntegrationTests(unittest.TestCase):
         template = (
             ROOT / "assets" / "skills" / "roadmap-maintainer" / "assets" / "roadmap-template.md"
         ).read_text()
-        self.assertIn("roadmap-maintainer/SKILL.md", rules)
+        self.assertIn("`roadmap-maintainer`", rules)
         self.assertEqual(template.count("## Active"), 1)
         self.assertIn("## Declined", template)
 
@@ -679,15 +688,31 @@ class IntegrationTests(unittest.TestCase):
                     self.assertNotIn(guard, content, (owner_path, path, guard))
 
     def test_rule_routes_are_complete_and_links_resolve(self):
-        rules_root = ROOT / "assets" / "skills" / "codex-practical-kit-rules" / "references"
-        route_sources = [
-            ROOT / "assets" / "AGENTS.block.md",
-            ROOT / ".agent" / "PLANS.md",
-            *sorted((ROOT / "assets" / "skills").rglob("*.md")),
-        ]
-        route_text = "\n".join(path.read_text() for path in route_sources)
-        for owner in rules_root.glob("*.md"):
-            self.assertIn(owner.name, route_text, owner)
+        agents = (ROOT / "assets" / "AGENTS.block.md").read_text()
+        skill_routes = {
+            "delivery-lifecycle": (
+                "coordination.md",
+                "delivery-lifecycle.md",
+                "git-isolation.md",
+                "decision-handoffs.md",
+            ),
+            "design-preflight": (
+                "scope-boundaries.md",
+                "supported-model.md",
+                "owner-composition.md",
+                "full-set-results.md",
+            ),
+            "adversarial-review": ("review-closure.md",),
+            "publication": ("publication.md", "versioning.md"),
+        }
+        for skill, references in skill_routes.items():
+            self.assertIn(f"`{skill}`", agents)
+            skill_text = (ROOT / "assets" / "skills" / skill / "SKILL.md").read_text()
+            for reference in references:
+                self.assertIn(reference, skill_text)
+        for skill in ("repository-knowledge", "toolkit-maintainer"):
+            self.assertIn(f"`{skill}`", agents)
+        self.assertNotIn("codex-practical-kit-rules", agents)
 
         link_pattern = re.compile(r"]\((?:<)?([^)>]+\.md)(?:>)?\)")
         link_sources = [
@@ -721,7 +746,7 @@ class IntegrationTests(unittest.TestCase):
             ROOT
             / "assets"
             / "skills"
-            / "codex-practical-kit-rules"
+            / "design-preflight"
             / "references"
             / "owner-composition.md"
         ).read_text()
@@ -738,7 +763,7 @@ class IntegrationTests(unittest.TestCase):
             self.assertIn("full-set-results.md", route)
 
     def test_product_scope_boundaries_gate_preflight_and_review(self):
-        rules_root = ROOT / "assets" / "skills" / "codex-practical-kit-rules" / "references"
+        rules_root = ROOT / "assets" / "skills" / "design-preflight" / "references"
         owner = (rules_root / "scope-boundaries.md").read_text()
         preflight = (ROOT / "assets" / "skills" / "design-preflight" / "SKILL.md").read_text()
         card = (
@@ -786,19 +811,27 @@ class IntegrationTests(unittest.TestCase):
         self.assertIn("## Delta correctness", lenses)
         self.assertIn("## Final coherence", lenses)
 
-    def test_focused_policy_package_and_version(self):
-        rules_root = ROOT / "assets" / "skills" / "codex-practical-kit-rules" / "references"
-        publication = (rules_root / "publication.md").read_text()
-        self.assertIn("codex-practical-kit-rules", kit.CUSTOM_SKILLS)
-        self.assertEqual(len(list(rules_root.glob("*.md"))), 13)
+    def test_lifecycle_skills_and_version(self):
+        publication = (
+            ROOT / "assets" / "skills" / "publication" / "references" / "publication.md"
+        ).read_text()
+        for skill in (
+            "delivery-lifecycle",
+            "repository-knowledge",
+            "publication",
+            "toolkit-maintainer",
+        ):
+            self.assertIn(skill, kit.CUSTOM_SKILLS)
+        self.assertNotIn("codex-practical-kit-rules", kit.CUSTOM_SKILLS)
+        self.assertIn("codex-practical-kit-rules", kit.OBSOLETE_SKILLS)
         self.assertIn("Before Codex Practical Kit publication", publication)
         self.assertIn("`./install.sh`", publication)
         self.assertIn("`./doctor.sh`", publication)
         self.assertIn("from the reviewed candidate", publication)
         self.assertIn("`Result: ready`", publication)
-        self.assertEqual(kit.KIT_VERSION, "0.13.0")
-        self.assertNotIn("Version `0.13.0`", (ROOT / "README.md").read_text())
-        self.assertNotIn("version 0.13.0", (ROOT / "CODEX-INSTALL-PROMPT.md").read_text())
+        self.assertEqual(kit.KIT_VERSION, "0.14.0")
+        self.assertNotIn("Version `0.14.0`", (ROOT / "README.md").read_text())
+        self.assertNotIn("version 0.14.0", (ROOT / "CODEX-INSTALL-PROMPT.md").read_text())
 
     def test_repowise_is_required(self):
         config = kit.repowise_config_block("/tmp/repowise")
@@ -806,9 +839,8 @@ class IntegrationTests(unittest.TestCase):
             ROOT
             / "assets"
             / "skills"
-            / "codex-practical-kit-rules"
-            / "references"
-            / "repository-knowledge.md"
+            / "repository-knowledge"
+            / "SKILL.md"
         ).read_text()
         docs_skill = (ROOT / "assets" / "skills" / "docs-maintainer" / "SKILL.md").read_text()
         research_skill = (ROOT / "assets" / "skills" / "research-first" / "SKILL.md").read_text()
@@ -818,7 +850,7 @@ class IntegrationTests(unittest.TestCase):
         self.assertIn("startup_timeout_sec = 1800", config)
         self.assertIn("cpk-rule-owner: repository-knowledge", owner)
         for route in (docs_skill, research_skill, notes):
-            self.assertIn("repository-knowledge.md", route)
+            self.assertIn("repository-knowledge", route)
 
     def test_review_stop_diagnostics_are_per_finding_and_mandatory(self):
         review = (ROOT / "assets" / "skills" / "adversarial-review" / "SKILL.md").read_text()

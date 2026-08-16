@@ -3,7 +3,7 @@
 ## Product scope
 
 <!-- cpk-rule-route-only: scope-boundaries -->
-[Scope boundaries](../../codex-practical-kit-rules/references/scope-boundaries.md)
+[Scope boundaries](../../design-preflight/references/scope-boundaries.md)
 
 ## Correctness
 
@@ -15,7 +15,7 @@ Always check the supported normal path:
 - A branch does not report success before the result exists.
 - Tests exercise the real owner.
 
-Apply [Owner composition](../../codex-practical-kit-rules/references/owner-composition.md) and [Full-set results](../../codex-practical-kit-rules/references/full-set-results.md) when they are applicable.
+Apply [Owner composition](../../design-preflight/references/owner-composition.md) and [Full-set results](../../design-preflight/references/full-set-results.md) when they are applicable.
 
 ## Delta correctness
 

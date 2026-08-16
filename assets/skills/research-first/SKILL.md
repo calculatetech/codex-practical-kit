@@ -28,7 +28,7 @@ Do not use this skill for a routine fix with a clear local answer.
 
 1. Read the current repository first.
    - Find the existing owner, dependency, pattern, and constraint.
-   - Apply [Repository knowledge](../codex-practical-kit-rules/references/repository-knowledge.md).
+   - Apply [Repository knowledge](../repository-knowledge/SKILL.md).
 2. Write the exact question in one sentence.
 3. List the constraints that decide the answer.
 4. Inspect two to four viable options. Do not create a long catalog.

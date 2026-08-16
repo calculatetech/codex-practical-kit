@@ -130,4 +130,4 @@ License: MIT.
 
 RepoWise is the kit's required repository context provider.
 
-Read the canonical [Repository knowledge](../assets/skills/codex-practical-kit-rules/references/repository-knowledge.md) rule when a task uses it.
+Read the canonical [Repository knowledge](../assets/skills/repository-knowledge/SKILL.md) rule when a task uses it.

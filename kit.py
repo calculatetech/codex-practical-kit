@@ -24,7 +24,7 @@ from pathlib import Path
 from typing import Any, Iterable
 
 KIT_ID = "codex-practical-kit"
-KIT_VERSION = "0.13.0"
+KIT_VERSION = "0.14.0"
 REPOWISE_VERSION = "0.41.0"
 UV_VERSION = "0.12.4"
 UV_INSTALLER_URL = f"https://astral.sh/uv/{UV_VERSION}/install.sh"
@@ -38,15 +38,18 @@ HOOKS_START = "# >>> codex-practical-kit:hooks >>>"
 HOOKS_END = "# <<< codex-practical-kit:hooks <<<"
 INSTALLED_HOOK_BASENAMES = {"session_start.py"}
 CUSTOM_SKILLS = (
-    "codex-practical-kit-rules",
+    "delivery-lifecycle",
+    "repository-knowledge",
     "docs-maintainer",
     "roadmap-maintainer",
     "research-first",
     "design-preflight",
     "adversarial-review",
     "defect-diagnostic",
+    "publication",
+    "toolkit-maintainer",
 )
-OBSOLETE_SKILLS = ("task-brief",)
+OBSOLETE_SKILLS = ("task-brief", "codex-practical-kit-rules")
 UPSTREAM_SKILLS = ("ponytail", "simple-english")
 ALL_SKILLS = (*UPSTREAM_SKILLS, *CUSTOM_SKILLS)
 

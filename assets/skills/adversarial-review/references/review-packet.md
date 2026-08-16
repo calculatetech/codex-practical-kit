@@ -28,7 +28,7 @@ Quote or link the accepted requirement, ExecPlan, specification, or user request
 ## Product boundary
 
 <!-- cpk-rule-route-only: scope-boundaries -->
-[Scope boundaries](../../codex-practical-kit-rules/references/scope-boundaries.md)
+[Scope boundaries](../../design-preflight/references/scope-boundaries.md)
 
 ## Task boundary facts
 
@@ -75,4 +75,4 @@ Include only the AGENTS, CLAUDE, lint, test, architecture, or API rules that gov
 
 ## RepoWise observations
 
-Apply [Repository knowledge](../../codex-practical-kit-rules/references/repository-knowledge.md).
+Apply [Repository knowledge](../../repository-knowledge/SKILL.md).

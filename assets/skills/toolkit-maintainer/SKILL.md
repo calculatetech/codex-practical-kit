@@ -1,13 +1,22 @@
+---
+name: toolkit-maintainer
+description: >
+  Maintain Codex Practical Kit rules, routers, skills, and rule-owner tests.
+  Use when adding, moving, deleting, or revising toolkit instructions or when
+  changing AGENTS routing and canonical rule ownership.
+license: MIT
+---
+
 <!-- cpk-rule-owner: rule-ownership -->
 <!-- cpk-rule-guard: A live toolkit rule has exactly one authoritative file. -->
-<!-- cpk-rule-guard: A router links to a rule owner and does not summarize its rule. -->
+<!-- cpk-rule-guard: A router names an applicable skill or links to a rule owner. It does not summarize the rule. -->
 <!-- cpk-rule-guard: A `cpk-rule-route-only` section contains only its marker and one Markdown link. -->
 
 # Rule ownership
 
 A live toolkit rule has exactly one authoritative file.
 
-A router links to a rule owner and does not summarize its rule. Documentation also links to the owner instead of copying instructions.
+A router names an applicable skill or links to a rule owner. It does not summarize the rule. Documentation also links to the owner instead of copying instructions.
 
 Each owner declares one unique `cpk-rule-owner` comment. Add `cpk-rule-guard` comments for distinctive requirements that must not occur in another live file.
 

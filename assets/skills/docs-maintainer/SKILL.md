@@ -33,12 +33,12 @@ Keep the documentation true. Do not write documentation to prove that you wrote 
 6. Use the `simple-english` skill in pragmatic mode.
 7. Keep code, commands, paths, identifiers, and quoted errors exact.
 8. Make sure that examples can still run as written.
-9. Apply [Delivery lifecycle](../codex-practical-kit-rules/references/delivery-lifecycle.md).
-10. Apply [Review closure](../codex-practical-kit-rules/references/review-closure.md) after a clean review.
+9. Apply [Delivery lifecycle](../delivery-lifecycle/references/delivery-lifecycle.md).
+10. Apply [Review closure](../adversarial-review/references/review-closure.md) after a clean review.
 
 ## RepoWise
 
-Apply [Repository knowledge](../codex-practical-kit-rules/references/repository-knowledge.md) to related documentation and owners.
+Apply [Repository knowledge](../repository-knowledge/SKILL.md) to related documentation and owners.
 
 ## Do not update documentation when
 

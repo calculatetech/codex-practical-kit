@@ -1,3 +1,12 @@
+---
+name: repository-knowledge
+description: >
+  Establish repository context with RepoWise before broad source exploration.
+  Use when inspecting an unfamiliar repository, tracing code relationships,
+  locating owners or callers, or preparing repository evidence for review.
+license: MIT
+---
+
 <!-- cpk-rule-owner: repository-knowledge -->
 <!-- cpk-rule-guard: Use RepoWise before broad repository exploration. -->
 <!-- cpk-rule-guard: If RepoWise fails, stop and restore the required code graph. -->

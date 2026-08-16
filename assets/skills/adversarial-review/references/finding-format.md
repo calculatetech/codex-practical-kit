@@ -3,7 +3,7 @@
 ## Product scope
 
 <!-- cpk-rule-route-only: scope-boundaries -->
-[Scope boundaries](../../codex-practical-kit-rules/references/scope-boundaries.md)
+[Scope boundaries](../../design-preflight/references/scope-boundaries.md)
 
 ## Result
 

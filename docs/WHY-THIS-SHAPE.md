@@ -4,13 +4,13 @@ The toolkit solves one narrow problem. It helps Codex complete useful work witho
 
 ## Focused rules
 
-The managed AGENTS block is a router. It does not carry a compact copy of each rule.
+The managed AGENTS block is a skill router. It does not carry a compact copy of each rule.
 
 Each shared rule has one focused owner. Skills link to shared owners when their procedures need the same requirement.
 
 This structure prevents compact summaries from losing required facts. It also prevents tests from making several policy copies mandatory.
 
-See [Rule ownership](../assets/skills/codex-practical-kit-rules/references/rule-ownership.md) for the enforceable contract.
+See [Rule ownership](../assets/skills/toolkit-maintainer/SKILL.md) for the enforceable contract.
 
 ## Task flow
 

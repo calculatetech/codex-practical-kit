@@ -87,7 +87,7 @@ After a clean review, move the reviewed Active task to one terminal section.
 4. Never put one identifier in more than one terminal section.
 5. Reread the complete roadmap and make sure that no task is incorrectly Active.
 
-Apply [Review closure](../codex-practical-kit-rules/references/review-closure.md) after a clean review.
+Apply [Review closure](../adversarial-review/references/review-closure.md) after a clean review.
 
 ## Template
 

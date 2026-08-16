@@ -17,12 +17,12 @@ Do not run the broken CBM uninstall routine first.
 ## Operation handling
 
 <!-- cpk-rule-route-only: supported-model -->
-[Supported model](../assets/skills/codex-practical-kit-rules/references/supported-model.md)
+[Supported model](../assets/skills/design-preflight/references/supported-model.md)
 
 ## Codex prompt
 
 ```text
 Remove the broken CBM integration without running its uninstall routine first.
 
-First read assets/skills/codex-practical-kit-rules/references/supported-model.md. Inspect global and project Codex configuration, hooks, plugins, skills, AGENTS files, running processes, package records, and CBM data directories. Remove only CBM-owned entries. Preserve unrelated entries. Apply the supported-model rules. Verify with `codex mcp list` and a new Codex session. Do not install a replacement during this task.
+First read assets/skills/design-preflight/references/supported-model.md. Inspect global and project Codex configuration, hooks, plugins, skills, AGENTS files, running processes, package records, and CBM data directories. Remove only CBM-owned entries. Preserve unrelated entries. Apply the supported-model rules. Verify with `codex mcp list` and a new Codex session. Do not install a replacement during this task.
 ```

@@ -24,12 +24,12 @@ Skip it for a small change with one proven owner and one direct check.
 ## Scope gate
 
 <!-- cpk-rule-route-only: scope-boundaries -->
-[Scope boundaries](../codex-practical-kit-rules/references/scope-boundaries.md)
+[Scope boundaries](references/scope-boundaries.md)
 
 ## Supported-model gate
 
 <!-- cpk-rule-route-only: supported-model -->
-[Supported model](../codex-practical-kit-rules/references/supported-model.md)
+[Supported model](references/supported-model.md)
 
 ## Define the change
 
@@ -41,7 +41,7 @@ For non-trivial runtime behavior, derive a Scenario Proof with three lenses:
 - Path and transition: selectors, filters, transformations, controlled boundaries, state changes, and terminal obligations.
 - Collection semantics: supported empty input, one record, duplicates, a duplicate prefix with a later counterexample, and every record that owes a result.
 
-Apply [Owner composition](../codex-practical-kit-rules/references/owner-composition.md) to the path-and-transition lens. Apply [Full-set results](../codex-practical-kit-rules/references/full-set-results.md) to collection semantics.
+Apply [Owner composition](references/owner-composition.md) to the path-and-transition lens. Apply [Full-set results](references/full-set-results.md) to collection semantics.
 
 Use source predicates and requirements. Select the minimum cases that exercise each distinct outcome or disprove an invariant. Do not create a Cartesian product.
 

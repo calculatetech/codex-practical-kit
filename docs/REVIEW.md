@@ -10,9 +10,9 @@ The review skill is the sole owner of the review procedure:
 
 These focused shared rules also apply:
 
-- [Supported model](../assets/skills/codex-practical-kit-rules/references/supported-model.md)
-- [Scope boundaries](../assets/skills/codex-practical-kit-rules/references/scope-boundaries.md)
-- [Owner composition](../assets/skills/codex-practical-kit-rules/references/owner-composition.md)
-- [Full-set results](../assets/skills/codex-practical-kit-rules/references/full-set-results.md)
-- [Review closure](../assets/skills/codex-practical-kit-rules/references/review-closure.md)
-- [Decision handoffs](../assets/skills/codex-practical-kit-rules/references/decision-handoffs.md)
+- [Supported model](../assets/skills/design-preflight/references/supported-model.md)
+- [Scope boundaries](../assets/skills/design-preflight/references/scope-boundaries.md)
+- [Owner composition](../assets/skills/design-preflight/references/owner-composition.md)
+- [Full-set results](../assets/skills/design-preflight/references/full-set-results.md)
+- [Review closure](../assets/skills/adversarial-review/references/review-closure.md)
+- [Decision handoffs](../assets/skills/delivery-lifecycle/references/decision-handoffs.md)
