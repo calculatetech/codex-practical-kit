@@ -33,6 +33,7 @@ No residual risk is accepted.
 
 ## Completed
 
+- ✅ **CPK-034 — Require discriminating Scenario Proof checks.** Each retained scenario proves its exact semantic distinction at the terminal oracle.
 - ✅ **CPK-033 — Keep RepoWise active for the full task.** Every repository lookup stays index-first after `no-llm-provider` and automatic compaction.
 - ✅ **CPK-032 — Invoke planning and RepoWise throughout applicable work.** Qualifying Default-mode implementation and review corrections apply Design Preflight with an xhigh planning challenger, then return to the configured implementation effort. Each new repository lookup returns through RepoWise.
 - ✅ **CPK-031 — Freeze tracked task status before delivery.** Tracked task records contain their final durable state before commit, CI, push, pull request, merge, or publication.

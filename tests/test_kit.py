@@ -875,6 +875,7 @@ class IntegrationTests(unittest.TestCase):
             "git-isolation",
             "full-set-results",
             "owner-composition",
+            "scenario-discrimination",
             "review-closure",
             "publication",
             "versioning",
@@ -957,6 +958,7 @@ class IntegrationTests(unittest.TestCase):
                 "supported-model.md",
                 "owner-composition.md",
                 "full-set-results.md",
+                "scenario-discrimination.md",
             ),
             "adversarial-review": ("review-closure.md",),
             "publication": ("publication.md", "versioning.md"),
@@ -1125,7 +1127,7 @@ class IntegrationTests(unittest.TestCase):
         self.assertIn("Before review", preflight)
         self.assertIn("suite pass or test count does not replace", preflight)
         self.assertIn(
-            "| Scenario | Production path | Required oracle | Runnable test or command | Result |",
+            "| Production path | Required oracle | Runnable test or command | Result |",
             card,
         )
         for field in ('"production_path"', '"required_oracle"', '"planned_check"'):
@@ -1133,6 +1135,45 @@ class IntegrationTests(unittest.TestCase):
         self.assertIn("accepted Scenario Proof mapping", packet)
         self.assertIn("aggregate suite result is supporting evidence only", packet)
         self.assertIn("required oracle in the named runnable check", lenses)
+
+    def test_scenario_proof_requires_a_discriminating_case(self):
+        root = ROOT / "assets" / "skills"
+        owner = (
+            root
+            / "design-preflight"
+            / "references"
+            / "scenario-discrimination.md"
+        ).read_text()
+        preflight = (root / "design-preflight" / "SKILL.md").read_text()
+        card = (
+            root / "design-preflight" / "references" / "preflight-card.md"
+        ).read_text()
+        result = (
+            root / "design-preflight" / "references" / "preflight-review.md"
+        ).read_text()
+        packet = (
+            root / "adversarial-review" / "references" / "review-packet.md"
+        ).read_text()
+        lenses = (
+            root / "adversarial-review" / "references" / "reviewer-lenses.md"
+        ).read_text()
+
+        self.assertIn("<!-- cpk-rule-owner: scenario-discrimination -->", owner)
+        self.assertEqual(owner.count("<!-- cpk-rule-guard:"), 3)
+        self.assertIn("scenario-discrimination.md", preflight)
+        self.assertIn("scenario-discrimination.md", card)
+        self.assertIn("scenario-discrimination.md", result)
+        self.assertIn("scenario-discrimination.md", packet)
+        self.assertIn("scenario-discrimination.md", lenses)
+        self.assertIn('"discriminator"', result)
+        self.assertIn('"contrast"', result)
+        self.assertIn(
+            "| Scenario | Discriminator | Contrast | Production path | Required oracle | Runnable test or command | Result |",
+            card,
+        )
+        self.assertIn("complete the first six columns", card)
+        self.assertIn("split a row when one contrast cannot prove all claimed outcomes", owner)
+        self.assertIn("named requirement can be false while the check passes", owner)
 
     def test_product_scope_boundaries_gate_preflight_and_review(self):
         rules_root = ROOT / "assets" / "skills" / "design-preflight" / "references"

@@ -58,6 +58,7 @@ An applicable skill selects only the rules needed for its task:
 - [Git isolation](assets/skills/delivery-lifecycle/references/git-isolation.md)
 - [Full-set results](assets/skills/design-preflight/references/full-set-results.md)
 - [Owner composition](assets/skills/design-preflight/references/owner-composition.md)
+- [Scenario discrimination](assets/skills/design-preflight/references/scenario-discrimination.md)
 - [Review closure](assets/skills/adversarial-review/references/review-closure.md)
 - [Publication](assets/skills/publication/references/publication.md)
 - [Versioning](assets/skills/publication/references/versioning.md)

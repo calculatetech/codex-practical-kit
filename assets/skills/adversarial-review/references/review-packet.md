@@ -62,7 +62,9 @@ Write `unknown` when the source does not establish a fact.
 
 ## Verification already run
 
-Copy the accepted Scenario Proof mapping. For every retained scenario, include its production path, required oracle, actual runnable test or command, and result. An aggregate suite result is supporting evidence only.
+Copy the accepted Scenario Proof mapping. For every retained scenario, include its discriminator, contrast, production path, required oracle, actual runnable test or command, and result. An aggregate suite result is supporting evidence only.
+
+Apply [Scenario discrimination](../../design-preflight/references/scenario-discrimination.md) to the mapping.
 
 For each command, include:
 

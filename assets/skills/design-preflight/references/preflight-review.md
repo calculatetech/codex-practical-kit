@@ -33,6 +33,8 @@ Return JSON only.
       "given": "Normal starting condition",
       "when": "Project-controlled trigger",
       "then": "Required result",
+      "discriminator": "Requirement-derived dimension varied independently",
+      "contrast": "Minimal paired input or seeded state that exposes the nearest wrong meaning",
       "production_path": ["Entry point", "State owner", "Terminal owner"],
       "required_oracle": "Observable terminal result",
       "planned_check": "Runnable test or command that exercises the complete path",
@@ -73,9 +75,9 @@ Return JSON only.
 }
 ```
 
-Apply [Owner composition](owner-composition.md) and [Full-set results](full-set-results.md) to the independent result.
+Apply [Scenario discrimination](scenario-discrimination.md) to every retained scenario. Apply [Owner composition](owner-composition.md) and [Full-set results](full-set-results.md) to the independent result.
 
-The coordinator must verify each production path and add its oracle and planned runnable check to the accepted Scenario Proof. Do not create a Cartesian product.
+The coordinator must verify each discriminator, contrast, production path, oracle, and planned runnable check. Do not create a Cartesian product.
 
 Use the canonical classifications to fill `scenarios`, `contract_gaps`, and `exclusions`. Empty arrays are valid.
 

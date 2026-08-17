@@ -17,7 +17,7 @@ Always check the supported normal path:
 - Each retained Scenario Proof row follows its production path to the required oracle in the named runnable check.
 - A suite count does not substitute for a scenario result.
 
-Apply [Owner composition](../../design-preflight/references/owner-composition.md) and [Full-set results](../../design-preflight/references/full-set-results.md) when they are applicable.
+Apply [Scenario discrimination](../../design-preflight/references/scenario-discrimination.md) to every retained scenario. Apply [Owner composition](../../design-preflight/references/owner-composition.md) and [Full-set results](../../design-preflight/references/full-set-results.md) when they are applicable.
 
 ## Delta correctness
 

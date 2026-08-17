@@ -54,7 +54,7 @@ For non-trivial runtime behavior, derive a Scenario Proof with three lenses:
 - Path and transition: selectors, filters, transformations, controlled boundaries, state changes, and terminal obligations.
 - Collection semantics: supported empty input, one record, duplicates, a duplicate prefix with a later counterexample, and every record that owes a result.
 
-Apply [Owner composition](references/owner-composition.md) to the path-and-transition lens. Apply [Full-set results](references/full-set-results.md) to collection semantics.
+Apply [Scenario discrimination](references/scenario-discrimination.md) to every retained scenario. Apply [Owner composition](references/owner-composition.md) to the path-and-transition lens. Apply [Full-set results](references/full-set-results.md) to collection semantics.
 
 Close each retained path-and-transition scenario over every supported event that can act on its state until the required terminal result. Do not split one stateful sequence into component scenarios.
 
@@ -69,7 +69,7 @@ Write one preflight card from `references/preflight-card.md`. It must contain:
 - The hard scope ceiling.
 - Applicable failures only.
 - The Scenario Proof for non-trivial runtime behavior.
-- A planned production path, required oracle, and runnable check for each retained scenario.
+- A discriminator, contrast, planned production path, required oracle, and runnable check for each retained scenario.
 
 Every non-trivial runtime preflight requires one task ExecPlan. Merge the accepted card into it before implementation. For other ExecPlan work, do the same. Do not preserve a second planning artifact.
 
