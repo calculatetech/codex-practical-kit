@@ -33,6 +33,7 @@ No residual risk is accepted.
 
 ## Completed
 
+- ✅ **CPK-032 — Invoke planning and RepoWise throughout applicable work.** Qualifying Default-mode implementation and review corrections apply Design Preflight with an xhigh planning challenger, then return to the configured implementation effort. Each new repository lookup returns through RepoWise.
 - ✅ **CPK-031 — Freeze tracked task status before delivery.** Tracked task records contain their final durable state before commit, CI, push, pull request, merge, or publication.
 - ✅ **CPK-030 — Make RepoWise index-first and self-refreshing.** Exact lookups use indexed selectors, model synthesis remains optional, and active Codex sessions keep working-tree edits indexed without model calls.
 - ✅ **CPK-029 — Activate normal mode when Plan mode starts.** The managed prompt hook selects Ponytail normal mode before each Plan-mode prompt. Other modes keep their selected implementation mode.

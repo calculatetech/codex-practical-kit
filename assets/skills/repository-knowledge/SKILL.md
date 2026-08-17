@@ -1,9 +1,10 @@
 ---
 name: repository-knowledge
 description: >
-  Establish repository context with RepoWise before broad source exploration.
-  Use when inspecting an unfamiliar repository, tracing code relationships,
-  locating owners or callers, or preparing repository evidence for review.
+  Establish and refresh repository context with RepoWise. Use for each new
+  symbol, path, owner, caller, callee, or relationship lookup throughout
+  planning, implementation, review corrections, and review. Use before broad
+  source exploration and when preparing repository evidence.
 license: MIT
 ---
 
@@ -13,10 +14,15 @@ license: MIT
 <!-- cpk-rule-guard: A verified `get_symbol` body is source confirmation; do not read it again. -->
 <!-- cpk-rule-guard: After `no-llm-provider`, do not call `get_answer` again in the same Codex session. -->
 <!-- cpk-rule-guard: If RepoWise fails, stop and restore the required code graph. -->
+<!-- cpk-rule-guard: Use RepoWise for each new repository lookup throughout a task. -->
 
 # Repository knowledge
 
 Use RepoWise before broad repository exploration.
+
+Use RepoWise for each new repository lookup throughout a task. Initial orientation does not satisfy a later lookup.
+
+Reuse a verified result that is already in context. Do not repeat an indexed lookup without a new question or changed source.
 
 For an unfamiliar repository, call `get_overview` once.
 

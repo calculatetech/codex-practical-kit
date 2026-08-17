@@ -995,11 +995,52 @@ class IntegrationTests(unittest.TestCase):
         self.assertIn("Do not give it the coordinator's card", skill)
         self.assertIn('"reviewer": "normal-use-scenarios"', result)
         self.assertIn('"contract_gaps"', result)
-        self.assertEqual(owner.count("<!-- cpk-rule-guard:"), 4)
+        self.assertEqual(owner.count("<!-- cpk-rule-guard:"), 6)
         self.assertIn("full-set-results.md", owner)
         for route in (skill, card, result, lens):
             self.assertIn("owner-composition.md", route)
             self.assertIn("full-set-results.md", route)
+
+    def test_default_mode_preflight_and_repowise_continue_through_corrections(self):
+        root = ROOT / "assets" / "skills"
+        delivery = (
+            root / "delivery-lifecycle" / "references" / "delivery-lifecycle.md"
+        ).read_text()
+        preflight = (root / "design-preflight" / "SKILL.md").read_text()
+        composition = (
+            root / "design-preflight" / "references" / "owner-composition.md"
+        ).read_text()
+        review = (root / "adversarial-review" / "SKILL.md").read_text()
+        repository = (root / "repository-knowledge" / "SKILL.md").read_text()
+
+        invocation = (
+            "Invoke Design Preflight before implementation or an accepted review correction "
+            "when its trigger matches, even outside Plan Mode."
+        )
+        self.assertIn(invocation, delivery)
+        for content in (preflight, composition, review, repository):
+            self.assertNotIn(invocation, content)
+
+        self.assertIn("Plan Mode and an explicit skill request are not prerequisites", preflight)
+        self.assertIn("Apply the same entry gate to an accepted correction", preflight)
+        self.assertIn("The small-change exception still applies", preflight)
+        self.assertIn(
+            "For an accepted correction that passes the entry gate, spawn one fresh",
+            preflight,
+        )
+        self.assertIn("Reapply Delivery Lifecycle before an accepted correction", review)
+        self.assertIn("cpk-rule-route-only: repository-knowledge", delivery)
+        self.assertIn("cpk-rule-route-only: repository-knowledge", preflight)
+
+        lookup = "Use RepoWise for each new repository lookup throughout a task."
+        self.assertIn(lookup, repository)
+        for content in (delivery, preflight, composition, review):
+            self.assertNotIn(lookup, content)
+        self.assertIn("Initial orientation does not satisfy a later lookup", repository)
+
+        self.assertIn("smallest counterexample ordering", composition)
+        self.assertIn("one signal has multiple causes", composition)
+        self.assertIn("Do not test every event permutation", composition)
 
     def test_implementation_modes_are_phase_scoped(self):
         root = ROOT / "assets" / "skills"
@@ -1023,6 +1064,15 @@ class IntegrationTests(unittest.TestCase):
         self.assertIn("without, disable, or exclude Ponytail", owner)
         self.assertIn("Return to normal mode before each read-only review pass", owner)
         self.assertIn("managed prompt hook selects normal mode", owner)
+        self.assertIn("Use xhigh reasoning for each fresh read-only planning challenger", owner)
+        self.assertIn("main thread's configured reasoning effort for implementation", owner)
+        self.assertIn("accepted correction", owner)
+        for content in (agents, delivery, preflight, research, review):
+            self.assertNotIn(
+                "Use xhigh reasoning for each fresh read-only planning challenger",
+                content,
+            )
+        self.assertIn("Give a correction challenger the accepted finding", preflight)
         self.assertIn("Implementation after accepted test scope", agents)
         self.assertNotIn("Code changes: `ponytail`", agents)
         for route in (delivery, preflight, research, review):
@@ -1134,9 +1184,9 @@ class IntegrationTests(unittest.TestCase):
         self.assertIn("`./doctor.sh`", publication)
         self.assertIn("from the reviewed candidate", publication)
         self.assertIn("`Result: ready`", publication)
-        self.assertEqual(kit.KIT_VERSION, "0.16.1")
-        self.assertNotIn("Version `0.16.1`", (ROOT / "README.md").read_text())
-        self.assertNotIn("version 0.16.1", (ROOT / "CODEX-INSTALL-PROMPT.md").read_text())
+        self.assertEqual(kit.KIT_VERSION, "0.17.0")
+        self.assertNotIn("Version `0.17.0`", (ROOT / "README.md").read_text())
+        self.assertNotIn("version 0.17.0", (ROOT / "CODEX-INSTALL-PROMPT.md").read_text())
 
     def test_repowise_is_required(self):
         config = kit.repowise_config_block(

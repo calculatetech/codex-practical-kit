@@ -18,6 +18,8 @@ Design Preflight, ExecPlans, Docs Maintainer, Roadmap Maintainer, and Adversaria
 
 Session Start announces the router. Prompt submission selects normal mode before Plan-mode prompts. An agent reads a linked procedure when the task reaches that stage.
 
+Qualifying implementation and review corrections use an xhigh planning challenger. The main thread then implements at its configured reasoning effort.
+
 ## Repository knowledge
 
 RepoWise provides repository evidence. Source remains the authority for implementation decisions.

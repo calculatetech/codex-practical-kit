@@ -1,12 +1,15 @@
 <!-- cpk-rule-owner: implementation-modes -->
 <!-- cpk-rule-guard: Keep normal mode active through accepted test scope. -->
 <!-- cpk-rule-guard: Return to normal mode before each read-only review pass. -->
+<!-- cpk-rule-guard: Use xhigh reasoning for each fresh read-only planning challenger. -->
 
 # Implementation modes
 
 Keep normal mode active through accepted test scope.
 
 Use normal mode for requirements, planning, research, Scenario Proof, test-scope definition, and read-only review. Fix each required behavior, oracle, and planned runnable check before implementation.
+
+Use xhigh reasoning for each fresh read-only planning challenger. This includes a challenger for an accepted correction when Design Preflight applies. After the challenger finishes, use the main thread's configured reasoning effort for implementation.
 
 The managed prompt hook selects normal mode before Codex sends a Plan-mode prompt.
 

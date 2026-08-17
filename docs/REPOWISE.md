@@ -21,15 +21,17 @@ The repository skill uses exact symbols and paths before natural-language synthe
 
 ## How the kit uses it
 
-### Before implementation
+### Throughout implementation
 
-Design Preflight can ask RepoWise for:
+Use RepoWise for each new repository discovery question. Design Preflight and implementation can ask for:
 
 - The current execution path.
 - Callers and dependencies.
 - Ownership and decision history.
 - Hidden coupling and recent bug fixes.
 - Existing tests and documentation clues.
+
+Reuse verified results that remain current. Read focused source when an edit needs wider context or the index reports approximate bounds.
 
 ### During review
 

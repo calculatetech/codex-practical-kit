@@ -2,9 +2,10 @@
 name: design-preflight
 description: >
   Define the normal-use behavior floor and implementation ceiling before a
-  non-trivial change. Derive runtime scenarios systematically, use one
-  independent planning challenge, exclude unsupported conditions, and stop on
-  unresolved normal-use contracts.
+  non-trivial change. Use automatically before implementation or an accepted
+  review correction for a multi-file change, public interface, persistent
+  product state, external service, or unclear ownership. Use even when Plan
+  Mode was not requested and the user did not name this skill.
 license: MIT
 ---
 
@@ -20,11 +21,18 @@ Understand the normal path before implementation. Do not turn possible environme
 <!-- cpk-rule-route-only: implementation-modes -->
 [Implementation modes](../delivery-lifecycle/references/implementation-modes.md)
 
-## Use this skill when
+## Repository context
 
-Use it for a multi-file change, a public interface, persistent product state, an external service, or unclear ownership.
+<!-- cpk-rule-route-only: repository-knowledge -->
+[Repository Knowledge](../repository-knowledge/SKILL.md)
 
-Skip it for a small change with one proven owner and one direct check.
+## Entry gate
+
+Apply the trigger in this skill description before the first implementation edit. Plan Mode and an explicit skill request are not prerequisites.
+
+Apply the same entry gate to an accepted correction. Runtime paths, retained state, reopening sources, terminal owners, event ordering, and shared-signal classification are common examples, not an exhaustive gate.
+
+Skip it for a small change with one proven owner and one direct check. The small-change exception still applies to an accepted correction.
 
 ## Scope gate
 
@@ -38,7 +46,7 @@ Skip it for a small change with one proven owner and one direct check.
 
 ## Define the change
 
-Read the entry point, outcome owner, state owner, callers, checks, and documentation. Use RepoWise only when its current index gives useful leads.
+Read the entry point, outcome owner, state owner, callers, checks, and documentation.
 
 For non-trivial runtime behavior, derive a Scenario Proof with three lenses:
 
@@ -69,9 +77,13 @@ Every non-trivial runtime preflight requires one task ExecPlan. Merge the accept
 
 The coordinator owns the preflight. For non-trivial runtime behavior, spawn one fresh read-only planning challenger with no inherited task conversation. A small change that skips Design Preflight also skips this challenge.
 
+For an accepted correction that passes the entry gate, spawn one fresh read-only planning challenger even when the correction is not runtime behavior.
+
 Give the challenger raw requirements, the supported model, exclusions, exact source, owners, selectors, filters, state writers, and current tests. Give it the applicable focused rule links.
 
-Do not give it the coordinator's card, Scenario Proof, implementation, known edge cases, prior diagnostics, reviewer corrections, severity, or preferred outcome.
+For an initial challenge, keep it independent. Do not give it the coordinator's card, Scenario Proof, implementation, known edge cases, prior diagnostics, reviewer corrections, severity, or preferred outcome.
+
+Give a correction challenger the accepted finding, original requirements, current source, and current tests. Do not give it the coordinator's preferred fix. Require it to derive the smallest complete correction and the runnable checks before implementation.
 
 Require the JSON in `references/preflight-review.md`. Compare its independent result with the coordinator's derivation once. Merge supported scenarios into the card and ExecPlan. Do not start a review loop.
 
@@ -79,7 +91,7 @@ Use the canonical classifications. Merge `applicable` scenarios. Record `contrac
 
 Before implementation, each retained scenario must have a planned runnable check and oracle. Before review, update the mapping with the actual test or command and its result. A suite pass or test count does not replace this mapping.
 
-For a non-runtime preflight, use this same single challenge only when normal-use ownership or scope remains unclear.
+For an initial non-runtime preflight, use this same single challenge only when normal-use ownership or scope remains unclear.
 
 ## Stop condition
 

@@ -123,12 +123,13 @@ After the halt, do not edit, test, review, spawn another subagent, commit, publi
 
 Otherwise, for any validated in-scope finding:
 
-1. Enter the selected implementation mode and fix the smallest shared cause.
-2. Add or correct one focused check.
-3. Run the applicable checks.
-4. Finalize documentation again.
-5. Record the reviewed tree and validated findings.
-6. Return to the selected read-only mode and start a delta pass with a fresh reviewer.
+1. Reapply Delivery Lifecycle before an accepted correction.
+2. Enter the selected implementation mode and fix the smallest shared cause.
+3. Add or correct one focused check.
+4. Run the applicable checks.
+5. Finalize documentation again.
+6. Record the reviewed tree and validated findings.
+7. Return to the selected read-only mode and start a delta pass with a fresh reviewer.
 
 Use one final status line:
 
