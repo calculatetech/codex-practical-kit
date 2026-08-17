@@ -8,7 +8,7 @@ Repository `AGENTS.md` files can override this managed block.
 Use only the skills that match the current task. Follow the focused references selected by each skill.
 
 - Coordination, implementation, and delivery: `delivery-lifecycle`.
-- Repository inspection: `repository-knowledge`.
+- Every new repository lookup throughout a task: `repository-knowledge`.
 - Implementation after accepted test scope: `ponytail`.
 - Non-trivial design: `design-preflight` and [ExecPlans](<{{PLANS_FILE}}>).
 - Current or costly technical choices: `research-first`.

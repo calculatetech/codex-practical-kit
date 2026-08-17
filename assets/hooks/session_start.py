@@ -10,9 +10,12 @@ if event.get("hook_event_name") == "UserPromptSubmit":
     if event.get("permission_mode") == "plan":
         print("normal mode")
 elif event.get("hook_event_name") == "SessionStart":
+    context = "Codex Practical Kit is active. Read the managed AGENTS.md links that apply to this task."
+    if event.get("source") == "compact":
+        context += " Apply repository-knowledge before the next repository lookup. Keep it active until the task ends."
     print(json.dumps({
         "hookSpecificOutput": {
             "hookEventName": "SessionStart",
-            "additionalContext": "Codex Practical Kit is active. Read the managed AGENTS.md links that apply to this task.",
+            "additionalContext": context,
         }
     }, separators=(",", ":")))

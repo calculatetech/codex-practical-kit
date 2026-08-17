@@ -107,6 +107,10 @@ class InstallerTests(unittest.TestCase):
                 "toolkit-maintainer",
             ):
                 self.assertIn(f"`{skill}`", installed)
+            self.assertIn(
+                "Every new repository lookup throughout a task: `repository-knowledge`.",
+                installed,
+            )
             self.assertNotIn("{{", installed)
             self.assertNotIn("Only the active coordinator can delegate", installed)
             self.assertNotIn("codex-practical-kit-rules", installed)
@@ -214,16 +218,29 @@ class InstallerTests(unittest.TestCase):
             self.assertNotIn(kit.HOOKS_START, text)
 
     def test_session_start_still_announces_router(self):
-        result = subprocess.run(
-            ["python3", str(ROOT / "assets" / "hooks" / "session_start.py")],
-            input=json.dumps({"hook_event_name": "SessionStart", "permission_mode": "default"}),
-            text=True,
-            capture_output=True,
-            check=True,
-        )
-        output = json.loads(result.stdout)
-        self.assertEqual(output["hookSpecificOutput"]["hookEventName"], "SessionStart")
-        self.assertIn("Codex Practical Kit is active", output["hookSpecificOutput"]["additionalContext"])
+        contexts = {}
+        for source in ("startup", "compact"):
+            result = subprocess.run(
+                ["python3", str(ROOT / "assets" / "hooks" / "session_start.py")],
+                input=json.dumps(
+                    {
+                        "hook_event_name": "SessionStart",
+                        "permission_mode": "default",
+                        "source": source,
+                    }
+                ),
+                text=True,
+                capture_output=True,
+                check=True,
+            )
+            output = json.loads(result.stdout)
+            self.assertEqual(output["hookSpecificOutput"]["hookEventName"], "SessionStart")
+            contexts[source] = output["hookSpecificOutput"]["additionalContext"]
+
+        self.assertIn("Codex Practical Kit is active", contexts["startup"])
+        self.assertNotIn("repository-knowledge", contexts["startup"])
+        self.assertIn("repository-knowledge", contexts["compact"])
+        self.assertIn("until the task ends", contexts["compact"])
 
     def test_copy_reinstall_and_uninstall(self):
         with tempfile.TemporaryDirectory() as temp:
@@ -1184,9 +1201,9 @@ class IntegrationTests(unittest.TestCase):
         self.assertIn("`./doctor.sh`", publication)
         self.assertIn("from the reviewed candidate", publication)
         self.assertIn("`Result: ready`", publication)
-        self.assertEqual(kit.KIT_VERSION, "0.17.0")
-        self.assertNotIn("Version `0.17.0`", (ROOT / "README.md").read_text())
-        self.assertNotIn("version 0.17.0", (ROOT / "CODEX-INSTALL-PROMPT.md").read_text())
+        self.assertEqual(kit.KIT_VERSION, "0.17.1")
+        self.assertNotIn("Version `0.17.1`", (ROOT / "README.md").read_text())
+        self.assertNotIn("version 0.17.1", (ROOT / "CODEX-INSTALL-PROMPT.md").read_text())
 
     def test_repowise_is_required(self):
         config = kit.repowise_config_block(
@@ -1220,17 +1237,30 @@ class IntegrationTests(unittest.TestCase):
             / "SKILL.md"
         ).read_text()
         agents = (ROOT / "assets" / "AGENTS.block.md").read_text()
+        metadata = (
+            ROOT
+            / "assets"
+            / "skills"
+            / "repository-knowledge"
+            / "agents"
+            / "openai.yaml"
+        ).read_text()
 
         for rule in (
             'Resolve exact identifiers through `search_codebase(mode="symbol")` and `get_symbol` before native search.',
             "A verified `get_symbol` body is source confirmation; do not read it again.",
             "After `no-llm-provider`, do not call `get_answer` again in the same Codex session.",
             "Use `get_answer` only for conceptual how or why questions.",
+            "`no-llm-provider` means that synthesis is unavailable. RepoWise is still available.",
+            "use `search_codebase` with automatic routing",
+            "Automatic compaction does not end this route.",
             "make one more query with the strongest known identifier or path",
             "Preserve ambiguous exact candidates",
         ):
             self.assertIn(rule, owner)
             self.assertNotIn(rule, agents)
+        self.assertIn('value: "repowise"', metadata)
+        self.assertIn("allow_implicit_invocation: true", metadata)
 
     def test_review_stop_diagnostics_are_per_finding_and_mandatory(self):
         review = (ROOT / "assets" / "skills" / "adversarial-review" / "SKILL.md").read_text()

@@ -19,6 +19,8 @@ The first no-prose index does not need an API key. Higher-level prose can run th
 
 The repository skill uses exact symbols and paths before natural-language synthesis. A user-configured model provider remains available for conceptual questions.
 
+If no model provider is configured, RepoWise still returns indexed candidates. Later questions continue through indexed search, context, and symbol tools.
+
 ## How the kit uses it
 
 ### Throughout implementation
@@ -59,6 +61,8 @@ The first start in a Git repository initializes a no-prose index when `.repowise
 While MCP runs, an index-only watcher collects working-tree edits and uses RepoWise's debounce period. It does not make model calls. The launcher ignores file-open and file-close events because these events are not edits.
 
 The managed Codex configuration makes RepoWise required and approves its MCP calls. Codex waits up to 1,800 seconds for initialization.
+
+After you install or upgrade the kit, start a new Codex session. A running session does not reload changed skills or configuration.
 
 The hook starts a background update after each commit. RepoWise owns its queue marker, log, and single-flight update behavior. The active watcher stops when MCP stops.
 

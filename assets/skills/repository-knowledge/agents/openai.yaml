@@ -1,0 +1,13 @@
+interface:
+  display_name: "Repository Knowledge"
+  short_description: "Use RepoWise for repository lookup"
+  default_prompt: "Use $repository-knowledge to inspect this repository with RepoWise."
+
+policy:
+  allow_implicit_invocation: true
+
+dependencies:
+  tools:
+    - type: "mcp"
+      value: "repowise"
+      description: "RepoWise repository index and code graph"
