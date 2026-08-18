@@ -76,13 +76,13 @@ c0ce736dd17cb03d20e1e9b42cb2a5744e260b67bfc51c27a61c097e90d2399f  ./docs/plans/c
 3993303d14ffa7b0ec12b16b4b283a7d5e384f2177aa5313ccb58ddab6d7be06  ./docs/plans/cpk-031-tracked-state-freeze.md
 827de29a2f0fa4385d6f6f18dddcd187315ab0a49023624688a70b65043c3d33  ./docs/plans/cpk-032-default-mode-preflight.md
 4302d26284160f48bc53f459ac2139639ab9b05d03e46df687f617b4f488f2e9  ./docs/plans/cpk-033-repowise-route-persistence.md
-5eed99dc9fa1b1e30b29c1ac535d8c6e5a58bef78340020151e86a12a1b16a35  ./docs/plans/cpk-034-scenario-discrimination.md
+4d576796362f0a062e0380c76cebc7144ee71aa88332627b769a9ca158cfd58c  ./docs/plans/cpk-034-scenario-discrimination.md
 6a3660a845780e073803375b390eb8f15ac03b6c82fa7fd06e708eda4006b4df  ./docs/roadmap.md
 ab56a88d9188979f06ea142d1f58ea0d6ad9088e83a965bd324209d83da513ad  ./doctor.sh
 3466d2e34145cfdaa83d793960794b2aefc96f3d9c48d22fd2af930ec819e9c4  ./install.sh
-46cbdb43dbb276b3325486f7de25a83ea4d6bdc87a52bf0fda2f1a8932a17ad6  ./kit.py
+d96f0533d2b983e8f64267d8ab567ecdafbee3bdc2cbfa10cd3df32802f97c59  ./kit.py
 aa6fc7c37c332f5c5f8d6eb2abdacdbba464895302ec51a60d2484530754ae68  ./run-tests.sh
 bdae5fdc5840e46ec70d4a0a9581974be65576bdf8a721262a9fa3792c455237  ./setup-repo.sh
-1eef0fe18216e2a1f5f6fcb3c33a19d263fa6f05ef81d38d8704401b7f9e8304  ./tests/test_kit.py
+ec120acc8b9f6637850a38fcbe44f7b9a60221fc029970d1cccc532c3e9bf4c2  ./tests/test_kit.py
 f12cff94ef7f9b0ca489cbe43e1de737011476966e04c1578f4977177b0da217  ./uninstall.sh
 60f43425edbce4c5b67f9d1b1002fcc4e2430eb8bdd57e2f8c374bd20b0a52bb  ./upstream.lock.json

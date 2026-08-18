@@ -14,6 +14,7 @@ After this change, a Scenario Proof cannot rely on a test that exercises adjacen
 - [x] (2026-08-17 18:44Z) Added the structural integration test and forward-tested the corrected raw source packet for all seven defect shapes.
 - [x] (2026-08-17 18:46Z) Finalized linked documentation and passed skill validation, 41 tests, shell syntax, diff, and manifest checks.
 - [x] (2026-08-17 18:50Z) Completed a clean full review of staged tree `888e94a0db41fc5feae331afb0c40980cbec8801` and closed the task.
+- [x] (2026-08-18) Selected version `0.18.0` and completed a clean full review of the publication candidate.
 
 ## Surprises & Discoveries
 
@@ -32,9 +33,9 @@ After this change, a Scenario Proof cannot rely on a test that exercises adjacen
 - Decision: Require a named discriminator and contrast, but do not require mutation-testing software or MC/DC metrics.
   Rationale: A small proof obligation detects the observed gap without adding dependencies or exhaustive combinations.
   Date/Author: 2026-08-17 / Codex
-- Decision: Keep source version 0.17.1.
-  Rationale: This local checkpoint does not authorize publication or version selection.
-  Date/Author: 2026-08-17 / Codex
+- Decision: Publish as version `0.18.0` through direct integration.
+  Rationale: CPK-034 adds a feature before 1.0.0. The repository has no CI workflows, so PR mode is off.
+  Date/Author: 2026-08-18 / Codex
 
 ## Outcomes & Retrospective
 
@@ -107,3 +108,5 @@ Revision note: Created from the accepted CPK-034 plan and the supplied first-pas
 Revision note: Recorded implementation and the corrected seven-shape forward test.
 Revision note: Recorded final validation and documentation status before review.
 Revision note: Recorded the clean staged-tree review and task closure.
+Revision note: Recorded the authorized publication version and direct-integration path before delivery.
+Revision note: Recorded the clean publication-candidate review before the version commit.

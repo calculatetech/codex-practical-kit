@@ -1242,9 +1242,9 @@ class IntegrationTests(unittest.TestCase):
         self.assertIn("`./doctor.sh`", publication)
         self.assertIn("from the reviewed candidate", publication)
         self.assertIn("`Result: ready`", publication)
-        self.assertEqual(kit.KIT_VERSION, "0.17.1")
-        self.assertNotIn("Version `0.17.1`", (ROOT / "README.md").read_text())
-        self.assertNotIn("version 0.17.1", (ROOT / "CODEX-INSTALL-PROMPT.md").read_text())
+        self.assertEqual(kit.KIT_VERSION, "0.18.0")
+        self.assertNotIn("Version `0.18.0`", (ROOT / "README.md").read_text())
+        self.assertNotIn("version 0.18.0", (ROOT / "CODEX-INSTALL-PROMPT.md").read_text())
 
     def test_repowise_is_required(self):
         config = kit.repowise_config_block(
