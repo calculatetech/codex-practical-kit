@@ -157,12 +157,15 @@ class InstallerTests(unittest.TestCase):
             config_text = config_path.read_text()
             hooks = tomllib.loads(config_text)["hooks"]
             self.assertEqual(
-                set(hooks), {"PreToolUse", "SessionStart", "UserPromptSubmit", "Stop"}
+                set(hooks),
+                {"PreToolUse", "PostToolUse", "SessionStart", "UserPromptSubmit", "Stop"},
             )
             self.assertEqual(
                 hooks["PreToolUse"][0]["hooks"][0]["command"],
                 "python /tmp/user.py",
             )
+            self.assertEqual(hooks["PreToolUse"][1]["matcher"], "^apply_patch$")
+            self.assertEqual(hooks["PostToolUse"][0]["matcher"], "^apply_patch$")
             self.assertEqual(len(hooks["SessionStart"]), 1)
             self.assertEqual(len(hooks["UserPromptSubmit"]), 1)
             self.assertEqual(len(hooks["Stop"]), 1)
@@ -174,6 +177,12 @@ class InstallerTests(unittest.TestCase):
             )
             self.assertNotIn(
                 "additionalContextLimit", hooks["Stop"][0]["hooks"][0]
+            )
+            self.assertNotIn(
+                "additionalContextLimit", hooks["PreToolUse"][1]["hooks"][0]
+            )
+            self.assertNotIn(
+                "additionalContextLimit", hooks["PostToolUse"][0]["hooks"][0]
             )
             self.assertEqual(
                 kit.configured_hook_events(paths, config_text),
@@ -253,6 +262,25 @@ class InstallerTests(unittest.TestCase):
 
             handler = tomllib.loads(config.read_text())["hooks"]["Stop"][0]["hooks"][0]
             self.assertNotIn("additionalContextLimit", handler)
+
+    def test_reinstall_repairs_wrong_apply_patch_matcher(self):
+        with tempfile.TemporaryDirectory() as temp:
+            paths = self.paths(Path(temp))
+            config = paths.codex_home / "config.toml"
+            kit.install_hooks(paths)
+            config.write_text(
+                config.read_text().replace(
+                    '[[hooks.PostToolUse]]\nmatcher = "^apply_patch$"',
+                    '[[hooks.PostToolUse]]\nmatcher = "Bash"',
+                ),
+                encoding="utf-8",
+            )
+
+            kit.install_hooks(paths)
+
+            hooks = tomllib.loads(config.read_text())["hooks"]
+            self.assertEqual(len(hooks["PostToolUse"]), 1)
+            self.assertEqual(hooks["PostToolUse"][0]["matcher"], "^apply_patch$")
 
     def test_session_start_still_announces_router(self):
         contexts = {}
@@ -672,6 +700,171 @@ class PlanHistoryHookTests(unittest.TestCase):
             self.assertEqual(records[0].read_bytes(), message.encode())
 
 
+class RoadmapViewHookTests(unittest.TestCase):
+    def run_hook(self, event: dict):
+        return subprocess.run(
+            [sys.executable, str(ROOT / "assets" / "hooks" / "session_start.py")],
+            input=json.dumps(event),
+            text=True,
+            capture_output=True,
+            check=True,
+        )
+
+    def event(self, root: Path, phase: str, patch: str, tool_use: str = "tool-1") -> dict:
+        return {
+            "hook_event_name": phase,
+            "session_id": str(root),
+            "tool_use_id": tool_use,
+            "cwd": str(root),
+            "tool_name": "apply_patch",
+            "tool_input": {"command": patch},
+        }
+
+    def apply_event(self, root: Path, patch: str, edit, tool_use: str = "tool-1"):
+        pre = self.run_hook(self.event(root, "PreToolUse", patch, tool_use))
+        edit()
+        post = self.run_hook(self.event(root, "PostToolUse", patch, tool_use))
+        return pre, post
+
+    def test_linked_worktree_change_updates_primary_view(self):
+        with tempfile.TemporaryDirectory() as temp:
+            primary = Path(temp) / "primary"
+            linked = Path(temp) / "linked"
+            primary.mkdir()
+            GitFixture(primary).commit("docs/roadmap.md", "primary\n")
+            subprocess.run(
+                ["git", "worktree", "add", "-q", "-b", "task", str(linked)],
+                cwd=primary,
+                check=True,
+            )
+            patch = (
+                "*** Begin Patch\n"
+                "*** Update File: nested/docs/roadmap.md\n"
+                "*** Update File: ../linked/docs/roadmap.md\n"
+                "*** End Patch"
+            )
+
+            pre, post = self.apply_event(
+                primary,
+                patch,
+                lambda: (linked / "docs/roadmap.md").write_text(
+                    "linked active\n", encoding="utf-8"
+                ),
+            )
+
+            view = primary / ".codex/roadmap-view.md"
+            self.assertEqual(pre.stdout, "")
+            self.assertEqual(post.stdout, "")
+            self.assertTrue(view.read_text().startswith(kit.ROADMAP_VIEW_MARKER + "\n"))
+            self.assertIn("linked active\n", view.read_text())
+            self.assertNotIn("primary\n", view.read_text())
+            self.assertIn("/.codex/roadmap-view.md", (primary / ".git/info/exclude").read_text())
+            status = subprocess.run(
+                ["git", "status", "--short"],
+                cwd=primary,
+                text=True,
+                capture_output=True,
+                check=True,
+            ).stdout
+            self.assertNotIn("roadmap-view.md", status)
+            self.assertEqual((primary / "docs/roadmap.md").read_text(), "primary\n")
+            self.assertEqual((linked / "docs/roadmap.md").read_text(), "linked active\n")
+
+    def test_add_file_creates_view_but_noop_and_unrelated_edits_do_not_refresh(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            GitFixture(root)
+            patch = "*** Begin Patch\n*** Add File: docs/roadmap.md\n*** End Patch"
+
+            malformed = self.event(root, "PreToolUse", patch, "malformed")
+            malformed["tool_input"] = {}
+            self.assertEqual(self.run_hook(malformed).stdout, "")
+            self.assertFalse((root / ".codex/roadmap-view.md").exists())
+
+            def add_roadmap():
+                (root / "docs").mkdir()
+                (root / "docs/roadmap.md").write_text("created\n", encoding="utf-8")
+
+            self.apply_event(root, patch, add_roadmap)
+            view = root / ".codex/roadmap-view.md"
+            exclude = root / ".git/info/exclude"
+            view_before = view.read_bytes()
+            exclude_before = exclude.read_bytes()
+
+            self.apply_event(root, patch.replace("Add", "Update"), lambda: None, "tool-2")
+            unrelated = "*** Begin Patch\n*** Update File: docs/roadmap.md.bak\n*** End Patch"
+            self.apply_event(
+                root,
+                unrelated,
+                lambda: (root / "docs/roadmap.md").write_text("external\n", encoding="utf-8"),
+                "tool-3",
+            )
+
+            self.assertEqual(view.read_bytes(), view_before)
+            self.assertEqual(exclude.read_bytes(), exclude_before)
+
+    def test_user_owned_view_is_preserved_and_remains_visible(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            GitFixture(root).commit("docs/roadmap.md", "before\n")
+            view = root / ".codex/roadmap-view.md"
+            view.parent.mkdir()
+            view.write_text("user owned\n", encoding="utf-8")
+            exclude = root / ".git/info/exclude"
+            exclude_before = exclude.read_bytes()
+            patch = "*** Begin Patch\n*** Update File: docs/roadmap.md\n*** End Patch"
+
+            pre, post = self.apply_event(
+                root,
+                patch,
+                lambda: (root / "docs/roadmap.md").write_text("after\n", encoding="utf-8"),
+            )
+
+            self.assertEqual(pre.stdout, "")
+            self.assertIn("preserved user-owned file", json.loads(post.stdout)["systemMessage"])
+            self.assertEqual(view.read_text(), "user owned\n")
+            self.assertEqual(exclude.read_bytes(), exclude_before)
+            status = subprocess.run(
+                ["git", "status", "--short"],
+                cwd=root,
+                text=True,
+                capture_output=True,
+                check=True,
+            ).stdout
+            self.assertIn("?? .codex/", status)
+
+    def test_user_owned_parent_file_is_preserved_before_exclusion(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            GitFixture(root).commit("docs/roadmap.md", "before\n")
+            parent = root / ".codex"
+            parent.write_text("user owned\n", encoding="utf-8")
+            exclude = root / ".git/info/exclude"
+            exclude_before = exclude.read_bytes()
+            patch = "*** Begin Patch\n*** Update File: docs/roadmap.md\n*** End Patch"
+
+            pre, post = self.apply_event(
+                root,
+                patch,
+                lambda: (root / "docs/roadmap.md").write_text("after\n", encoding="utf-8"),
+            )
+
+            self.assertEqual(pre.stdout, "")
+            self.assertIn("preserved user-owned path", json.loads(post.stdout)["systemMessage"])
+            self.assertEqual(parent.read_text(), "user owned\n")
+            self.assertEqual(exclude.read_bytes(), exclude_before)
+            self.assertIn(
+                "?? .codex",
+                subprocess.run(
+                    ["git", "status", "--short"],
+                    cwd=root,
+                    text=True,
+                    capture_output=True,
+                    check=True,
+                ).stdout,
+            )
+
+
 class RepoWiseRuntimeTests(unittest.TestCase):
     def paths(self, base: Path) -> kit.InstallPaths:
         return kit.InstallPaths(
@@ -989,10 +1182,53 @@ class IntegrationTests(unittest.TestCase):
             with mock.patch.object(kit, "repowise_command", fake_repowise), mock.patch.object(
                 kit, "ensure_repowise_runtime", return_value=("/usr/bin/uv", "/usr/bin/repowise")
             ):
+                view = root / ".codex/roadmap-view.md"
+                view.write_text(kit.ROADMAP_VIEW_MARKER + "\nowned\n", encoding="utf-8")
+                exclude = root / ".git/info/exclude"
+                exclude.write_text(
+                    kit.ROADMAP_EXCLUDE_START
+                    + "\n/.codex/roadmap-view.md\n"
+                    + kit.ROADMAP_EXCLUDE_END
+                    + "\n",
+                    encoding="utf-8",
+                )
                 kit.remove_repo(Namespace(repo=str(root), delete_index=False), paths)
             self.assertEqual((root / "AGENTS.md").read_text(), "# Project rules\n")
             self.assertIn("enabled = false", (root / ".codex" / "config.toml").read_text())
             self.assertTrue(any(call[:2] == ("hook", "uninstall") for call in calls))
+            self.assertFalse(view.exists())
+            self.assertNotIn(kit.ROADMAP_EXCLUDE_START, kit.read_text(exclude))
+
+    def test_remove_repo_preserves_user_owned_roadmap_view(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            GitFixture(root)
+            view = root / ".codex/roadmap-view.md"
+            view.parent.mkdir()
+            view.write_text("user owned\n", encoding="utf-8")
+            exclude = root / ".git/info/exclude"
+            exclude.write_text(
+                kit.ROADMAP_EXCLUDE_START
+                + "\n/.codex/roadmap-view.md\n"
+                + kit.ROADMAP_EXCLUDE_END
+                + "\n",
+                encoding="utf-8",
+            )
+
+            kit.remove_roadmap_view(root)
+
+            self.assertEqual(view.read_text(), "user owned\n")
+            self.assertNotIn(kit.ROADMAP_EXCLUDE_START, kit.read_text(exclude))
+            self.assertIn(
+                "?? .codex/",
+                subprocess.run(
+                    ["git", "status", "--short"],
+                    cwd=root,
+                    text=True,
+                    capture_output=True,
+                    check=True,
+                ).stdout,
+            )
 
     def test_roadmap_contract_and_router(self):
         rules = (ROOT / "assets" / "AGENTS.block.md").read_text()
@@ -1002,6 +1238,9 @@ class IntegrationTests(unittest.TestCase):
         self.assertIn("`roadmap-maintainer`", rules)
         self.assertEqual(template.count("## Active"), 1)
         self.assertIn("## Declined", template)
+        owner = (ROOT / "assets/skills/roadmap-maintainer/SKILL.md").read_text()
+        self.assertIn("Edit only `docs/roadmap.md`", owner)
+        self.assertIn("generated human view, not as task state", owner)
 
     def test_tracked_task_records_freeze_before_delivery(self):
         delivery = (

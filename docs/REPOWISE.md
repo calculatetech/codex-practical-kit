@@ -88,7 +88,7 @@ Check:
 python3 kit.py doctor --repo .
 ```
 
-Opt out this repository, remove RepoWise's hook block, and keep the index:
+Opt out this repository and keep the index. This command also removes the owned roadmap view and its exclusion:
 
 ```bash
 python3 kit.py remove-repo .

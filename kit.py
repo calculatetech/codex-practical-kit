@@ -44,8 +44,23 @@ REPOWISE_WATCH_PATCH = (
 )
 HOOKS_START = "# >>> codex-practical-kit:hooks >>>"
 HOOKS_END = "# <<< codex-practical-kit:hooks <<<"
+ROADMAP_VIEW_MARKER = "<!-- codex-practical-kit:roadmap-view -->"
+ROADMAP_EXCLUDE_START = "# >>> codex-practical-kit:roadmap-view >>>"
+ROADMAP_EXCLUDE_END = "# <<< codex-practical-kit:roadmap-view <<<"
 INSTALLED_HOOK_BASENAMES = {"session_start.py"}
-MANAGED_HOOK_EVENTS = ("SessionStart", "UserPromptSubmit", "Stop")
+MANAGED_HOOK_EVENTS = (
+    "SessionStart",
+    "PreToolUse",
+    "PostToolUse",
+    "UserPromptSubmit",
+    "Stop",
+)
+HOOK_MATCHERS = {
+    "SessionStart": "startup|resume|clear|compact",
+    "PreToolUse": "^apply_patch$",
+    "PostToolUse": "^apply_patch$",
+}
+CONTEXT_HOOK_EVENTS = {"SessionStart", "UserPromptSubmit"}
 CUSTOM_SKILLS = (
     "delivery-lifecycle",
     "repository-knowledge",
@@ -369,8 +384,8 @@ def hooks_config_block(
     blocks = []
     for event in events:
         lines = [f"[[hooks.{event}]]"]
-        if event == "SessionStart":
-            lines.append('matcher = "startup|resume|clear|compact"')
+        if event in HOOK_MATCHERS:
+            lines.append(f"matcher = {toml_string(HOOK_MATCHERS[event])}")
         lines.extend([
             "",
             f"[[hooks.{event}.hooks]]",
@@ -380,7 +395,7 @@ def hooks_config_block(
             'statusMessage = "Loading practical defaults"',
             "timeout = 10",
         ])
-        if event != "Stop":
+        if event in CONTEXT_HOOK_EVENTS:
             lines.append("additionalContextLimit = 1200")
         blocks.append("\n".join(lines))
     return "\n\n".join(blocks)
@@ -410,11 +425,17 @@ def configured_hook_events(paths: InstallPaths, text: str) -> set[str]:
         event
         for event in MANAGED_HOOK_EVENTS
         if any(
+            (
+                group.get("matcher") == HOOK_MATCHERS[event]
+                if event in HOOK_MATCHERS
+                else "matcher" not in group
+            )
+            and
             all(handler.get(key) == value for key, value in expected.items())
             and (
-                "additionalContextLimit" not in handler
-                if event == "Stop"
-                else handler.get("additionalContextLimit") == 1200
+                handler.get("additionalContextLimit") == 1200
+                if event in CONTEXT_HOOK_EVENTS
+                else "additionalContextLimit" not in handler
             )
             for group in hooks.get(event, [])
             for handler in group.get("hooks", [])
@@ -919,7 +940,32 @@ def remove_repo(args: argparse.Namespace, paths: InstallPaths) -> None:
             agents.unlink()
     if args.delete_index and (root / ".repowise").exists():
         shutil.rmtree(root / ".repowise")
+    remove_roadmap_view(root)
     remove_path(root / ".codex-practical-kit")
+
+
+def remove_roadmap_view(root: Path) -> None:
+    result = run(
+        ["git", "rev-parse", "--path-format=absolute", "--git-common-dir"],
+        cwd=root,
+        check=False,
+        timeout=20,
+    )
+    common = Path(result.stdout.strip()).resolve() if result.returncode == 0 else None
+    if common is None or common.name != ".git" or not common.is_dir():
+        return
+    view = common.parent / ".codex" / "roadmap-view.md"
+    if view.is_file() and read_text(view).startswith(ROADMAP_VIEW_MARKER + "\n"):
+        view.unlink()
+    exclude = common / "info" / "exclude"
+    if exclude.is_file() and ROADMAP_EXCLUDE_START in read_text(exclude):
+        updated = remove_marker_block(
+            read_text(exclude), ROADMAP_EXCLUDE_START, ROADMAP_EXCLUDE_END
+        )
+        if updated:
+            write_file(exclude, updated)
+        else:
+            exclude.unlink()
 
 
 def update_repowise(args: argparse.Namespace, paths: InstallPaths) -> None:

@@ -33,6 +33,7 @@ No residual risk is accepted.
 
 ## Completed
 
+- ✅ **CPK-038 — Keep one live roadmap view across worktrees.** Generate a stable primary-checkout projection only after the active worktree roadmap changes.
 - ✅ **CPK-037 — Remove the invalid Stop context limit.** Install `additionalContextLimit` only for managed hooks that can emit additional context.
 - ✅ **CPK-036 — Preserve Plan Mode decisions.** Save each completed Plan Mode summary as immutable project evidence and require later planning sessions to reconcile it.
 - ✅ **CPK-035 — Make preflight adversarial and research-backed.** Challenge the coordinator after independent derivation, require NeuroArxiv for qualifying prior-art research, and limit only write-capable implementation delegation.

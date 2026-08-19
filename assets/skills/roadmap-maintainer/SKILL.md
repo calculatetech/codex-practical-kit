@@ -19,6 +19,8 @@ Keep `docs/roadmap.md` accurate at durable lifecycle transitions. This file is t
 
 - Use `docs/roadmap.md` as the only roadmap authority.
 - Do not keep another backlog, task ledger, or roadmap.
+- Edit only `docs/roadmap.md`. Never edit `.codex/roadmap-view.md`.
+- Treat `.codex/roadmap-view.md` as a generated human view, not as task state.
 - Preserve human notes and accepted decisions unless the user changes them.
 - Make roadmap lifecycle edits through this skill. Other skills can request or verify an edit, but they do not own task status.
 

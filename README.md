@@ -43,6 +43,8 @@ The installer also writes `$CODEX_HOME/PLANS.md` and managed Codex hooks. Sessio
 
 Prompt submission selects normal mode before Plan-mode prompts. The passive Stop hook saves completed Plan Mode responses without continuing the turn.
 
+The edit hooks update `<primary-checkout>/.codex/roadmap-view.md` after an agent changes `docs/roadmap.md`. Keep this generated file open to follow worktree progress. Edit only `docs/roadmap.md`.
+
 The `plan-history` skill puts immutable summaries beside related specifications. It uses `.agent/plan-history/` when no specification exists. Later planning sessions read and reconcile these records.
 
 An unrecorded destination skill is a conflict. The installer stops before it changes that directory.
@@ -105,6 +107,8 @@ Also remove toolkit files:
 Core uninstall leaves `uv` and RepoWise installed. Other repositories and tools can use them.
 
 Uninstall also leaves all Plan history records in their project or fallback locations.
+
+Core uninstall leaves generated roadmap views because it does not track repository locations. Run `python3 kit.py remove-repo <repository>` first to remove owned view files.
 
 ## Verification
 

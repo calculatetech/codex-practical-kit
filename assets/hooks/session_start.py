@@ -6,12 +6,21 @@ import hashlib
 import json
 import os
 import re
+import subprocess
 import sys
+import tempfile
 from datetime import datetime, timezone
 from pathlib import Path
 
 
 PLAN_MARKER = re.compile(r"^<!-- cpk-plan-spec: ([^\r\n]+) -->$", re.MULTILINE)
+PATCH_FILE = re.compile(r"^\*\*\* (?:Add|Update) File: (.+)$", re.MULTILINE)
+ROADMAP_PATH = Path("docs/roadmap.md")
+ROADMAP_VIEW_PATH = Path(".codex/roadmap-view.md")
+ROADMAP_VIEW_MARKER = "<!-- codex-practical-kit:roadmap-view -->"
+ROADMAP_EXCLUDE_START = "# >>> codex-practical-kit:roadmap-view >>>"
+ROADMAP_EXCLUDE_END = "# <<< codex-practical-kit:roadmap-view <<<"
+ROADMAP_EXCLUDE_PATH = "/.codex/roadmap-view.md"
 
 
 def repository_root(cwd: Path) -> Path | None:
@@ -19,6 +28,135 @@ def repository_root(cwd: Path) -> Path | None:
         if (candidate / ".git").exists():
             return candidate
     return None
+
+
+def roadmap_target(event: dict[str, object]) -> tuple[Path, Path] | None:
+    tool_input = event.get("tool_input")
+    command = tool_input.get("command") if isinstance(tool_input, dict) else None
+    if not isinstance(command, str):
+        return None
+    cwd = Path(str(event.get("cwd") or Path.cwd())).resolve()
+    for value in PATCH_FILE.findall(command):
+        path = Path(value.strip())
+        candidate = path if path.is_absolute() else cwd / path
+        candidate = candidate.resolve()
+        root = repository_root(candidate.parent)
+        if root is not None and candidate == (root / ROADMAP_PATH).resolve():
+            roadmap = candidate
+            return root, roadmap
+    return None
+
+
+def roadmap_state_file(event: dict[str, object]) -> Path | None:
+    session = event.get("session_id")
+    tool_use = event.get("tool_use_id")
+    if not isinstance(session, str) or not isinstance(tool_use, str):
+        return None
+    key = hashlib.sha256(f"{session}\0{tool_use}".encode()).hexdigest()
+    return Path(tempfile.gettempdir()) / "codex-practical-kit-roadmap" / f"{key}.json"
+
+
+def fingerprint(path: Path) -> str | None:
+    try:
+        return hashlib.sha256(path.read_bytes()).hexdigest()
+    except FileNotFoundError:
+        return None
+
+
+def save_roadmap_state(event: dict[str, object]) -> None:
+    target = roadmap_target(event)
+    state = roadmap_state_file(event)
+    if target is None or state is None:
+        return
+    _, roadmap = target
+    state.parent.mkdir(parents=True, exist_ok=True)
+    state.write_text(
+        json.dumps({"path": str(roadmap), "fingerprint": fingerprint(roadmap)}),
+        encoding="utf-8",
+    )
+
+
+def git_common_directory(root: Path) -> Path:
+    result = subprocess.run(
+        ["git", "rev-parse", "--path-format=absolute", "--git-common-dir"],
+        cwd=root,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        check=False,
+    )
+    if result.returncode != 0 or not result.stdout.strip():
+        raise RuntimeError((result.stderr or "cannot resolve the shared Git directory").strip())
+    common = Path(result.stdout.strip()).resolve()
+    if common.name != ".git" or not common.is_dir():
+        raise RuntimeError("the repository does not use a supported primary checkout")
+    return common
+
+
+def exclude_roadmap_view(common: Path) -> None:
+    path = common / "info" / "exclude"
+    text = path.read_text(encoding="utf-8") if path.exists() else ""
+    if ROADMAP_EXCLUDE_START in text or ROADMAP_EXCLUDE_PATH in text.splitlines():
+        return
+    block = (
+        f"{ROADMAP_EXCLUDE_START}\n{ROADMAP_EXCLUDE_PATH}\n"
+        f"{ROADMAP_EXCLUDE_END}\n"
+    )
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text((text.rstrip() + "\n\n" if text.strip() else "") + block, encoding="utf-8")
+
+
+def write_roadmap_view(common: Path, roadmap: Path) -> None:
+    view = common.parent / ROADMAP_VIEW_PATH
+    if view.parent.exists() and not view.parent.is_dir():
+        raise RuntimeError(f"preserved user-owned path at {view.parent}")
+    if view.exists():
+        if not view.is_file() or not view.read_text(encoding="utf-8").startswith(
+            ROADMAP_VIEW_MARKER + "\n"
+        ):
+            raise RuntimeError(f"preserved user-owned file at {view}")
+    exclude_roadmap_view(common)
+    source = roadmap.read_text(encoding="utf-8")
+    content = (
+        f"{ROADMAP_VIEW_MARKER}\n"
+        "> Generated view. Edit `docs/roadmap.md` in the active task worktree.\n\n"
+        + source
+    )
+    view.parent.mkdir(parents=True, exist_ok=True)
+    temporary = None
+    try:
+        with tempfile.NamedTemporaryFile(
+            "w", encoding="utf-8", dir=view.parent, delete=False
+        ) as output:
+            temporary = Path(output.name)
+            output.write(content)
+        os.replace(temporary, view)
+    finally:
+        if temporary is not None:
+            temporary.unlink(missing_ok=True)
+
+
+def refresh_roadmap_view(event: dict[str, object]) -> None:
+    target = roadmap_target(event)
+    state = roadmap_state_file(event)
+    if target is None or state is None or not state.exists():
+        return
+    root, roadmap = target
+    try:
+        before = json.loads(state.read_text(encoding="utf-8"))
+    finally:
+        state.unlink(missing_ok=True)
+    if before.get("path") != str(roadmap) or before.get("fingerprint") == fingerprint(roadmap):
+        return
+    if not roadmap.is_file():
+        raise RuntimeError("the changed roadmap is not a regular file")
+    write_roadmap_view(git_common_directory(root), roadmap)
+
+
+def roadmap_warning(exc: Exception) -> None:
+    print(json.dumps({
+        "systemMessage": f"Codex Practical Kit: roadmap view was not refreshed: {exc}"
+    }, separators=(",", ":")))
 
 
 def completed_plan(message: str) -> bool:
@@ -124,7 +262,17 @@ def save_plan(event: dict[str, object]) -> list[str]:
 
 event = json.load(sys.stdin)
 
-if event.get("hook_event_name") == "Stop":
+if event.get("hook_event_name") == "PreToolUse":
+    try:
+        save_roadmap_state(event)
+    except Exception as exc:
+        roadmap_warning(exc)
+elif event.get("hook_event_name") == "PostToolUse":
+    try:
+        refresh_roadmap_view(event)
+    except Exception as exc:
+        roadmap_warning(exc)
+elif event.get("hook_event_name") == "Stop":
     warnings = save_plan(event) if event.get("permission_mode") == "plan" else []
     output = (
         {"systemMessage": "Codex Practical Kit: " + "; ".join(warnings)}
