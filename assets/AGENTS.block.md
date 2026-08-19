@@ -11,6 +11,7 @@ Use only the skills that match the current task. Follow the focused references s
 - Every new repository lookup throughout a task: `repository-knowledge`.
 - Implementation after accepted test scope: `ponytail`.
 - Non-trivial design: `design-preflight` and [ExecPlans](<{{PLANS_FILE}}>).
+- Plan history, resumed plans, and implementation after planning: `plan-history`.
 - Current or costly technical choices: `research-first`.
 - Qualifying architecture, algorithm, protocol, or systems prior art: `neuroarxiv` through `research-first`.
 - Roadmap changes: `roadmap-maintainer`.

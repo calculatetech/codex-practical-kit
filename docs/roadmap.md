@@ -33,6 +33,7 @@ No residual risk is accepted.
 
 ## Completed
 
+- ✅ **CPK-036 — Preserve Plan Mode decisions.** Save each completed Plan Mode summary as immutable project evidence and require later planning sessions to reconcile it.
 - ✅ **CPK-035 — Make preflight adversarial and research-backed.** Challenge the coordinator after independent derivation, require NeuroArxiv for qualifying prior-art research, and limit only write-capable implementation delegation.
 - ✅ **CPK-034 — Require discriminating Scenario Proof checks.** Each retained scenario proves its exact semantic distinction at the terminal oracle.
 - ✅ **CPK-033 — Keep RepoWise active for the full task.** Every repository lookup stays index-first after `no-llm-provider` and automatic compaction.

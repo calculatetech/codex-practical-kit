@@ -25,3 +25,8 @@ Task implementation authorizes coherent local checkpoint commits on the isolated
 A checkpoint does not authorize push, merge, pull-request creation, or cleanup.
 
 Remove a worktree or branch only after integration is proven and its state is clean. Cleanup always needs separate authorization.
+
+## Plan history
+
+<!-- cpk-rule-route-only: plan-history -->
+[Plan history](../../plan-history/SKILL.md)

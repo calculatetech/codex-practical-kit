@@ -21,6 +21,7 @@ The kit installs these task skills:
 - `defect-diagnostic`
 - `publication`
 - `toolkit-maintainer`
+- `plan-history`
 
 Each lifecycle skill contains its focused rule owners or links to the one skill that owns a shared rule.
 
@@ -38,11 +39,15 @@ The installer copies managed skills to `~/.agents/skills/`. Do not edit installe
 
 The installer writes a managed block in `~/.codex/AGENTS.md`. It renders the absolute PLANS path and names installed skills.
 
-The installer also writes `$CODEX_HOME/PLANS.md` and managed Codex hooks. Session Start announces the AGENTS router. Prompt submission selects normal mode before Plan-mode prompts.
+The installer also writes `$CODEX_HOME/PLANS.md` and managed Codex hooks. Session Start announces the AGENTS router.
+
+Prompt submission selects normal mode before Plan-mode prompts. The passive Stop hook saves completed Plan Mode responses without continuing the turn.
+
+The `plan-history` skill puts immutable summaries beside related specifications. It uses `.agent/plan-history/` when no specification exists. Later planning sessions read and reconcile these records.
 
 An unrecorded destination skill is a conflict. The installer stops before it changes that directory.
 
-Open a new Codex session after installation. Use `/hooks` to review and trust the Session Start command.
+Open a new Codex session after installation. Use `/hooks` to review and trust the managed command.
 
 ## Rule owners
 
@@ -58,6 +63,7 @@ An applicable skill selects only the rules needed for its task:
 - [Delivery lifecycle](assets/skills/delivery-lifecycle/references/delivery-lifecycle.md)
 - [Implementation modes](assets/skills/delivery-lifecycle/references/implementation-modes.md)
 - [Git isolation](assets/skills/delivery-lifecycle/references/git-isolation.md)
+- [Plan history](assets/skills/plan-history/SKILL.md)
 - [Full-set results](assets/skills/design-preflight/references/full-set-results.md)
 - [Owner composition](assets/skills/design-preflight/references/owner-composition.md)
 - [Scenario discrimination](assets/skills/design-preflight/references/scenario-discrimination.md)
@@ -97,6 +103,8 @@ Also remove toolkit files:
 ```
 
 Core uninstall leaves `uv` and RepoWise installed. Other repositories and tools can use them.
+
+Uninstall also leaves all Plan history records in their project or fallback locations.
 
 ## Verification
 

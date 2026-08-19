@@ -13,6 +13,7 @@ The managed AGENTS block selects the rules for an agent. This manual does not co
 - [Delivery lifecycle](../assets/skills/delivery-lifecycle/references/delivery-lifecycle.md)
 - [Implementation modes](../assets/skills/delivery-lifecycle/references/implementation-modes.md)
 - [Git isolation](../assets/skills/delivery-lifecycle/references/git-isolation.md)
+- [Plan history](../assets/skills/plan-history/SKILL.md)
 - [Full-set results](../assets/skills/design-preflight/references/full-set-results.md)
 - [Owner composition](../assets/skills/design-preflight/references/owner-composition.md)
 - [Scenario discrimination](../assets/skills/design-preflight/references/scenario-discrimination.md)

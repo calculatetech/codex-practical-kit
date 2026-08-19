@@ -45,7 +45,7 @@ REPOWISE_WATCH_PATCH = (
 HOOKS_START = "# >>> codex-practical-kit:hooks >>>"
 HOOKS_END = "# <<< codex-practical-kit:hooks <<<"
 INSTALLED_HOOK_BASENAMES = {"session_start.py"}
-MANAGED_HOOK_EVENTS = ("SessionStart", "UserPromptSubmit")
+MANAGED_HOOK_EVENTS = ("SessionStart", "UserPromptSubmit", "Stop")
 CUSTOM_SKILLS = (
     "delivery-lifecycle",
     "repository-knowledge",
@@ -57,6 +57,7 @@ CUSTOM_SKILLS = (
     "defect-diagnostic",
     "publication",
     "toolkit-maintainer",
+    "plan-history",
 )
 OBSOLETE_SKILLS = ("task-brief", "codex-practical-kit-rules")
 UPSTREAM_SKILLS = ("ponytail", "simple-english", "neuroarxiv")

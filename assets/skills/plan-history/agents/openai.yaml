@@ -1,0 +1,4 @@
+interface:
+  display_name: "Plan History"
+  short_description: "Preserve and reconcile Plan Mode decisions"
+  default_prompt: "Use $plan-history to recover and reconcile the applicable Plan Mode summaries."

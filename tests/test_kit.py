@@ -156,13 +156,16 @@ class InstallerTests(unittest.TestCase):
 
             config_text = config_path.read_text()
             hooks = tomllib.loads(config_text)["hooks"]
-            self.assertEqual(set(hooks), {"PreToolUse", "SessionStart", "UserPromptSubmit"})
+            self.assertEqual(
+                set(hooks), {"PreToolUse", "SessionStart", "UserPromptSubmit", "Stop"}
+            )
             self.assertEqual(
                 hooks["PreToolUse"][0]["hooks"][0]["command"],
                 "python /tmp/user.py",
             )
             self.assertEqual(len(hooks["SessionStart"]), 1)
             self.assertEqual(len(hooks["UserPromptSubmit"]), 1)
+            self.assertEqual(len(hooks["Stop"]), 1)
             self.assertIn(kit.HOOKS_START, config_text)
             self.assertIn(kit.HOOKS_END, config_text)
             self.assertFalse((paths.codex_home / "hooks.json").exists())
@@ -196,7 +199,7 @@ class InstallerTests(unittest.TestCase):
 
             self.assertEqual(
                 run({"hook_event_name": "UserPromptSubmit", "permission_mode": "plan"}),
-                "normal mode\n",
+                "normal mode\nUse plan-history before planning. Read and reconcile all applicable Plan history records.\n",
             )
             self.assertEqual(
                 run({"hook_event_name": "UserPromptSubmit", "permission_mode": "default"}),
@@ -242,6 +245,7 @@ class InstallerTests(unittest.TestCase):
         self.assertNotIn("repository-knowledge", contexts["startup"])
         self.assertIn("repository-knowledge", contexts["compact"])
         self.assertIn("until the task ends", contexts["compact"])
+        self.assertIn("plan-history", contexts["compact"])
 
     def test_copy_reinstall_and_uninstall(self):
         with tempfile.TemporaryDirectory() as temp:
@@ -479,6 +483,160 @@ class InstallerTests(unittest.TestCase):
             ), self.assertRaises(kit.KitError):
                 kit.install_core(Namespace(repo=None, repowise_prose=False), paths)
             self.assertEqual(config.read_text(), '[mcp_servers.repowise]\ncommand = "user"\n')
+
+
+class PlanHistoryHookTests(unittest.TestCase):
+    def run_hook(self, event: dict, *, codex_home: Path | None = None):
+        env = os.environ.copy()
+        if codex_home is not None:
+            env["CODEX_HOME"] = str(codex_home)
+        return subprocess.run(
+            [sys.executable, str(ROOT / "assets" / "hooks" / "session_start.py")],
+            input=json.dumps(event),
+            text=True,
+            capture_output=True,
+            check=True,
+            env=env,
+        )
+
+    def stop_event(self, root: Path, message: str, turn: str = "turn-1") -> dict:
+        return {
+            "hook_event_name": "Stop",
+            "permission_mode": "plan",
+            "session_id": "session/unsafe",
+            "turn_id": turn,
+            "cwd": str(root),
+            "last_assistant_message": message,
+        }
+
+    def test_plan_history_preserves_exact_bytes_and_event_identity(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            GitFixture(root)
+            spec = root / "docs" / "feature[1].md"
+            spec.parent.mkdir()
+            spec.write_text("# Feature\n", encoding="utf-8")
+            message = (
+                "<proposed_plan>\n# Café plan\n"
+                "<!-- cpk-plan-spec: docs/feature[1].md -->\n"
+                "</proposed_plan>"
+            )
+            event = self.stop_event(root, message)
+
+            first = self.run_hook(event)
+            retry = self.run_hook(event)
+            records = [
+                path
+                for path in spec.parent.glob("*.plan-summary.*.md")
+                if path.name.startswith("feature[1].plan-summary.")
+            ]
+
+            self.assertEqual(first.stdout, "{}\n")
+            self.assertEqual(retry.stdout, "{}\n")
+            self.assertEqual(len(records), 1)
+            self.assertEqual(records[0].read_bytes(), message.encode("utf-8"))
+            self.assertNotIn("/", records[0].name)
+
+            changed = message.replace("Café", "Changed")
+            collision = self.run_hook(self.stop_event(root, changed))
+            records = [
+                path
+                for path in spec.parent.glob("*.plan-summary.*.md")
+                if path.name.startswith("feature[1].plan-summary.")
+            ]
+            self.assertEqual(len(records), 2)
+            self.assertIn("same event identity", json.loads(collision.stdout)["systemMessage"])
+            self.assertEqual({path.read_bytes() for path in records}, {message.encode(), changed.encode()})
+
+            with_newline = message + "\n"
+            self.run_hook(self.stop_event(root, with_newline, "turn-2"))
+            self.assertIn(
+                with_newline.encode(),
+                {
+                    path.read_bytes()
+                    for path in spec.parent.glob("*.plan-summary.*.md")
+                    if path.name.startswith("feature[1].plan-summary.")
+                },
+            )
+
+    def test_plan_history_processes_all_associations_and_fallbacks(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            GitFixture(root)
+            for name in ("one.md", "two.md"):
+                (root / name).write_text(f"# {name}\n", encoding="utf-8")
+            message = (
+                "<proposed_plan>\n# Plan\n"
+                "<!-- cpk-plan-spec: one.md -->\n"
+                "<!-- cpk-plan-spec: two.md -->\n"
+                "<!-- cpk-plan-spec: ../missing.md -->\n"
+                "</proposed_plan>"
+            )
+
+            result = self.run_hook(self.stop_event(root, message))
+
+            self.assertEqual(len(list(root.glob("one.plan-summary.*.md"))), 1)
+            self.assertEqual(len(list(root.glob("two.plan-summary.*.md"))), 1)
+            unlinked = list((root / ".agent" / "plan-history").glob("*.md"))
+            self.assertEqual(len(unlinked), 1)
+            self.assertEqual(unlinked[0].read_bytes(), message.encode())
+            self.assertIn("../missing.md", json.loads(result.stdout)["systemMessage"])
+
+            none = (
+                "<proposed_plan>\n# No spec\n"
+                "<!-- cpk-plan-spec: none -->\n"
+                "</proposed_plan>"
+            )
+            self.assertEqual(
+                self.run_hook(self.stop_event(root, none, "turn-2")).stdout, "{}\n"
+            )
+            self.assertEqual(len(list((root / ".agent" / "plan-history").glob("*.md"))), 2)
+
+            missing = "<proposed_plan>\n# Missing marker\n</proposed_plan>"
+            warning = self.run_hook(self.stop_event(root, missing, "turn-3"))
+            self.assertIn("no cpk-plan-spec marker", json.loads(warning.stdout)["systemMessage"])
+            self.assertEqual(len(list((root / ".agent" / "plan-history").glob("*.md"))), 3)
+
+    def test_plan_history_ignores_nonfinal_or_nonplan_messages(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            GitFixture(root)
+            incomplete = self.stop_event(root, "I need one answer.")
+            self.assertEqual(self.run_hook(incomplete).stdout, "{}\n")
+
+            complete = self.stop_event(
+                root,
+                "<proposed_plan>\n<!-- cpk-plan-spec: none -->\n</proposed_plan>",
+            )
+            complete["permission_mode"] = "default"
+            self.assertEqual(self.run_hook(complete).stdout, "{}\n")
+            self.assertFalse((root / ".agent" / "plan-history").exists())
+
+            absent = self.stop_event(root, "unused", "turn-2")
+            absent.pop("last_assistant_message")
+            warning = self.run_hook(absent)
+            self.assertIn("did not provide", json.loads(warning.stdout)["systemMessage"])
+
+    def test_plan_history_uses_global_storage_outside_git(self):
+        with tempfile.TemporaryDirectory() as temp:
+            base = Path(temp)
+            cwd = base / "project"
+            cwd.mkdir()
+            codex_home = base / "codex"
+            message = (
+                "<proposed_plan>\n# Plan\n"
+                "<!-- cpk-plan-spec: none -->\n"
+                "</proposed_plan>"
+            )
+
+            result = self.run_hook(
+                self.stop_event(cwd, message), codex_home=codex_home
+            )
+
+            self.assertEqual(result.stdout, "{}\n")
+            records = list((codex_home / "plan-history").rglob("*.md"))
+            self.assertEqual(len(records), 1)
+            self.assertEqual(records[0].read_bytes(), message.encode())
 
 
 class RepoWiseRuntimeTests(unittest.TestCase):
@@ -912,6 +1070,7 @@ class IntegrationTests(unittest.TestCase):
             "roadmap-maintainer",
             "research-first",
             "defect-diagnostic",
+            "plan-history",
         }
         self.assertEqual(set(owners), expected)
 
@@ -1353,6 +1512,37 @@ class IntegrationTests(unittest.TestCase):
         self.assertEqual(kit.KIT_VERSION, "0.18.0")
         self.assertNotIn("Version `0.18.0`", (ROOT / "README.md").read_text())
         self.assertNotIn("version 0.18.0", (ROOT / "CODEX-INSTALL-PROMPT.md").read_text())
+
+    def test_plan_history_is_immutable_and_complete(self):
+        skill = (ROOT / "assets" / "skills" / "plan-history" / "SKILL.md").read_text()
+        agents = (ROOT / "assets" / "AGENTS.block.md").read_text()
+        plans = (ROOT / ".agent" / "PLANS.md").read_text()
+        isolation = (
+            ROOT
+            / "assets"
+            / "skills"
+            / "delivery-lifecycle"
+            / "references"
+            / "git-isolation.md"
+        ).read_text()
+
+        self.assertIn("plan-history", kit.CUSTOM_SKILLS)
+        self.assertIn("cpk-rule-owner: plan-history", skill)
+        self.assertIn("Read every file in `.agent/plan-history/`", skill)
+        self.assertIn("Do not trust a RepoWise match limit", skill)
+        self.assertIn("Do not continue with partial history", skill)
+        self.assertIn("same event key and identical bytes", skill)
+        self.assertIn("Retain and reconcile every distinct-content collision record", skill)
+        self.assertIn("duplicate", skill.lower())
+        self.assertIn("Prior plan reconciliation", skill)
+        self.assertIn("Status: superseded", skill)
+        self.assertIn("<!-- cpk-plan-spec: none -->", skill)
+        self.assertIn("implements a plan after context was cleared", skill)
+        self.assertIn("specification becomes known after capture", skill)
+        self.assertIn("Never edit or remove a Plan history record", skill)
+        self.assertIn("`plan-history`", agents)
+        self.assertIn("Immutable Plan Mode summaries are source records", plans)
+        self.assertIn("cpk-rule-route-only: plan-history", isolation)
 
     def test_repowise_is_required(self):
         config = kit.repowise_config_block(
