@@ -379,8 +379,9 @@ def hooks_config_block(
             f"commandWindows = {toml_string(command_windows)}",
             'statusMessage = "Loading practical defaults"',
             "timeout = 10",
-            "additionalContextLimit = 1200",
         ])
+        if event != "Stop":
+            lines.append("additionalContextLimit = 1200")
         blocks.append("\n".join(lines))
     return "\n\n".join(blocks)
 
@@ -403,7 +404,6 @@ def configured_hook_events(paths: InstallPaths, text: str) -> set[str]:
         "commandWindows": command_windows,
         "statusMessage": "Loading practical defaults",
         "timeout": 10,
-        "additionalContextLimit": 1200,
     }
     hooks = config.get("hooks", {})
     return {
@@ -411,6 +411,11 @@ def configured_hook_events(paths: InstallPaths, text: str) -> set[str]:
         for event in MANAGED_HOOK_EVENTS
         if any(
             all(handler.get(key) == value for key, value in expected.items())
+            and (
+                "additionalContextLimit" not in handler
+                if event == "Stop"
+                else handler.get("additionalContextLimit") == 1200
+            )
             for group in hooks.get(event, [])
             for handler in group.get("hooks", [])
         )

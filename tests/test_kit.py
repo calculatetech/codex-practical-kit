@@ -166,6 +166,19 @@ class InstallerTests(unittest.TestCase):
             self.assertEqual(len(hooks["SessionStart"]), 1)
             self.assertEqual(len(hooks["UserPromptSubmit"]), 1)
             self.assertEqual(len(hooks["Stop"]), 1)
+            self.assertEqual(
+                hooks["SessionStart"][0]["hooks"][0]["additionalContextLimit"], 1200
+            )
+            self.assertEqual(
+                hooks["UserPromptSubmit"][0]["hooks"][0]["additionalContextLimit"], 1200
+            )
+            self.assertNotIn(
+                "additionalContextLimit", hooks["Stop"][0]["hooks"][0]
+            )
+            self.assertEqual(
+                kit.configured_hook_events(paths, config_text),
+                set(kit.MANAGED_HOOK_EVENTS),
+            )
             self.assertIn(kit.HOOKS_START, config_text)
             self.assertIn(kit.HOOKS_END, config_text)
             self.assertFalse((paths.codex_home / "hooks.json").exists())
@@ -220,6 +233,26 @@ class InstallerTests(unittest.TestCase):
             for event in kit.MANAGED_HOOK_EVENTS:
                 self.assertEqual(len(hooks[event]), 1)
             self.assertNotIn(kit.HOOKS_START, text)
+
+    def test_reinstall_removes_stop_context_limit(self):
+        with tempfile.TemporaryDirectory() as temp:
+            paths = self.paths(Path(temp))
+            config = paths.codex_home / "config.toml"
+            kit.install_hooks(paths)
+            text = config.read_text()
+            before, stop = text.split("[[hooks.Stop.hooks]]", 1)
+            config.write_text(
+                before
+                + "[[hooks.Stop.hooks]]"
+                + stop.replace(
+                    "timeout = 10", "timeout = 10\nadditionalContextLimit = 1200", 1
+                )
+            )
+
+            kit.install_hooks(paths)
+
+            handler = tomllib.loads(config.read_text())["hooks"]["Stop"][0]["hooks"][0]
+            self.assertNotIn("additionalContextLimit", handler)
 
     def test_session_start_still_announces_router(self):
         contexts = {}
