@@ -27,12 +27,20 @@ Each lifecycle skill contains its focused rule owners or links to the one skill 
 
 ## Install
 
-Run:
+On macOS or Linux, run:
 
 ```bash
 ./run-tests.sh
 ./install.sh
 ./doctor.sh
+```
+
+On Windows, install PowerShell 7 and Python 3.11 or later. Then run:
+
+```powershell
+pwsh -File .\run-tests.ps1
+pwsh -File .\install.ps1
+pwsh -File .\doctor.ps1
 ```
 
 The installer copies managed skills to `~/.agents/skills/`. Do not edit installed copies.
@@ -81,18 +89,25 @@ The core install provides pinned `uv` and RepoWise when they are absent. It conf
 
 In a Git repository, the first MCP start creates the index and installs RepoWise's `post-commit` hook. Each MCP session catches up the index and watches working-tree edits without model calls. A completely empty folder becomes a Git repository. A non-empty, non-Git folder remains unchanged.
 
-Run eager setup when you need the index before the next Codex session:
+On macOS or Linux, run eager setup when you need the index before the next Codex session:
 
 ```bash
 ./setup-repo.sh /path/to/repository
 ./doctor.sh --repo /path/to/repository
 ```
 
+On Windows, run:
+
+```powershell
+pwsh -File .\setup-repo.ps1 C:\path\to\repository
+pwsh -File .\doctor.ps1 --repo C:\path\to\repository
+```
+
 See [RepoWise notes](docs/REPOWISE.md) for setup, refresh, opt-out, and trust-boundary details.
 
 ## Uninstall
 
-Remove managed integrations and copied skills:
+On macOS or Linux, remove managed integrations and copied skills:
 
 ```bash
 ./uninstall.sh
@@ -104,6 +119,13 @@ Also remove toolkit files:
 ./uninstall.sh --purge
 ```
 
+On Windows, run:
+
+```powershell
+pwsh -File .\uninstall.ps1
+pwsh -File .\uninstall.ps1 --purge
+```
+
 Core uninstall leaves `uv` and RepoWise installed. Other repositories and tools can use them.
 
 Uninstall also leaves all Plan history records in their project or fallback locations.
@@ -112,13 +134,20 @@ Core uninstall leaves generated roadmap views because it does not track reposito
 
 ## Verification
 
-Run:
+On macOS or Linux, run:
 
 ```bash
 ./run-tests.sh
 sh -n doctor.sh install.sh run-tests.sh setup-repo.sh uninstall.sh
 git diff --check
 sha256sum --check MANIFEST.sha256
+```
+
+On Windows, run:
+
+```powershell
+pwsh -File .\run-tests.ps1
+git diff --check
 ```
 
 `MANIFEST.sha256` covers distributed files. Regenerate it after code and documentation are final.

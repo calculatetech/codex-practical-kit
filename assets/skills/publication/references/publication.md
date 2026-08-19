@@ -2,7 +2,7 @@
 <!-- cpk-rule-guard: PR mode is active only when protected `main` requires pull requests, required CI checks, and resolved conversations. -->
 <!-- cpk-rule-guard: Before merge, require successful checks for the latest head. Require no requested changes and GitHub mergeability. -->
 <!-- cpk-rule-guard: Publication does not authorize tag creation, a GitHub release, or cleanup. -->
-<!-- cpk-rule-guard: Before Codex Practical Kit publication, run `./install.sh` and `./doctor.sh` from the reviewed candidate. Require `Result: ready`. -->
+<!-- cpk-rule-guard: Before Codex Practical Kit publication, use the Windows PowerShell launchers on Windows and the shell launchers elsewhere. Require `Result: ready`. -->
 
 # Publication
 
@@ -13,7 +13,9 @@
 
 ## Procedure
 
-Before Codex Practical Kit publication, run `./install.sh` and `./doctor.sh` from the reviewed candidate. Require `Result: ready`.
+Before Codex Practical Kit publication, use the Windows PowerShell launchers on Windows and the shell launchers elsewhere. Require `Result: ready`.
+
+On Windows, run `pwsh -File .\install.ps1` and `pwsh -File .\doctor.ps1`. On macOS or Linux, run `./install.sh` and `./doctor.sh`. Run the commands from the reviewed candidate.
 
 PR mode is active only when protected `main` requires pull requests, required CI checks, and resolved conversations.
 

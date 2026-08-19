@@ -1,6 +1,8 @@
+import hashlib
 import json
 import os
 import re
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -13,6 +15,7 @@ from unittest import mock
 ROOT = Path(__file__).resolve().parents[1]
 
 import kit
+from assets.runtime import repowise_bootstrap as bootstrap
 
 
 class GitFixture:
@@ -37,20 +40,17 @@ class MarkerTests(unittest.TestCase):
         self.assertEqual(kit.remove_marker_block(installed, "# start", "# end"), original)
 
     def test_managed_block_replacement_preserves_backslashes(self):
+        runtime = Path(r"C:\Users\Example User\repowise_bootstrap.py")
+        repowise = r"C:\Users\Example User\repowise.exe"
         updated = kit.marker_block(
             "# start\nold\n# end\n",
             "# start",
             "# end",
-            kit.repowise_config_block(
-                "/tmp/repowise", watcher=["/tmp/repowise", "watch"]
-            ),
+            kit.repowise_config_block(repowise, runtime),
         )
-        self.assertEqual(
-            tomllib.loads(updated)["mcp_servers"]["repowise"]["args"][1],
-            kit.repowise_bootstrap(
-                "/tmp/repowise", watcher=["/tmp/repowise", "watch"]
-            ),
-        )
+        config = tomllib.loads(updated)["mcp_servers"]["repowise"]
+        self.assertEqual(config["command"], sys.executable)
+        self.assertEqual(config["args"], [str(runtime), repowise])
 
 
 class InstallerTests(unittest.TestCase):
@@ -60,16 +60,9 @@ class InstallerTests(unittest.TestCase):
             "ensure_repowise_runtime",
             return_value=("/usr/bin/uv", "/usr/bin/repowise"),
         )
-        self.watcher = mock.patch.object(
-            kit,
-            "repowise_watch_command",
-            return_value=["/usr/bin/python3", "-c", kit.REPOWISE_WATCH_PATCH],
-        )
         self.runtime.start()
-        self.watcher.start()
 
     def tearDown(self):
-        self.watcher.stop()
         self.runtime.stop()
 
     def paths(self, base: Path) -> kit.InstallPaths:
@@ -529,9 +522,23 @@ class InstallerTests(unittest.TestCase):
             self.assertIn('default_tools_approval_mode = "approve"', installed)
             self.assertIn("required = true", installed)
             self.assertIn("startup_timeout_sec = 1800", installed)
-            self.assertIn("hook install", installed)
+            repowise_config = tomllib.loads(installed)["mcp_servers"]["repowise"]
+            self.assertEqual(repowise_config["command"], sys.executable)
+            self.assertEqual(
+                repowise_config["args"],
+                [str(kit.repowise_bootstrap_path(paths)), "/usr/bin/repowise"],
+            )
+            self.assertEqual(
+                kit.repowise_bootstrap_path(paths).read_text(),
+                (ROOT / "assets" / "runtime" / "repowise_bootstrap.py").read_text(),
+            )
             self.assertTrue(kit.uninstall_core(Namespace(purge=False), paths))
+            self.assertTrue(kit.repowise_bootstrap_path(paths).is_file())
             self.assertEqual(config.read_text(), '[mcp_servers.other]\ncommand = "other"\n')
+            with mock.patch.object(kit, "stage_upstream_skills", fake_stage):
+                kit.install_core(Namespace(repo=None, repowise_prose=False), paths)
+            self.assertTrue(kit.uninstall_core(Namespace(purge=True), paths))
+            self.assertFalse(paths.install_root.exists())
 
     def test_unowned_global_repowise_config_is_a_conflict(self):
         with tempfile.TemporaryDirectory() as temp:
@@ -865,28 +872,161 @@ class RoadmapViewHookTests(unittest.TestCase):
             )
 
 
+@unittest.skipUnless(shutil.which("pwsh"), "PowerShell 7 is not installed")
+class PowerShellLauncherTests(unittest.TestCase):
+    def invoke(self, script: Path, *, exit_code: int = 0, fail_tests: bool = False):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp) / "source with spaces"
+            root.mkdir()
+            target = root / script.name
+            target.write_text(script.read_text(), encoding="utf-8")
+            log = Path(temp) / "args.json"
+            if script.name == "run-tests.ps1":
+                (root / "kit.py").write_text("", encoding="utf-8")
+            else:
+                (root / "kit.py").write_text(
+                    "import json, os, sys\n"
+                    "from pathlib import Path\n"
+                    "Path(os.environ['CPK_LOG']).write_text(json.dumps(sys.argv[1:]))\n"
+                    "raise SystemExit(int(os.environ['CPK_EXIT']))\n",
+                    encoding="utf-8",
+                )
+            hooks = root / "assets" / "hooks"
+            hooks.mkdir(parents=True)
+            (hooks / "alpha.py").write_text("", encoding="utf-8")
+            (hooks / "omega.py").write_text("", encoding="utf-8")
+            runtime = root / "assets" / "runtime"
+            runtime.mkdir()
+            (runtime / "bootstrap.py").write_text("", encoding="utf-8")
+            tests = root / "tests"
+            tests.mkdir()
+            if fail_tests:
+                (tests / "test_failure.py").write_text(
+                    "import unittest\n"
+                    "class Failure(unittest.TestCase):\n"
+                    "    def test_failure(self): self.fail('expected')\n",
+                    encoding="utf-8",
+                )
+            else:
+                (tests / "test_success.py").write_text(
+                    "import unittest\n"
+                    "class Success(unittest.TestCase):\n"
+                    "    def test_success(self): self.assertTrue(True)\n",
+                    encoding="utf-8",
+                )
+            env = os.environ.copy()
+            env["CPK_LOG"] = str(log)
+            env["CPK_EXIT"] = str(exit_code)
+            if shutil.which("python") is None:
+                command_dir = Path(temp) / "commands"
+                command_dir.mkdir()
+                (command_dir / "python").symlink_to(sys.executable)
+                env["PATH"] = str(command_dir) + os.pathsep + env["PATH"]
+            arguments = (
+                []
+                if script.name == "run-tests.ps1"
+                else ["--label", "path with spaces"]
+            )
+            result = subprocess.run(
+                ["pwsh", "-NoProfile", "-File", str(target), *arguments],
+                text=True,
+                capture_output=True,
+                env=env,
+                check=False,
+            )
+            call = json.loads(log.read_text()) if log.exists() else None
+            compiled = {
+                str(path.relative_to(root))
+                for path in (
+                    root / "kit.py",
+                    *sorted(hooks.glob("*.py")),
+                    *sorted(runtime.glob("*.py")),
+                )
+                if any((path.parent / "__pycache__").glob(path.stem + ".*.pyc"))
+            }
+            return result, call, compiled
+
+    def test_action_launchers_forward_arguments_and_exit_status(self):
+        actions = {
+            "install.ps1": "install",
+            "uninstall.ps1": "uninstall",
+            "setup-repo.ps1": "setup-repo",
+            "doctor.ps1": "doctor",
+        }
+        for name, action in actions.items():
+            with self.subTest(name=name):
+                result, call, _ = self.invoke(ROOT / name, exit_code=9)
+                self.assertEqual(result.returncode, 9)
+                self.assertEqual(call, [action, "--label", "path with spaces"])
+
+    def test_test_launcher_stops_after_failed_unit_phase(self):
+        result, _, compiled = self.invoke(ROOT / "run-tests.ps1", fail_tests=True)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertEqual(compiled, set())
+
+    def test_action_launcher_reports_missing_python(self):
+        env = os.environ.copy()
+        env["PATH"] = ""
+        result = subprocess.run(
+            [shutil.which("pwsh"), "-NoProfile", "-File", str(ROOT / "doctor.ps1")],
+            text=True,
+            capture_output=True,
+            env=env,
+            check=False,
+        )
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("python", result.stderr)
+
+    def test_test_launcher_compiles_kit_and_every_hook(self):
+        result, _, compiled = self.invoke(ROOT / "run-tests.ps1")
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertEqual(
+            compiled,
+            {
+                "kit.py",
+                "assets/hooks/alpha.py",
+                "assets/hooks/omega.py",
+                "assets/runtime/bootstrap.py",
+            },
+        )
+
+
 class RepoWiseRuntimeTests(unittest.TestCase):
     def paths(self, base: Path) -> kit.InstallPaths:
         return kit.InstallPaths(
             base / "home", base / "codex", base / "skills", base / "kit"
         )
 
-    def test_watch_command_uses_repowise_python_and_filters_read_events(self):
+    def test_watch_command_is_platform_specific(self):
         with tempfile.TemporaryDirectory() as temp:
             launcher = Path(temp) / "repowise"
             launcher.write_text(f"#!{sys.executable}\n")
+            posix = bootstrap.watch_command(str(launcher), "linux")
+            windows = bootstrap.watch_command(r"C:\Tools\repowise.exe", "win32")
 
-            command = kit.repowise_watch_command(str(launcher))
-
-        self.assertEqual(command[:2], [sys.executable, "-c"])
+        self.assertEqual(posix[:2], [sys.executable, "-c"])
         for event in ("opened", "closed", "closed_no_write"):
-            self.assertIn(event, command[2])
+            self.assertIn(event, posix[2])
+        self.assertEqual(windows, [r"C:\Tools\repowise.exe", "watch"])
+
+    def test_windows_runtime_discovery_uses_executable_suffix(self):
+        with tempfile.TemporaryDirectory() as temp, mock.patch.object(
+            kit, "is_windows", return_value=True
+        ), mock.patch.object(kit.shutil, "which", return_value=None) as which:
+            paths = self.paths(Path(temp))
+            command = paths.home / ".local" / "bin" / "uv.exe"
+            command.parent.mkdir(parents=True)
+            command.write_text("uv")
+            self.assertEqual(kit.find_runtime_command(paths, "uv"), str(command))
+            which.assert_called_once_with("uv.exe")
 
     def test_runtime_pins_match_lock_file(self):
         runtime = json.loads((ROOT / "upstream.lock.json").read_text())["runtime_tools"]
         self.assertEqual(runtime["uv"]["version"], kit.UV_VERSION)
-        self.assertEqual(runtime["uv"]["installer_url"], kit.UV_INSTALLER_URL)
-        self.assertEqual(runtime["uv"]["installer_sha256"], kit.UV_INSTALLER_SHA256)
+        self.assertEqual(runtime["uv"]["installers"]["posix"]["url"], kit.UV_INSTALLER_URL)
+        self.assertEqual(runtime["uv"]["installers"]["posix"]["sha256"], kit.UV_INSTALLER_SHA256)
+        self.assertEqual(runtime["uv"]["installers"]["windows"]["url"], kit.UV_WINDOWS_INSTALLER_URL)
+        self.assertEqual(runtime["uv"]["installers"]["windows"]["sha256"], kit.UV_WINDOWS_INSTALLER_SHA256)
         self.assertEqual(runtime["repowise"]["version"], kit.REPOWISE_VERSION)
 
     def test_missing_uv_runs_verified_installer_once(self):
@@ -909,6 +1049,41 @@ class RepoWiseRuntimeTests(unittest.TestCase):
                 uv = kit.ensure_uv(paths)
             self.assertEqual(uv, str(paths.home / ".local" / "bin" / "uv"))
             download.assert_called_once_with(kit.UV_INSTALLER_URL, kit.UV_INSTALLER_SHA256)
+            run.assert_called_once()
+
+    def test_missing_windows_uv_runs_verified_powershell_installer_once(self):
+        with tempfile.TemporaryDirectory() as temp:
+            paths = self.paths(Path(temp))
+
+            def fake_run(command, **kwargs):
+                self.assertEqual(
+                    command,
+                    [
+                        "pwsh",
+                        "-NoProfile",
+                        "-NonInteractive",
+                        "-ExecutionPolicy",
+                        "Bypass",
+                        "-Command",
+                        "-",
+                    ],
+                )
+                self.assertEqual(kwargs["input_text"], "installer")
+                destination = Path(kwargs["env"]["UV_INSTALL_DIR"])
+                destination.mkdir(parents=True)
+                (destination / "uv.exe").write_text("uv")
+                return subprocess.CompletedProcess(command, 0, "", "")
+
+            with mock.patch.object(kit, "is_windows", return_value=True), mock.patch.object(
+                kit, "find_runtime_command", return_value=None
+            ), mock.patch.object(
+                kit, "download_sha256", return_value=b"installer"
+            ) as download, mock.patch.object(kit, "run", side_effect=fake_run) as run:
+                uv = kit.ensure_uv(paths)
+            self.assertEqual(uv, str(paths.home / ".local" / "bin" / "uv.exe"))
+            download.assert_called_once_with(
+                kit.UV_WINDOWS_INSTALLER_URL, kit.UV_WINDOWS_INSTALLER_SHA256
+            )
             run.assert_called_once()
 
     def test_download_rejects_wrong_sha256(self):
@@ -952,6 +1127,25 @@ class RepoWiseRuntimeTests(unittest.TestCase):
                 ],
             )
 
+    def test_missing_windows_repowise_uses_executable_result(self):
+        with tempfile.TemporaryDirectory() as temp:
+            paths = self.paths(Path(temp))
+
+            def fake_run(command, **kwargs):
+                if command[1:3] == ["tool", "install"]:
+                    destination = Path(kwargs["env"]["UV_TOOL_BIN_DIR"])
+                    destination.mkdir(parents=True)
+                    (destination / "repowise.exe").write_text("repowise")
+                return subprocess.CompletedProcess(command, 0, "", "")
+
+            with mock.patch.object(kit, "is_windows", return_value=True), mock.patch.object(
+                kit, "find_runtime_command", return_value=None
+            ), mock.patch.object(kit, "run", side_effect=fake_run):
+                repowise = kit.ensure_repowise(paths, r"C:\Tools\uv.exe")
+            self.assertEqual(
+                repowise, str(paths.home / ".local" / "bin" / "repowise.exe")
+            )
+
     def test_different_repowise_version_stops_install(self):
         with tempfile.TemporaryDirectory() as temp:
             paths = self.paths(Path(temp))
@@ -963,144 +1157,165 @@ class RepoWiseRuntimeTests(unittest.TestCase):
                 kit.ensure_repowise(paths, "/usr/bin/uv")
             run.assert_not_called()
 
+    class Watcher:
+        def __init__(self, status=None):
+            self.status = status
+            self.terminated = False
+            self.waited = False
+
+        def poll(self):
+            return self.status
+
+        def terminate(self):
+            self.terminated = True
+            self.status = 0
+
+        def wait(self):
+            self.waited = True
+            return self.status
+
     def test_bootstrap_initializes_once_and_always_installs_hook(self):
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp) / "repo"
             root.mkdir()
-            GitFixture(root).commit("sample.py", "value = 1\n")
-            log = Path(temp) / "calls"
-            fake = Path(temp) / "repowise"
-            fake.write_text(
-                "#!/bin/sh\n"
-                "printf '%s\\n' \"$*\" >> \"$CALL_LOG\"\n"
-                "if [ \"$1\" = init ]; then\n"
-                "  for LAST do :; done\n"
-                "  mkdir -p \"$LAST/.repowise\"\n"
-                "elif [ \"$1\" = update ] && ! git rev-parse --verify HEAD >/dev/null 2>&1; then\n"
-                "  exit 7\n"
-                "elif [ \"$1\" = watch ]; then\n"
-                "  printf '%s\\n' \"$$\" >> \"$WATCH_PID_LOG\"\n"
-                "  trap 'exit 0' HUP INT TERM\n"
-                "  while :; do sleep 1; done\n"
-                "fi\n"
-            )
-            fake.chmod(0o755)
-            env = os.environ.copy()
-            env["CALL_LOG"] = str(log)
-            watcher_pids = Path(temp) / "watcher-pids"
-            env["WATCH_PID_LOG"] = str(watcher_pids)
-            script = kit.repowise_bootstrap(str(fake), watcher=[str(fake), "watch"])
-            first = subprocess.run(
-                ["/bin/sh", "-c", script],
-                cwd=root,
-                env=env,
-                check=True,
-                capture_output=True,
-                text=True,
-            )
-            subprocess.run(
-                ["/bin/sh", "-c", script], cwd=root, env=env, check=True
-            )
-            calls = log.read_text().splitlines()
-            self.assertEqual(sum(line.startswith("init ") for line in calls), 1)
-            self.assertEqual(sum(line.startswith("hook install ") for line in calls), 2)
-            self.assertEqual(
-                sum(line.startswith("update --index-only ") for line in calls), 2
-            )
-            self.assertEqual(
-                sum(line.startswith("watch --index-only ") for line in calls), 2
-            )
-            self.assertEqual(sum(line.startswith("mcp ") for line in calls), 2)
-            self.assertEqual(first.stdout, "")
-            self.assertLess(
-                calls.index(
-                    "update --index-only --no-agents --no-workspace " + str(root)
-                ),
-                calls.index("watch --index-only --no-workspace " + str(root)),
-            )
-            self.assertLess(
-                calls.index("watch --index-only --no-workspace " + str(root)),
-                calls.index("mcp " + str(root)),
-            )
-            for pid in map(int, watcher_pids.read_text().splitlines()):
-                with self.assertRaises(ProcessLookupError):
-                    os.kill(pid, 0)
+            calls = []
+            watchers = []
+
+            def setup(command, _cwd):
+                calls.append(command)
+                if command[1] == "init":
+                    (root / ".repowise").mkdir()
+
+            def popen(command, **_kwargs):
+                calls.append(command)
+                watcher = self.Watcher()
+                watchers.append(watcher)
+                return watcher
+
+            def foreground(command, **_kwargs):
+                calls.append(command)
+                return subprocess.CompletedProcess(command, 0)
+
+            with mock.patch.object(bootstrap, "git_root", return_value=root), mock.patch.object(
+                bootstrap, "has_head", return_value=True
+            ), mock.patch.object(bootstrap, "run_setup", side_effect=setup), mock.patch.object(
+                bootstrap, "watch_command", return_value=["watcher"]
+            ), mock.patch.object(bootstrap.subprocess, "Popen", side_effect=popen), mock.patch.object(
+                bootstrap.subprocess, "run", side_effect=foreground
+            ), mock.patch.object(bootstrap.time, "sleep"):
+                self.assertEqual(bootstrap.bootstrap("repowise", root), 0)
+                self.assertEqual(bootstrap.bootstrap("repowise", root), 0)
+
+            self.assertEqual(sum(command[1] == "init" for command in calls if len(command) > 1), 1)
+            self.assertEqual(sum(command[1:3] == ["hook", "install"] for command in calls), 2)
+            self.assertEqual(sum(command[1] == "update" for command in calls if len(command) > 1), 2)
+            self.assertEqual(sum(command[0] == "watcher" for command in calls), 2)
+            self.assertEqual(sum(command[1] == "mcp" for command in calls if len(command) > 1), 2)
+            self.assertTrue(all(item.terminated and item.waited for item in watchers))
 
     def test_bootstrap_initializes_only_empty_non_git_directory(self):
         with tempfile.TemporaryDirectory() as temp:
-            root = Path(temp)
-            log = root / "calls"
-            fake = root / "repowise"
-            fake.write_text(
-                "#!/bin/sh\n"
-                "printf '%s\\n' \"$*\" >> \"$CALL_LOG\"\n"
-                "if [ \"$1\" = init ]; then\n"
-                "  for LAST do :; done\n"
-                "  mkdir -p \"$LAST/.repowise\"\n"
-                "elif [ \"$1\" = update ] && ! git rev-parse --verify HEAD >/dev/null 2>&1; then\n"
-                "  exit 7\n"
-                "elif [ \"$1\" = watch ]; then\n"
-                "  trap 'exit 0' HUP INT TERM\n"
-                "  while :; do sleep 1; done\n"
-                "fi\n"
-            )
-            fake.chmod(0o755)
-            env = os.environ.copy()
-            env["CALL_LOG"] = str(log)
-            script = kit.repowise_bootstrap(str(fake), watcher=[str(fake), "watch"])
-
-            empty = root / "empty"
+            base = Path(temp)
+            empty = base / "empty"
             empty.mkdir()
-            subprocess.run(["/bin/sh", "-c", script], cwd=empty, env=env, check=True)
-            self.assertTrue((empty / ".git").is_dir())
-            empty_calls = log.read_text().splitlines()
-            self.assertEqual(sum(line.startswith("init ") for line in empty_calls), 1)
-            self.assertEqual(sum(line.startswith("hook install ") for line in empty_calls), 1)
-            self.assertEqual(sum(line.startswith("update --index-only ") for line in empty_calls), 0)
-            self.assertEqual(sum(line.startswith("watch --index-only ") for line in empty_calls), 1)
-            self.assertIn(f"mcp {empty}", empty_calls)
+            calls = []
 
-            log.write_text("")
-            nonempty = root / "nonempty"
+            def setup(command, _cwd):
+                calls.append(command)
+                if command[:3] == ["git", "init", "--quiet"]:
+                    (empty / ".git").mkdir()
+                if len(command) > 1 and command[1] == "init":
+                    (empty / ".repowise").mkdir()
+
+            watcher = self.Watcher()
+            with mock.patch.object(
+                bootstrap, "git_root", side_effect=[None, empty]
+            ), mock.patch.object(bootstrap, "has_head", return_value=False), mock.patch.object(
+                bootstrap, "run_setup", side_effect=setup
+            ), mock.patch.object(bootstrap, "watch_command", return_value=["watcher"]), mock.patch.object(
+                bootstrap.subprocess, "Popen", return_value=watcher
+            ) as popen, mock.patch.object(
+                bootstrap.subprocess,
+                "run",
+                side_effect=lambda command, **_kwargs: calls.append(command)
+                or subprocess.CompletedProcess(command, 0),
+            ), mock.patch.object(bootstrap.time, "sleep"):
+                self.assertEqual(bootstrap.bootstrap("repowise", empty), 0)
+
+            self.assertTrue((empty / ".git").is_dir())
+            self.assertEqual(calls[0], ["git", "init", "--quiet"])
+            self.assertTrue(any(len(command) > 1 and command[1] == "init" for command in calls))
+            self.assertTrue(any(command[1:3] == ["hook", "install"] for command in calls))
+            self.assertFalse(any(len(command) > 1 and command[1] == "update" for command in calls))
+            popen.assert_called_once_with(
+                ["watcher", "--index-only", "--no-workspace", str(empty)],
+                cwd=empty,
+                stdout=mock.ANY,
+                stderr=subprocess.STDOUT,
+            )
+            self.assertIn(["repowise", "mcp", str(empty)], calls)
+            self.assertTrue(watcher.terminated and watcher.waited)
+
+            nonempty = base / "nonempty"
             nonempty.mkdir()
             (nonempty / ".keep").write_text("")
-            subprocess.run(["/bin/sh", "-c", script], cwd=nonempty, env=env, check=True)
+            with mock.patch.object(bootstrap, "git_root", return_value=None), mock.patch.object(
+                bootstrap, "run_setup"
+            ) as setup_mock, mock.patch.object(bootstrap.subprocess, "Popen") as popen, mock.patch.object(
+                bootstrap.subprocess,
+                "run",
+                return_value=subprocess.CompletedProcess([], 0),
+            ) as foreground:
+                self.assertEqual(bootstrap.bootstrap("repowise", nonempty), 0)
             self.assertFalse((nonempty / ".git").exists())
-            self.assertEqual(log.read_text().splitlines(), ["mcp"])
+            setup_mock.assert_not_called()
+            popen.assert_not_called()
+            foreground.assert_called_once_with(
+                ["repowise", "mcp"], cwd=nonempty, check=False
+            )
 
     def test_bootstrap_stops_when_watcher_fails_to_start(self):
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
-            GitFixture(root)
             (root / ".repowise").mkdir()
-            log = root / "calls"
-            fake = root / "repowise"
-            fake.write_text(
-                "#!/bin/sh\n"
-                "printf '%s\\n' \"$*\" >> \"$CALL_LOG\"\n"
-                "if [ \"$1\" = watch ]; then exit 7; fi\n"
-            )
-            fake.chmod(0o755)
-            env = os.environ.copy()
-            env["CALL_LOG"] = str(log)
+            watcher = self.Watcher(status=7)
+            with mock.patch.object(bootstrap, "git_root", return_value=root), mock.patch.object(
+                bootstrap, "has_head", return_value=False
+            ), mock.patch.object(bootstrap, "run_setup"), mock.patch.object(
+                bootstrap, "watch_command", return_value=["watcher"]
+            ), mock.patch.object(bootstrap.subprocess, "Popen", return_value=watcher), mock.patch.object(
+                bootstrap.subprocess, "run"
+            ) as foreground, mock.patch.object(bootstrap.time, "sleep"):
+                result = bootstrap.bootstrap("repowise", root)
 
-            result = subprocess.run(
-                [
-                    "/bin/sh",
-                    "-c",
-                    kit.repowise_bootstrap(
-                        str(fake), watcher=[str(fake), "watch"]
-                    ),
-                ],
-                cwd=root,
-                env=env,
-                check=False,
-            )
+            self.assertEqual(result, 7)
+            self.assertTrue(watcher.waited)
+            foreground.assert_not_called()
 
-            self.assertEqual(result.returncode, 7)
-            self.assertFalse(
-                any(line.startswith("mcp ") for line in log.read_text().splitlines())
-            )
+    def test_bootstrap_keeps_setup_diagnostics_off_mcp_stdout(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            (root / ".repowise").mkdir()
+            watcher = self.Watcher()
+            calls = []
+
+            def run(command, **kwargs):
+                calls.append((command, kwargs))
+                return subprocess.CompletedProcess(command, 0)
+
+            with mock.patch.object(bootstrap, "git_root", return_value=root), mock.patch.object(
+                bootstrap, "has_head", return_value=False
+            ), mock.patch.object(bootstrap, "watch_command", return_value=["watcher"]), mock.patch.object(
+                bootstrap.subprocess, "Popen", return_value=watcher
+            ), mock.patch.object(bootstrap.subprocess, "run", side_effect=run), mock.patch.object(
+                bootstrap.time, "sleep"
+            ):
+                self.assertEqual(bootstrap.bootstrap("repowise", root), 0)
+
+            hook_kwargs = next(kwargs for command, kwargs in calls if command[1] == "hook")
+            mcp_kwargs = next(kwargs for command, kwargs in calls if command[1] == "mcp")
+            self.assertIs(hook_kwargs["stdout"], sys.stderr)
+            self.assertNotIn("stdout", mcp_kwargs)
 
 
 class IntegrationTests(unittest.TestCase):
@@ -1125,10 +1340,6 @@ class IntegrationTests(unittest.TestCase):
                 kit,
                 "ensure_repowise_runtime",
                 return_value=("/usr/bin/uv", "/usr/bin/repowise"),
-            ), mock.patch.object(
-                kit,
-                "repowise_watch_command",
-                return_value=["/usr/bin/python3", "-c", kit.REPOWISE_WATCH_PATCH],
             ):
                 kit.setup_repo(Namespace(repo=str(root), prose=False), paths)
 
@@ -1159,13 +1370,15 @@ class IntegrationTests(unittest.TestCase):
             paths = kit.InstallPaths(root, root / "codex", root / "skills", root / "kit")
             with mock.patch.object(kit, "repowise_command", fake_repowise), mock.patch.object(
                 kit, "ensure_repowise_runtime", return_value=("/usr/bin/uv", "/usr/bin/repowise")
-            ), mock.patch.object(
-                kit,
-                "repowise_watch_command",
-                return_value=["/usr/bin/python3", "-c", kit.REPOWISE_WATCH_PATCH],
             ):
                 kit.setup_repo(Namespace(repo=str(root), prose=False), paths)
             self.assertIn("mcp_servers.other", (root / ".codex" / "config.toml").read_text())
+            repo_config = tomllib.loads((root / ".codex" / "config.toml").read_text())
+            self.assertEqual(
+                repo_config["mcp_servers"]["repowise"]["args"],
+                [str(kit.repowise_bootstrap_path(paths)), "/usr/bin/repowise"],
+            )
+            self.assertTrue(kit.repowise_bootstrap_path(paths).is_file())
             self.assertTrue(any(call[:2] == ("hook", "install") for call in calls))
             self.assertIn(
                 (
@@ -1779,11 +1992,40 @@ class IntegrationTests(unittest.TestCase):
         self.assertIn("Before Codex Practical Kit publication", publication)
         self.assertIn("`./install.sh`", publication)
         self.assertIn("`./doctor.sh`", publication)
+        self.assertIn("`pwsh -File .\\install.ps1`", publication)
+        self.assertIn("`pwsh -File .\\doctor.ps1`", publication)
         self.assertIn("from the reviewed candidate", publication)
         self.assertIn("`Result: ready`", publication)
-        self.assertEqual(kit.KIT_VERSION, "0.18.0")
-        self.assertNotIn("Version `0.18.0`", (ROOT / "README.md").read_text())
-        self.assertNotIn("version 0.18.0", (ROOT / "CODEX-INSTALL-PROMPT.md").read_text())
+        self.assertEqual(kit.KIT_VERSION, "0.19.0")
+        self.assertNotIn("Version `0.19.0`", (ROOT / "README.md").read_text())
+        self.assertNotIn("version 0.19.0", (ROOT / "CODEX-INSTALL-PROMPT.md").read_text())
+
+    def test_windows_launchers_and_runtime_are_complete_distribution_artifacts(self):
+        shell_paths = {path.relative_to(ROOT) for path in ROOT.rglob("*.sh")}
+        powershell_paths = {path.relative_to(ROOT) for path in ROOT.rglob("*.ps1")}
+        shell = {path.stem for path in shell_paths}
+        powershell = {path.stem for path in powershell_paths}
+        self.assertEqual(
+            shell, {"install", "uninstall", "setup-repo", "doctor", "run-tests"}
+        )
+        self.assertEqual(powershell, shell)
+        self.assertTrue(all(path.parent == Path(".") for path in shell_paths | powershell_paths))
+        self.assertFalse(any(ROOT.rglob("*.bat")))
+        self.assertFalse(any(ROOT.rglob("*.cmd")))
+
+        records = {}
+        for line in (ROOT / "MANIFEST.sha256").read_text().splitlines():
+            digest, path = line.split("  ", 1)
+            records.setdefault(path, []).append(digest)
+        required = [
+            *(f"./{name}.ps1" for name in sorted(powershell)),
+            "./assets/runtime/repowise_bootstrap.py",
+        ]
+        for relative in required:
+            with self.subTest(relative=relative):
+                self.assertEqual(len(records.get(relative, [])), 1)
+                content = (ROOT / relative.removeprefix("./")).read_bytes()
+                self.assertEqual(records[relative][0], hashlib.sha256(content).hexdigest())
 
     def test_plan_history_is_immutable_and_complete(self):
         skill = (ROOT / "assets" / "skills" / "plan-history" / "SKILL.md").read_text()
@@ -1818,7 +2060,7 @@ class IntegrationTests(unittest.TestCase):
 
     def test_repowise_is_required(self):
         config = kit.repowise_config_block(
-            "/tmp/repowise", watcher=["/tmp/repowise", "watch"]
+            "/tmp/repowise", Path("/tmp/repowise_bootstrap.py")
         )
         owner = (
             ROOT
@@ -1833,8 +2075,11 @@ class IntegrationTests(unittest.TestCase):
 
         self.assertIn("required = true", config)
         self.assertIn("startup_timeout_sec = 1800", config)
-        self.assertIn("update --index-only --no-agents --no-workspace", config)
-        self.assertIn("watch --index-only --no-workspace", config)
+        runtime = (ROOT / "assets" / "runtime" / "repowise_bootstrap.py").read_text()
+        self.assertIn('"update",', runtime)
+        self.assertIn('"watch"]', runtime)
+        self.assertIn('"--index-only",', runtime)
+        self.assertIn('"--no-workspace",', runtime)
         self.assertIn("cpk-rule-owner: repository-knowledge", owner)
         for route in (docs_skill, research_skill, notes):
             self.assertIn("repository-knowledge", route)

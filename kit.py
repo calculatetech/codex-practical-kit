@@ -24,24 +24,19 @@ from pathlib import Path
 from typing import Any, Iterable
 
 KIT_ID = "codex-practical-kit"
-KIT_VERSION = "0.18.0"
+KIT_VERSION = "0.19.0"
 REPOWISE_VERSION = "0.41.0"
 UV_VERSION = "0.12.4"
 UV_INSTALLER_URL = f"https://astral.sh/uv/{UV_VERSION}/install.sh"
 UV_INSTALLER_SHA256 = "f1ee4a249799525a330df57643335120150c9102db7483b1d37546cc43af3a16"
+UV_WINDOWS_INSTALLER_URL = f"https://astral.sh/uv/{UV_VERSION}/install.ps1"
+UV_WINDOWS_INSTALLER_SHA256 = "76a0c027f3d47a7ced56f9e63e67a21cb1bcbf525c8ba9ef7ec0d633cc8f89e4"
 ROOT = Path(__file__).resolve().parent
 AGENTS_START = "<!-- codex-practical-kit:start -->"
 AGENTS_END = "<!-- codex-practical-kit:end -->"
 REPOWISE_START = "# >>> codex-practical-kit:repowise >>>"
 REPOWISE_END = "# <<< codex-practical-kit:repowise <<<"
 
-REPOWISE_WATCH_PATCH = (
-    "from repowise.cli.commands import watch_cmd as w;"
-    "original=w._event_paths;"
-    "w._event_paths=lambda event,root:set() if getattr(event,'event_type','') in "
-    "{'opened','closed','closed_no_write'} else original(event,root);"
-    "w.watch_command.main(args=__import__('sys').argv[1:],standalone_mode=False)"
-)
 HOOKS_START = "# >>> codex-practical-kit:hooks >>>"
 HOOKS_END = "# <<< codex-practical-kit:hooks <<<"
 ROADMAP_VIEW_MARKER = "<!-- codex-practical-kit:roadmap-view -->"
@@ -528,6 +523,7 @@ def install_core(args: argparse.Namespace, paths: InstallPaths) -> None:
             raise KitError(f"This plans file already exists and is not owned by this kit: {plan}")
         validate_global_repowise_config(paths)
         uv, repowise = ensure_repowise_runtime(paths)
+        install_runtime(paths)
 
         hook_root = paths.install_root / "hooks"
         remove_path(hook_root)
@@ -616,11 +612,20 @@ def user_bin(paths: InstallPaths) -> Path:
     return paths.home / ".local" / "bin"
 
 
+def is_windows() -> bool:
+    return sys.platform == "win32"
+
+
+def runtime_executable(name: str) -> str:
+    return name + ".exe" if is_windows() else name
+
+
 def find_runtime_command(paths: InstallPaths, name: str) -> str | None:
-    found = shutil.which(name)
+    executable = runtime_executable(name)
+    found = shutil.which(executable)
     if found:
         return found
-    candidate = user_bin(paths) / name
+    candidate = user_bin(paths) / executable
     if candidate.is_file():
         return str(candidate)
     manifest = json_load(manifest_path(paths), {})
@@ -633,14 +638,30 @@ def ensure_uv(paths: InstallPaths) -> str:
     if uv:
         return uv
 
-    script = download_sha256(UV_INSTALLER_URL, UV_INSTALLER_SHA256).decode("utf-8")
+    if is_windows():
+        url = UV_WINDOWS_INSTALLER_URL
+        checksum = UV_WINDOWS_INSTALLER_SHA256
+        installer = [
+            "pwsh",
+            "-NoProfile",
+            "-NonInteractive",
+            "-ExecutionPolicy",
+            "Bypass",
+            "-Command",
+            "-",
+        ]
+    else:
+        url = UV_INSTALLER_URL
+        checksum = UV_INSTALLER_SHA256
+        installer = ["sh"]
+    script = download_sha256(url, checksum).decode("utf-8")
     destination = user_bin(paths)
     env = os.environ.copy()
     env["HOME"] = str(paths.home)
     env["UV_INSTALL_DIR"] = str(destination)
     env.pop("UV_UNMANAGED_INSTALL", None)
-    run(["sh"], env=env, input_text=script, timeout=300)
-    uv = destination / "uv"
+    run(installer, env=env, input_text=script, timeout=300)
+    uv = destination / runtime_executable("uv")
     if not uv.is_file():
         raise KitError(f"uv {UV_VERSION} installation did not create {uv}")
     return str(uv)
@@ -664,7 +685,7 @@ def ensure_repowise(paths: InstallPaths, uv: str) -> str:
     env["UV_TOOL_DIR"] = str(paths.home / ".local" / "share" / "uv" / "tools")
     run([uv, "tool", "install", f"repowise=={REPOWISE_VERSION}"], env=env, timeout=1800)
     run([uv, "tool", "update-shell"], env=env, timeout=60)
-    repowise = destination / "repowise"
+    repowise = destination / runtime_executable("repowise")
     if not repowise.is_file():
         raise KitError(f"RepoWise {REPOWISE_VERSION} installation did not create {repowise}")
     return str(repowise)
@@ -693,96 +714,26 @@ def repowise_init_args(prose: bool) -> list[str]:
     return args
 
 
-def repowise_watch_command(repowise: str) -> list[str]:
-    launcher = Path(repowise).resolve()
-    try:
-        first_line = launcher.read_bytes().splitlines()[0].decode("utf-8").strip()
-    except (IndexError, OSError, UnicodeDecodeError) as exc:
-        raise KitError(f"Cannot read the RepoWise launcher at {launcher}: {exc}") from exc
-    if not first_line.startswith("#!"):
-        raise KitError(f"RepoWise launcher has no Python shebang: {launcher}")
-    words = shlex.split(first_line[2:])
-    if not words:
-        raise KitError(f"RepoWise launcher has an empty shebang: {launcher}")
-    if Path(words[0]).name == "env":
-        interpreter = shutil.which(words[-1])
-    else:
-        interpreter = words[0]
-    if not interpreter or not Path(interpreter).is_file():
-        raise KitError(f"Cannot resolve the RepoWise Python interpreter: {first_line[2:]}")
-    return [interpreter, "-c", REPOWISE_WATCH_PATCH]
+def repowise_bootstrap_path(paths: InstallPaths) -> Path:
+    return paths.install_root / "runtime" / "repowise_bootstrap.py"
 
 
-def repowise_bootstrap(repowise: str, watcher: list[str] | None = None) -> str:
-    command = shlex.quote(repowise)
-    init = " ".join(
-        [command, *map(shlex.quote, repowise_init_args(False)), '"$ROOT"']
-    )
-    update = " ".join(
-        [
-            command,
-            "update",
-            "--index-only",
-            "--no-agents",
-            "--no-workspace",
-            '"$ROOT"',
-        ]
-    )
-    watch = " ".join(
-        [
-            *map(shlex.quote, watcher or repowise_watch_command(repowise)),
-            "--index-only",
-            "--no-workspace",
-            '"$ROOT"',
-        ]
-    )
-    return "\n".join(
-        [
-            "set -eu",
-            'if ! ROOT=$(git rev-parse --show-toplevel 2>/dev/null); then',
-            '  if [ -n "$(ls -A)" ]; then',
-            f"    exec {command} mcp",
-            "  fi",
-            "  git init --quiet 1>&2",
-            "  ROOT=$(git rev-parse --show-toplevel)",
-            "fi",
-            'if [ ! -d "$ROOT/.repowise" ]; then',
-            f"  {init} 1>&2",
-            "fi",
-            f'{command} hook install "$ROOT" --no-workspace 1>&2',
-            "if git rev-parse --verify HEAD >/dev/null 2>&1; then",
-            f"  {update} 1>&2",
-            "fi",
-            'LOG="$ROOT/.repowise/.update.log"',
-            f'{watch} >> "$LOG" 2>&1 &',
-            "WATCH_PID=$!",
-            "sleep 1",
-            'if ! kill -0 "$WATCH_PID" 2>/dev/null; then',
-            '  wait "$WATCH_PID"',
-            "  exit 1",
-            "fi",
-            "cleanup() {",
-            '  kill "$WATCH_PID" 2>/dev/null || true',
-            '  wait "$WATCH_PID" 2>/dev/null || true',
-            "}",
-            "trap cleanup EXIT",
-            "trap 'exit 129' HUP",
-            "trap 'exit 130' INT",
-            "trap 'exit 143' TERM",
-            f'{command} mcp "$ROOT"',
-        ]
-    )
+def install_runtime(paths: InstallPaths) -> Path:
+    destination = repowise_bootstrap_path(paths)
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(ROOT / "assets" / "runtime" / destination.name, destination)
+    return destination
 
 
 def repowise_config_block(
     repowise: str,
+    bootstrap: Path,
     root: Path | None = None,
-    watcher: list[str] | None = None,
 ) -> str:
     lines = [
         "[mcp_servers.repowise]",
-        'command = "/bin/sh"',
-        f"args = [\"-c\", {toml_string(repowise_bootstrap(repowise, watcher))}]",
+        f"command = {toml_string(sys.executable)}",
+        f"args = [{toml_string(str(bootstrap))}, {toml_string(repowise)}]",
         'default_tools_approval_mode = "approve"',
         "required = true",
         "startup_timeout_sec = 1800",
@@ -815,7 +766,7 @@ def install_global_repowise(paths: InstallPaths, repowise: str) -> None:
         read_text(config),
         REPOWISE_START,
         REPOWISE_END,
-        repowise_config_block(repowise),
+        repowise_config_block(repowise, repowise_bootstrap_path(paths)),
     )
     write_file(config, updated)
 
@@ -851,6 +802,7 @@ def setup_repo(args: argparse.Namespace, paths: InstallPaths) -> None:
     agents_before = read_text(agents)
     ensure_no_external_repowise_table(config_before)
     _, repowise = ensure_repowise_runtime(paths)
+    bootstrap = install_runtime(paths)
 
     if not (root / ".repowise").exists():
         repowise_command(
@@ -887,7 +839,7 @@ def setup_repo(args: argparse.Namespace, paths: InstallPaths) -> None:
         config_before,
         REPOWISE_START,
         REPOWISE_END,
-        repowise_config_block(repowise, root),
+        repowise_config_block(repowise, bootstrap, root),
     )
     write_file(config, config_after)
     agents_after = remove_marker_block(
@@ -1023,13 +975,20 @@ def doctor(args: argparse.Namespace, paths: InstallPaths) -> int:
 
     global_config = global_repowise_config(paths)
     global_text = read_text(global_config)
+    bootstrap = repowise_bootstrap_path(paths)
     ok &= check(
         REPOWISE_START in global_text
+        and f"args = [{toml_string(str(bootstrap))}," in global_text
         and 'default_tools_approval_mode = "approve"' in global_text
         and "required = true" in global_text
         and "startup_timeout_sec = 1800" in global_text,
         "global RepoWise MCP config",
         str(global_config),
+    )
+    ok &= check(
+        read_text(bootstrap) == read_text(ROOT / "assets" / "runtime" / bootstrap.name),
+        "RepoWise bootstrap",
+        str(bootstrap),
     )
     uv = find_runtime_command(paths, "uv")
     ok &= check(bool(uv), "uv", uv or "not found")

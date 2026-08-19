@@ -52,13 +52,15 @@ Agent evidence and review-packet rules are in [Repository knowledge](../assets/s
 
 RepoWise is a large external tool and uses AGPL-3.0. The kit does not copy it, modify it, or depend on its database format.
 
-Core installation reuses `uv` when present. If it is absent, the kit installs pinned uv 0.12.4 from a checksum-verified upstream script. The kit installs RepoWise 0.41.0 as a persistent uv tool when no matching command exists.
+Core installation reuses `uv` when present. If it is absent, the kit installs pinned uv 0.12.4 from a checksum-verified upstream script. Windows uses the official PowerShell installer. macOS and Linux use the official shell installer. The kit installs RepoWise 0.41.0 as a persistent uv tool when no matching command exists.
 
 The installer adds a user-level RepoWise MCP server. If Codex starts in a completely empty folder, the server command initializes Git first. It does not initialize Git in a non-empty folder.
 
 The first start in a Git repository initializes a no-prose index when `.repowise` is absent. Each start then installs RepoWise's marker-delimited `post-commit` hook and catches up the index.
 
-While MCP runs, an index-only watcher collects working-tree edits and uses RepoWise's debounce period. It does not make model calls. The launcher ignores file-open and file-close events because these events are not edits.
+While MCP runs, an index-only watcher collects working-tree edits and uses the RepoWise debounce period. It does not make model calls. The POSIX launcher ignores file-open and file-close events because these events are not edits. The Windows event source reports change events and does not need this filter.
+
+The MCP configuration starts one installed Python bootstrap on all platforms. This bootstrap starts the watcher before RepoWise MCP. It stops MCP startup if the watcher stops during its readiness check.
 
 The managed Codex configuration makes RepoWise required and approves its MCP calls. Codex waits up to 1,800 seconds for initialization.
 
@@ -70,7 +72,7 @@ Agent behavior is defined by [Repository knowledge](../assets/skills/repository-
 
 ## Day-to-day commands
 
-Set up before the first MCP call:
+On macOS or Linux, set up before the first MCP call:
 
 ```bash
 python3 kit.py setup-repo .
@@ -98,6 +100,13 @@ Opt out and remove the index:
 
 ```bash
 python3 kit.py remove-repo . --delete-index
+```
+
+On Windows, use the same `kit.py` commands with `python`. The root launchers provide the common commands:
+
+```powershell
+pwsh -File .\setup-repo.ps1 .
+pwsh -File .\doctor.ps1 --repo .
 ```
 
 Core uninstall removes the global MCP block. It leaves `uv` and RepoWise installed.

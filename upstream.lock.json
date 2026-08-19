@@ -33,8 +33,16 @@
     },
     "uv": {
       "install_mode": "verified upstream installer when missing",
-      "installer_sha256": "f1ee4a249799525a330df57643335120150c9102db7483b1d37546cc43af3a16",
-      "installer_url": "https://astral.sh/uv/0.12.4/install.sh",
+      "installers": {
+        "posix": {
+          "sha256": "f1ee4a249799525a330df57643335120150c9102db7483b1d37546cc43af3a16",
+          "url": "https://astral.sh/uv/0.12.4/install.sh"
+        },
+        "windows": {
+          "sha256": "76a0c027f3d47a7ced56f9e63e67a21cb1bcbf525c8ba9ef7ec0d633cc8f89e4",
+          "url": "https://astral.sh/uv/0.12.4/install.ps1"
+        }
+      },
       "license": "Apache-2.0 OR MIT",
       "repository": "https://github.com/astral-sh/uv",
       "version": "0.12.4"

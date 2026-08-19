@@ -13,7 +13,7 @@ Status legend:
 
 ## Active
 
-No task is active.
+- 🎯 **CPK-039 — Add native Windows compatibility.** Add PowerShell 7 entry points and make the required RepoWise runtime work without a POSIX shell.
 
 ## Planned next
 
