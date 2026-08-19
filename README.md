@@ -10,6 +10,7 @@ The kit installs these task skills:
 
 - `ponytail`
 - `simple-english`
+- `neuroarxiv`
 - `design-preflight`
 - `delivery-lifecycle`
 - `repository-knowledge`
@@ -53,6 +54,7 @@ An applicable skill selects only the rules needed for its task:
 - [Scope boundaries](assets/skills/design-preflight/references/scope-boundaries.md)
 - [Decision handoffs](assets/skills/delivery-lifecycle/references/decision-handoffs.md)
 - [Repository knowledge](assets/skills/repository-knowledge/SKILL.md)
+- [Research First](assets/skills/research-first/SKILL.md)
 - [Delivery lifecycle](assets/skills/delivery-lifecycle/references/delivery-lifecycle.md)
 - [Implementation modes](assets/skills/delivery-lifecycle/references/implementation-modes.md)
 - [Git isolation](assets/skills/delivery-lifecycle/references/git-isolation.md)

@@ -10,6 +10,7 @@ license: MIT
 
 <!-- cpk-rule-owner: research-first -->
 <!-- cpk-rule-guard: Research must reduce uncertainty. It must not create ceremony. -->
+<!-- cpk-rule-guard: Run `neuroarxiv` before selecting an open, costly-to-reverse architecture, algorithm, protocol, or systems mechanism when published prior art can matter. -->
 
 # Research first
 
@@ -29,6 +30,16 @@ Research must reduce uncertainty. It must not create ceremony.
 
 Do not use this skill for a routine fix with a clear local answer.
 
+## NeuroArxiv gate
+
+Run `neuroarxiv` before selecting an open, costly-to-reverse architecture, algorithm, protocol, or systems mechanism when published prior art can matter. This gate applies to major refactors when the technical mechanism remains open.
+
+Skip this gate for routine CRUD, glue code, ordinary framework use, and work whose approach is already fixed. A thin search result is valid. Record that result instead of inventing papers.
+
+NeuroArxiv is arXiv-only and can be limited to abstracts. Continue to use official documentation, standards, source code, and other primary research when they answer a different part of the question.
+
+If a required real arXiv fetch cannot run, stop before architecture selection. Do not replace the fetch with model memory.
+
 ## Process
 
 1. Read the current repository first.
@@ -47,6 +58,8 @@ Do not use this skill for a routine fix with a clear local answer.
 7. Select one option. State why it wins for this repository.
 8. Name the rejected options and the condition that can change the decision.
 9. Reuse an existing solution when it satisfies the constraints.
+
+For work with an ExecPlan, record the selected path, paper citations, and paper limitations in that plan before implementation.
 
 ## Durable note
 

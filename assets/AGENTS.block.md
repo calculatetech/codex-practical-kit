@@ -12,6 +12,7 @@ Use only the skills that match the current task. Follow the focused references s
 - Implementation after accepted test scope: `ponytail`.
 - Non-trivial design: `design-preflight` and [ExecPlans](<{{PLANS_FILE}}>).
 - Current or costly technical choices: `research-first`.
+- Qualifying architecture, algorithm, protocol, or systems prior art: `neuroarxiv` through `research-first`.
 - Roadmap changes: `roadmap-maintainer`.
 - User-facing prose: `simple-english` and `docs-maintainer`.
 - Correctness review: `adversarial-review`.

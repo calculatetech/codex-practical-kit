@@ -102,30 +102,6 @@ Why these are not bundled:
 - Several require extra tools or long runs.
 - The marketplace license is CC BY-SA 4.0. The kit does not copy the skill text.
 
-## ADHD
-
-Source: https://github.com/UditAkhourii/adhd
-
-Use before a high-cost architecture decision with several viable answers.
-
-It runs isolated divergent branches, detects traps, and deepens the best survivors.
-
-Do not use it for routine coding. It is intentionally expensive.
-
-License: MIT.
-
-## NeuroArxiv
-
-Source: https://github.com/UditAkhourii/neuroarxiv
-
-Use when the hard part is a real technical mechanism and published prior art can prevent a bad design.
-
-It fetches real arXiv results, reads each paper in isolation, and selects one recommended path.
-
-Do not use it for CRUD, ordinary framework usage, or glue code.
-
-License: MIT.
-
 ## RepoWise
 
 RepoWise is the kit's required repository context provider.

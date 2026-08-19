@@ -16,6 +16,14 @@
 - Installed files: the Simple English skill, its two reference files, and `LICENSE`
 - License: MIT
 
+### NeuroArxiv
+
+- Source: https://github.com/UditAkhourii/neuroarxiv
+- Pinned commit: `b5d20efa12dd1ba177ce890d56809d2e027f8055`
+- Installed files: `skills/neuroarxiv/SKILL.md`, `LICENSE`
+- License: MIT
+- Integration: required prior-art workflow for qualifying open technical mechanisms
+
 ### RepoWise
 
 - Source: https://github.com/repowise-dev/repowise
@@ -69,22 +77,8 @@
 - Status: optional and not bundled
 - Relevant tools: differential review, property-based testing, spec-to-code compliance, sharp-edge analysis, mutation testing, second opinion
 
-### ADHD
-
-- Source: https://github.com/UditAkhourii/adhd
-- License: MIT
-- Status: optional and not bundled
-- Relevant idea: isolated divergent architecture exploration with trap detection
-
-### NeuroArxiv
-
-- Source: https://github.com/UditAkhourii/neuroarxiv
-- License: MIT
-- Status: optional and not bundled
-- Relevant idea: real arXiv prior-art search with isolated paper reads and one selected path
-
 ## Original kit skills
 
 `design-preflight` and `adversarial-review` are original, small Codex skills written for this kit.
 
-They apply general process ideas from the projects above. They do not copy those projects' large skill bodies, helper scripts, or orchestration engines.
+They apply general process ideas from the projects above. They do not copy those projects' large skill bodies, helper scripts, or orchestration engines. NeuroArxiv supersedes ADHD only in this toolkit's recommended workflow. The toolkit does not install, adopt, overwrite, or remove user-managed ADHD.

@@ -5,7 +5,7 @@
 <!-- cpk-rule-route-only: scope-boundaries -->
 [Scope boundaries](scope-boundaries.md)
 
-## Result
+## Phase 1 result
 
 Return JSON only.
 
@@ -80,6 +80,41 @@ Apply [Scenario discrimination](scenario-discrimination.md) to every retained sc
 The coordinator must verify each discriminator, contrast, production path, oracle, and planned runnable check. Do not create a Cartesian product.
 
 Use the canonical classifications to fill `scenarios`, `contract_gaps`, and `exclusions`. Empty arrays are valid.
+
+## Phase 2 result
+
+After the coordinator supplies the complete card and its decisions, return JSON only.
+
+```json
+{
+  "reviewer": "preflight-adversary",
+  "findings": [
+    {
+      "kind": "missing-scenario | unsupported-assumption | invalid-exclusion | weak-proof | contract-gap",
+      "source": ["path:line-line"],
+      "coordinator_claim": "Exact card claim under challenge",
+      "counterexample": "Smallest supported case that disproves or weakens the claim",
+      "wrong_terminal_result": "Observable result if the card remains unchanged",
+      "required_card_change": "Smallest correction to the card and runnable check",
+      "supported_model": {
+        "normal_use": true,
+        "project_controls_it": true,
+        "feasible_without_fault_injection": true,
+        "explicit_result_defined": true
+      }
+    }
+  ],
+  "coverage": {
+    "decisions": ["Coordinator decisions inspected"],
+    "assumptions": ["Coordinator assumptions inspected"],
+    "exclusions": ["Coordinator exclusions inspected"],
+    "proofs": ["Scenario discriminators, contrasts, paths, oracles, and checks inspected"],
+    "contracts": ["Public results inspected for undefined behavior"]
+  }
+}
+```
+
+Empty `findings` is valid. Every finding must cite source and name the coordinator claim that it challenges.
 
 ## Supported-model classification
 

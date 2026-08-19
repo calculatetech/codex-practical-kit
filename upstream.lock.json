@@ -1,21 +1,11 @@
 {
-  "generated_on": "2026-08-13",
+  "generated_on": "2026-08-19",
   "optional_tools": {
-    "adhd": {
-      "install_mode": "optional Agent Skill; not bundled",
-      "license": "MIT",
-      "repository": "https://github.com/UditAkhourii/adhd"
-    },
     "compound-engineering": {
       "commit": "05f3b798b0e5fb76c6bb1830bee7cbc84ff6c4c4",
       "install_mode": "optional Codex plugin; not bundled",
       "license": "MIT",
       "repository": "https://github.com/EveryInc/compound-engineering-plugin"
-    },
-    "neuroarxiv": {
-      "install_mode": "optional Agent Skill; not bundled",
-      "license": "MIT",
-      "repository": "https://github.com/UditAkhourii/neuroarxiv"
     },
     "spec-kit": {
       "install_mode": "optional user-installed tool; not bundled or enabled by default",
@@ -52,6 +42,23 @@
   },
   "schema_version": 1,
   "skills": {
+    "neuroarxiv": {
+      "commit": "b5d20efa12dd1ba177ce890d56809d2e027f8055",
+      "files": [
+        {
+          "destination": "neuroarxiv/SKILL.md",
+          "git_blob_sha1": "cc47304c76f7cb53aa4e8a324702dc8e4f1d5639",
+          "path": "skills/neuroarxiv/SKILL.md"
+        },
+        {
+          "destination": "neuroarxiv/LICENSE",
+          "git_blob_sha1": "aaf95a45d3b11d68387ab0c3a0cee964a4ecd98c",
+          "path": "LICENSE"
+        }
+      ],
+      "license": "MIT",
+      "repository": "https://github.com/UditAkhourii/neuroarxiv"
+    },
     "ponytail": {
       "commit": "2ed6c52c9d7e5e56942508591085fd45dea277d3",
       "files": [

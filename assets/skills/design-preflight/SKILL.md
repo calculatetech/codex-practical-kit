@@ -10,7 +10,7 @@ license: MIT
 ---
 
 <!-- cpk-rule-owner: design-preflight -->
-<!-- cpk-rule-guard: For non-trivial runtime behavior, spawn one fresh read-only planning challenger with no inherited task conversation. -->
+<!-- cpk-rule-guard: Use the same fresh read-only challenger for an unanchored derivation and an informed adversarial challenge. -->
 
 # Design preflight
 
@@ -73,19 +73,29 @@ Write one preflight card from `references/preflight-card.md`. It must contain:
 
 Every non-trivial runtime preflight requires one task ExecPlan. Merge the accepted card into it before implementation. For other ExecPlan work, do the same. Do not preserve a second planning artifact.
 
-## Independent challenge
+## Two-phase challenge
 
-The coordinator owns the preflight. For non-trivial runtime behavior, spawn one fresh read-only planning challenger with no inherited task conversation. A small change that skips Design Preflight also skips this challenge.
+The coordinator owns the preflight. For non-trivial runtime behavior, spawn one fresh read-only planning challenger with no inherited task conversation. Use the same fresh read-only challenger for an unanchored derivation and an informed adversarial challenge. A small change that skips Design Preflight also skips this challenge.
 
 For an accepted correction that passes the entry gate, spawn one fresh read-only planning challenger even when the correction is not runtime behavior.
 
-Give the challenger raw requirements, the supported model, exclusions, exact source, owners, selectors, filters, state writers, and current tests. Give it the applicable focused rule links.
+### Phase 1: independent derivation
 
-For an initial challenge, keep it independent. Do not give it the coordinator's card, Scenario Proof, implementation, known edge cases, prior diagnostics, reviewer corrections, severity, or preferred outcome.
+Give the challenger raw requirements, the supported model, exact source, owners, selectors, filters, state writers, current tests, and applicable focused rule links.
 
-Give a correction challenger the accepted finding, original requirements, current source, and current tests. Do not give it the coordinator's preferred fix. Require it to derive the smallest complete correction and the runnable checks before implementation.
+Keep Phase 1 unanchored. Do not give it the coordinator's card, decisions, assumptions, exclusions, Scenario Proof, implementation, known edge cases, prior diagnostics, reviewer corrections, severity, research result, or preferred outcome.
 
-Require the JSON in `references/preflight-review.md`. Compare its independent result with the coordinator's derivation once. Merge supported scenarios into the card and ExecPlan. Do not start a review loop.
+Give a correction challenger the accepted finding, original requirements, current source, and current tests. Do not give it the coordinator's preferred fix in Phase 1. Require it to derive the smallest complete correction and the runnable checks before implementation.
+
+Require the Phase 1 JSON in `references/preflight-review.md`.
+
+### Phase 2: adversarial challenge
+
+After Phase 1, give the same challenger the coordinator's complete card and Scenario Proof. Include decisions, assumptions, exclusions, diagnostics, known edge cases, and the research result when one exists.
+
+Require the Phase 2 JSON in `references/preflight-review.md`. The challenger must look for missing scenarios, unsupported assumptions, invalid exclusions, weak proof cases, and contract gaps. It must challenge the coordinator's actual claims, not repeat Phase 1.
+
+Compare both results with the coordinator's derivation once. Merge each supported finding into the card and ExecPlan. Record a source-backed rationale for each rejected finding. Stop on an unresolved contract gap. Do not start a review loop. Empty finding arrays are valid.
 
 Use the canonical classifications. Merge `applicable` scenarios. Record `contract-gap` scenarios. Omit `excluded` scenarios.
 

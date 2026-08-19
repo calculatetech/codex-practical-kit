@@ -59,7 +59,7 @@ CUSTOM_SKILLS = (
     "toolkit-maintainer",
 )
 OBSOLETE_SKILLS = ("task-brief", "codex-practical-kit-rules")
-UPSTREAM_SKILLS = ("ponytail", "simple-english")
+UPSTREAM_SKILLS = ("ponytail", "simple-english", "neuroarxiv")
 ALL_SKILLS = (*UPSTREAM_SKILLS, *CUSTOM_SKILLS)
 
 

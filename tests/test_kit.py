@@ -101,6 +101,7 @@ class InstallerTests(unittest.TestCase):
             for skill in (
                 "delivery-lifecycle",
                 "repository-knowledge",
+                "neuroarxiv",
                 "design-preflight",
                 "adversarial-review",
                 "publication",
@@ -247,6 +248,9 @@ class InstallerTests(unittest.TestCase):
             base = Path(temp)
             paths = self.paths(base)
             source = self.source(base)
+            adhd = paths.skills_home / "adhd"
+            adhd.mkdir(parents=True)
+            (adhd / "SKILL.md").write_text("user-managed\n")
             records = kit.install_skills(paths, source, set())
             self.assertEqual(records, [{"name": name} for name in kit.ALL_SKILLS])
             self.assertFalse((paths.skills_home / kit.ALL_SKILLS[0]).is_symlink())
@@ -285,6 +289,7 @@ class InstallerTests(unittest.TestCase):
             self.assertTrue(kit.uninstall_core(Namespace(purge=False), other))
             self.assertTrue(all(not (paths.skills_home / name).exists() for name in kit.ALL_SKILLS))
             self.assertTrue(all((other.skills_home / name).exists() for name in kit.ALL_SKILLS))
+            self.assertEqual((adhd / "SKILL.md").read_text(), "user-managed\n")
             self.assertFalse(plans.exists())
             self.assertFalse((paths.install_root / "install-manifest.json").exists())
             self.assertFalse(kit.uninstall_core(Namespace(purge=False), other))
@@ -354,6 +359,27 @@ class InstallerTests(unittest.TestCase):
                 kit, "stage_upstream_skills", return_value={}
             ), self.assertRaises(kit.KitError):
                 kit.install_core(Namespace(repo=None, repowise_prose=False), paths)
+            self.assertEqual((conflict / "SKILL.md").read_text(), "user\n")
+
+    def test_unowned_neuroarxiv_directory_is_a_conflict(self):
+        def fake_stage(destination: Path):
+            for name in kit.UPSTREAM_SKILLS:
+                skill = destination / name
+                skill.mkdir(parents=True)
+                (skill / "SKILL.md").write_text(name + "\n")
+            return {}
+
+        with tempfile.TemporaryDirectory() as temp:
+            paths = self.paths(Path(temp))
+            conflict = paths.skills_home / "neuroarxiv"
+            conflict.mkdir(parents=True)
+            (conflict / "SKILL.md").write_text("user\n")
+
+            with mock.patch.object(
+                kit, "stage_upstream_skills", fake_stage
+            ), self.assertRaises(kit.KitError):
+                kit.install_core(Namespace(repo=None, repowise_prose=False), paths)
+
             self.assertEqual((conflict / "SKILL.md").read_text(), "user\n")
 
     def test_v021_recorded_links_upgrade_to_copies(self):
@@ -1019,6 +1045,88 @@ class IntegrationTests(unittest.TestCase):
         for route in (skill, card, result, lens):
             self.assertIn("owner-composition.md", route)
             self.assertIn("full-set-results.md", route)
+
+    def test_preflight_challenges_the_coordinator_in_two_phases(self):
+        root = ROOT / "assets" / "skills"
+        preflight = (root / "design-preflight" / "SKILL.md").read_text()
+        result = (
+            root / "design-preflight" / "references" / "preflight-review.md"
+        ).read_text()
+
+        self.assertIn("same fresh read-only challenger", preflight)
+        self.assertLess(preflight.index("Phase 1: independent"), preflight.index("Phase 2: adversarial"))
+        self.assertIn("Do not give it the coordinator's card, decisions, assumptions, exclusions", preflight)
+        self.assertIn("give the same challenger the coordinator's complete card", preflight)
+        for target in (
+            "missing scenarios",
+            "unsupported assumptions",
+            "invalid exclusions",
+            "weak proof cases",
+            "contract gaps",
+        ):
+            self.assertIn(target, preflight)
+        self.assertIn("source-backed rationale for each rejected finding", preflight)
+        self.assertIn("Stop on an unresolved contract gap", preflight)
+        self.assertIn('"reviewer": "preflight-adversary"', result)
+        for field in (
+            '"kind"',
+            '"source"',
+            '"coordinator_claim"',
+            '"counterexample"',
+            '"wrong_terminal_result"',
+            '"required_card_change"',
+            '"supported_model"',
+            '"coverage"',
+        ):
+            self.assertIn(field, result)
+        self.assertIn("Empty `findings` is valid", result)
+
+    def test_neuroarxiv_is_pinned_and_required_only_for_qualifying_research(self):
+        lock = json.loads((ROOT / "upstream.lock.json").read_text())
+        neuro = lock["skills"]["neuroarxiv"]
+        research = (ROOT / "assets" / "skills" / "research-first" / "SKILL.md").read_text()
+        agents = (ROOT / "assets" / "AGENTS.block.md").read_text()
+        optional = (ROOT / "docs" / "OPTIONAL-REVIEW-TOOLS.md").read_text()
+
+        self.assertIn("neuroarxiv", kit.UPSTREAM_SKILLS)
+        self.assertEqual(neuro["commit"], "b5d20efa12dd1ba177ce890d56809d2e027f8055")
+        self.assertEqual(neuro["license"], "MIT")
+        self.assertEqual(
+            {(item["destination"], item["git_blob_sha1"]) for item in neuro["files"]},
+            {
+                ("neuroarxiv/SKILL.md", "cc47304c76f7cb53aa4e8a324702dc8e4f1d5639"),
+                ("neuroarxiv/LICENSE", "aaf95a45d3b11d68387ab0c3a0cee964a4ecd98c"),
+            },
+        )
+        self.assertNotIn("adhd", lock["optional_tools"])
+        self.assertNotIn("neuroarxiv", lock["optional_tools"])
+        self.assertNotIn("adhd", kit.ALL_SKILLS)
+        self.assertNotIn("adhd", kit.OBSOLETE_SKILLS)
+        self.assertIn("architecture, algorithm, protocol, or systems mechanism", research)
+        self.assertIn("costly-to-reverse", research)
+        self.assertIn("published prior art can matter", research)
+        self.assertIn("routine CRUD, glue code", research)
+        self.assertIn("If a required real arXiv fetch cannot run, stop", research)
+        self.assertIn("selected path, paper citations, and paper limitations", research)
+        self.assertIn("`neuroarxiv` through `research-first`", agents)
+        self.assertNotIn("## ADHD", optional)
+        self.assertNotIn("## NeuroArxiv", optional)
+
+    def test_coordination_limits_writers_but_not_read_only_agents(self):
+        coordination = (
+            ROOT
+            / "assets"
+            / "skills"
+            / "delivery-lifecycle"
+            / "references"
+            / "coordination.md"
+        ).read_text()
+
+        self.assertIn("at most one write-capable implementation subagent", coordination)
+        self.assertIn("Read-only research, planning, and review agents do not count", coordination)
+        self.assertIn("platform makes available", coordination)
+        self.assertIn("task-specific skill can impose a narrower limit", coordination)
+        self.assertNotIn("at most one subagent at a time", coordination)
 
     def test_default_mode_preflight_and_repowise_continue_through_corrections(self):
         root = ROOT / "assets" / "skills"

@@ -9,6 +9,7 @@ The managed AGENTS block selects the rules for an agent. This manual does not co
 - [Scope boundaries](../assets/skills/design-preflight/references/scope-boundaries.md)
 - [Decision handoffs](../assets/skills/delivery-lifecycle/references/decision-handoffs.md)
 - [Repository knowledge](../assets/skills/repository-knowledge/SKILL.md)
+- [Research First](../assets/skills/research-first/SKILL.md)
 - [Delivery lifecycle](../assets/skills/delivery-lifecycle/references/delivery-lifecycle.md)
 - [Implementation modes](../assets/skills/delivery-lifecycle/references/implementation-modes.md)
 - [Git isolation](../assets/skills/delivery-lifecycle/references/git-isolation.md)
@@ -24,6 +25,7 @@ The managed AGENTS block selects the rules for an agent. This manual does not co
 
 - [ExecPlans](../.agent/PLANS.md)
 - [Design Preflight](../assets/skills/design-preflight/SKILL.md)
+- `neuroarxiv` is the bundled arXiv workflow selected by Research First for qualifying technical mechanisms.
 - [Documentation maintenance](../assets/skills/docs-maintainer/SKILL.md)
 - [Roadmap maintenance](../assets/skills/roadmap-maintainer/SKILL.md)
 - [Adversarial review](../assets/skills/adversarial-review/SKILL.md)
