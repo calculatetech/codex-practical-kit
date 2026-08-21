@@ -65,6 +65,16 @@ class InstallerTests(unittest.TestCase):
     def tearDown(self):
         self.runtime.stop()
 
+    def test_run_decodes_utf8_subprocess_output(self):
+        result = kit.run(
+            [
+                sys.executable,
+                "-c",
+                'import sys; sys.stdout.buffer.write("✓".encode("utf-8"))',
+            ]
+        )
+        self.assertEqual(result.stdout, "✓")
+
     def paths(self, base: Path) -> kit.InstallPaths:
         return kit.InstallPaths(
             base / "home", base / "codex", base / "skills", base / "kit"

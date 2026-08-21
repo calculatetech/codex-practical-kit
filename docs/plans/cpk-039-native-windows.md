@@ -23,8 +23,9 @@ Windows users must be able to operate every root toolkit entry point with PowerS
 - [x] (2026-08-21) Validated two Windows review findings and completed a two-phase correction preflight.
 - [x] (2026-08-21) Stopped the complete Windows watcher tree and passed 73 tests through `run-tests.ps1` with ambient RepoWise on `PATH`.
 - [x] (2026-08-21) Corrected the Windows repository-cleanup command found by the final coherence review.
+- [x] (2026-08-21) Bound subprocess text decoding to UTF-8 after exact-commit validation exposed a cp1252 reader error.
 - [ ] Pass local validation and the native Windows checkpoint (completed: corrected local validation; remaining: exact-commit Windows VM validation).
-- [x] (2026-08-21) Completed adversarial review and review closure after five passes.
+- [x] (2026-08-21) Completed adversarial review and review closure after six passes, including the validation correction.
 
 ## Prior Plan Reconciliation
 
@@ -41,6 +42,7 @@ No earlier Plan history record applies to CPK-039.
 - The reported Python replacement adds one Windows-only recovery case. A failed RepoWise launcher is repairable only when the previous manifest records the selected fixed user-bin path.
 - The correction stops the complete Windows watcher process tree and isolates the recovery fixture from ambient executable discovery. It does not change POSIX shutdown.
 - The coherence correction splits the repository-cleanup command by platform. Windows uses `python`; macOS and Linux retain `python3`.
+- Exact-commit validation reopened the candidate after RepoWise output caused a cp1252 decoder error. The shared subprocess owner now decodes UTF-8 and replaces malformed bytes.
 
 ## Surprises and Discoveries
 
@@ -63,6 +65,8 @@ No earlier Plan history record applies to CPK-039.
   Evidence: `run-tests.ps1` failed with the ambient `C:\Users\mikeb\.local\bin\repowise.exe` and passed when that path was absent.
 - Observation: The shared uninstall text used the POSIX-only `python3` command for Windows users.
   Evidence: The supported native Windows installation exposes `python.exe` and does not require a `python3` alias.
+- Observation: `setup-repo.ps1` completed while a subprocess reader thread failed to decode RepoWise UTF-8 output as cp1252.
+  Evidence: Exact-commit clone `1f0a784d61653c75dd5b0e9dec4769e32834da2b` emitted `UnicodeDecodeError` from `subprocess.py` before Doctor reported ready.
 
 ## Decision Log
 
@@ -82,7 +86,7 @@ No earlier Plan history record applies to CPK-039.
 
 ## Outcomes and Retrospective
 
-The five PowerShell entry points and the cross-platform RepoWise bootstrap are implemented. Local native Windows validation now passes, including watcher-tree cleanup and installed-runtime test isolation. Adversarial review is clean after the watcher, fixture-isolation, and cleanup-command corrections. Exact-commit VM validation remains.
+The five PowerShell entry points and the cross-platform RepoWise bootstrap are implemented. Local native Windows validation now passes. Adversarial review is clean after the watcher, fixture-isolation, cleanup-command, and UTF-8 corrections. Exact-commit VM validation remains.
 
 ## Context and Orientation
 
@@ -129,6 +133,7 @@ Apply [Scenario discrimination](../../assets/skills/design-preflight/references/
 | Eager setup | Repository without `HEAD` versus with `HEAD` | setup entry point to RepoWise | Both initialize and install the hook; only the latter updates | `test_setup_skips_catch_up_before_first_commit`; `test_setup_preserves_roadmap_and_unrelated_blocks` | Passed locally |
 | Uninstall ownership | Normal uninstall versus `--purge` | ownership manifest to filesystem | Normal mode retains the runtime root; purge removes it | `test_install_preserves_global_config_and_uninstall_removes_owned_block` | Passed locally |
 | Repository cleanup command | Windows `python` versus POSIX `python3` | README uninstall instructions to `kit.py remove-repo` | Each supported platform receives a command that resolves its required interpreter | `test_windows_launchers_and_runtime_are_complete_distribution_artifacts` | Passed locally |
+| Subprocess text encoding | UTF-8 output under a cp1252 Windows locale versus ASCII output | `kit.run` pipe reader to command result | UTF-8 output decodes without a reader-thread error; malformed bytes cannot crash the reader | `test_run_decodes_utf8_subprocess_output`; native `setup-repo.ps1` | Focused test passed; exact-commit rerun pending |
 | Native release gate | Local proof versus exact pushed Windows commit | checkpoint to Codex MCP use | Windows tests pass and a fresh Codex session can use RepoWise | user VM record bound to commit | Failed at `a80ca4f`; next checkpoint pending |
 
 ## Plan of Work
