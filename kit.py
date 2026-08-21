@@ -648,7 +648,7 @@ def ensure_uv(paths: InstallPaths) -> str:
             "-ExecutionPolicy",
             "Bypass",
             "-Command",
-            "-",
+            "& ([scriptblock]::Create([Console]::In.ReadToEnd()))",
         ]
     else:
         url = UV_INSTALLER_URL

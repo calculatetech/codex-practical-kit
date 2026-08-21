@@ -1067,7 +1067,7 @@ class RepoWiseRuntimeTests(unittest.TestCase):
                         "-ExecutionPolicy",
                         "Bypass",
                         "-Command",
-                        "-",
+                        "& ([scriptblock]::Create([Console]::In.ReadToEnd()))",
                     ],
                 )
                 self.assertEqual(kwargs["input_text"], "installer")
@@ -1087,6 +1087,27 @@ class RepoWiseRuntimeTests(unittest.TestCase):
                 kit.UV_WINDOWS_INSTALLER_URL, kit.UV_WINDOWS_INSTALLER_SHA256
             )
             run.assert_called_once()
+
+    @unittest.skipUnless(shutil.which("pwsh"), "PowerShell 7 is not installed")
+    def test_windows_uv_executes_verified_multiline_installer(self):
+        script = (
+            "function Install-Uv {\n"
+            "  New-Item -ItemType Directory -Force -Path $env:UV_INSTALL_DIR | Out-Null\n"
+            "  New-Item -ItemType File -Path (Join-Path $env:UV_INSTALL_DIR 'uv.exe') | Out-Null\n"
+            "}\n"
+            "Install-Uv\n"
+        ).encode()
+        with tempfile.TemporaryDirectory() as temp, mock.patch.object(
+            kit, "is_windows", return_value=True
+        ), mock.patch.object(
+            kit, "find_runtime_command", return_value=None
+        ), mock.patch.object(
+            kit, "download_sha256", return_value=script
+        ):
+            paths = self.paths(Path(temp))
+            uv = kit.ensure_uv(paths)
+
+        self.assertEqual(uv, str(paths.home / ".local" / "bin" / "uv.exe"))
 
     def test_download_rejects_wrong_sha256(self):
         class Response:

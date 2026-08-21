@@ -15,6 +15,8 @@ Windows users must be able to operate every root toolkit entry point with PowerS
 - [x] (2026-08-19) Replaced the shell-only RepoWise bootstrap with one cross-platform Python runtime.
 - [x] (2026-08-19) Updated user instructions, the release manifest, the lock, and version surfaces.
 - [x] (2026-08-21) Recorded the failed native Windows test checkpoint and completed a two-phase correction preflight.
+- [x] (2026-08-21) Reproduced the uv installer failure and isolated PowerShell statement-at-a-time parsing as its cause.
+- [x] (2026-08-21) Passed 67 tests through both local launchers after the uv invocation correction.
 - [ ] Pass local validation and the native Windows checkpoint (completed: corrected local validation; remaining: exact-commit Windows VM validation).
 - [ ] Complete adversarial review and review closure.
 
@@ -28,7 +30,8 @@ No earlier Plan history record applies to CPK-039.
 
 - Native checkpoint `a80ca4f446e9c1d73e20b1b18d33d716072ddd4c` is superseded only as validation evidence.
 - The accepted scope is unchanged. The correction changes the Windows test environment, host-specific test contracts, and checkout bytes.
-- The correction does not rewrite `kit.py` or the RepoWise bootstrap.
+- The first correction did not rewrite `kit.py` or the RepoWise bootstrap. The uv correction changes one `ensure_uv` command argument.
+- Native installation at `9850d63` proved that `pwsh -Command -` did not execute the verified multi-line uv installer as one script. The next correction changes only the `ensure_uv` PowerShell invocation and its direct test.
 
 ## Surprises and Discoveries
 
@@ -39,6 +42,8 @@ No earlier Plan history record applies to CPK-039.
 - Observation: Native Windows validation found 11 errors and 9 failures in the test checkpoint.
   Evidence: Python used cp1252 for repository text. Some tests selected the wrong host command or platform branch.
   Evidence: One excluded migration fixture required link privilege. Windows paths and Git checkout conversion changed test results.
+- Observation: PowerShell returned zero after it skipped the body of a multi-line installer received through `-Command -`.
+  Evidence: A local executable check reproduced a missing marker with status zero. Evaluating the complete input as one script block created the marker.
 
 ## Decision Log
 
@@ -87,7 +92,7 @@ Apply [Scenario discrimination](../../assets/skills/design-preflight/references/
 | Hook interpreter | `python3` alias versus the current interpreter | test subprocess to Session Start JSON | The router test uses the interpreter running the suite | `test_session_start_still_announces_router` | Passed locally; native rerun pending |
 | Platform-specific unit contracts | Unmocked host versus explicit POSIX and Windows predicates | test fixture to uv and RepoWise selectors | Each test proves its named platform branch on either host | missing-uv and missing-RepoWise POSIX and Windows tests | Passed locally; native rerun pending |
 | Existing Windows executables | Present `uv.exe` and `repowise.exe` versus absent names | platform discovery to runtime result | Existing commands are reused without installation | `test_windows_runtime_discovery_uses_executable_suffix` | Passed locally |
-| Missing Windows uv | Missing `uv.exe` versus the POSIX missing path | download, hash, and `pwsh` stdin | Exact URL and hash are used once; result is `uv.exe` | `test_missing_windows_uv_runs_verified_powershell_installer_once` | Passed locally |
+| Missing Windows uv | Missing `uv.exe` versus the POSIX missing path; statement stream versus one script block | download, hash, and `pwsh` stdin | The exact verified installer executes as one script and creates `uv.exe` in `UV_INSTALL_DIR` | `test_missing_windows_uv_runs_verified_powershell_installer_once`; executable multi-line installer check | Passed locally; native install rerun pending |
 | Missing Windows RepoWise | Missing `repowise.exe` after uv is ready | uv tool installation to discovery | One pinned persistent tool install returns `repowise.exe` | `test_missing_windows_repowise_uses_executable_result` | Passed locally |
 | Watcher platform | Valid POSIX shebang versus Windows executable | bootstrap watcher selector | POSIX uses patched Python; Windows uses `repowise.exe watch` | `test_watch_command_is_platform_specific` | Passed locally; native rerun pending |
 | Watcher readiness | Watcher stays alive versus exits during the gate | watcher to MCP terminal owner | Early exit returns nonzero and MCP never starts | `test_bootstrap_stops_when_watcher_fails_to_start` | Passed locally |
