@@ -130,7 +130,19 @@ Core uninstall leaves `uv` and RepoWise installed. Other repositories and tools 
 
 Uninstall also leaves all Plan history records in their project or fallback locations.
 
-Core uninstall leaves generated roadmap views because it does not track repository locations. Run `python3 kit.py remove-repo <repository>` first to remove owned view files.
+Core uninstall leaves generated roadmap views because it does not track repository locations. Remove owned view files before core uninstall.
+
+On macOS or Linux, run:
+
+```bash
+python3 kit.py remove-repo <repository>
+```
+
+On Windows, run:
+
+```powershell
+python kit.py remove-repo <repository>
+```
 
 ## Verification
 

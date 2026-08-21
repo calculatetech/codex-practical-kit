@@ -20,8 +20,11 @@ Windows users must be able to operate every root toolkit entry point with PowerS
 - [x] (2026-08-21) Removed ambient Windows `python` resolution from the PowerShell launcher tests and bounded their subprocess runtime.
 - [x] (2026-08-21) Defined an ownership-safe Windows recovery path for a RepoWise launcher broken by Python replacement.
 - [x] (2026-08-21) Completed clean correctness review of the RepoWise recovery candidate.
+- [x] (2026-08-21) Validated two Windows review findings and completed a two-phase correction preflight.
+- [x] (2026-08-21) Stopped the complete Windows watcher tree and passed 73 tests through `run-tests.ps1` with ambient RepoWise on `PATH`.
+- [x] (2026-08-21) Corrected the Windows repository-cleanup command found by the final coherence review.
 - [ ] Pass local validation and the native Windows checkpoint (completed: corrected local validation; remaining: exact-commit Windows VM validation).
-- [ ] Complete adversarial review and review closure.
+- [x] (2026-08-21) Completed adversarial review and review closure after five passes.
 
 ## Prior Plan Reconciliation
 
@@ -36,6 +39,8 @@ No earlier Plan history record applies to CPK-039.
 - The first correction did not rewrite `kit.py` or the RepoWise bootstrap. The uv correction changes one `ensure_uv` command argument.
 - Native installation at `9850d63` proved that `pwsh -Command -` did not execute the verified multi-line uv installer as one script. The next correction changes only the `ensure_uv` PowerShell invocation and its direct test.
 - The reported Python replacement adds one Windows-only recovery case. A failed RepoWise launcher is repairable only when the previous manifest records the selected fixed user-bin path.
+- The correction stops the complete Windows watcher process tree and isolates the recovery fixture from ambient executable discovery. It does not change POSIX shutdown.
+- The coherence correction splits the repository-cleanup command by platform. Windows uses `python`; macOS and Linux retain `python3`.
 
 ## Surprises and Discoveries
 
@@ -52,6 +57,12 @@ No earlier Plan history record applies to CPK-039.
   Evidence: The test did not bind the temporary launcher to the interpreter that started the suite and had no subprocess timeout.
 - Observation: A retained `repowise.exe` can become non-executable after its Python installation is replaced.
   Evidence: Native reinstall reported the removed Python 3.14 path, but classified the manifest-recorded launcher as a different RepoWise version.
+- Observation: `Popen.terminate()` stops only the uv console launcher on Windows.
+  Evidence: A native smoke check left the Python watcher alive and immediate repository cleanup failed with `WinError 32`.
+- Observation: The Windows recovery fixture selected the user's installed RepoWise before its temporary launcher.
+  Evidence: `run-tests.ps1` failed with the ambient `C:\Users\mikeb\.local\bin\repowise.exe` and passed when that path was absent.
+- Observation: The shared uninstall text used the POSIX-only `python3` command for Windows users.
+  Evidence: The supported native Windows installation exposes `python.exe` and does not require a `python3` alias.
 
 ## Decision Log
 
@@ -64,10 +75,14 @@ No earlier Plan history record applies to CPK-039.
 - Decision: Require native VM evidence for the exact pushed checkpoint before correctness review.
   Rationale: Local PowerShell on Linux cannot prove Windows process and path behavior.
   Date/Author: 2026-08-19 / User and Codex
+- Decision: Stop a live Windows watcher with one `taskkill /T /F` operation, discard its output, and then wait for the launcher.
+  Rationale: Windows `taskkill /T` ends the selected process and its children. Job Objects require custom Win32 lifecycle code, and console signals require console attachment.
+  Sources: https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/taskkill and https://docs.python.org/3/library/subprocess.html#subprocess.Popen.terminate
+  Date/Author: 2026-08-21 / Codex
 
 ## Outcomes and Retrospective
 
-The five PowerShell entry points and the cross-platform RepoWise bootstrap are implemented. The first native Windows checkpoint exposed test-environment and checkout portability defects. Correction, repeated native validation, and adversarial review remain.
+The five PowerShell entry points and the cross-platform RepoWise bootstrap are implemented. Local native Windows validation now passes, including watcher-tree cleanup and installed-runtime test isolation. Adversarial review is clean after the watcher, fixture-isolation, and cleanup-command corrections. Exact-commit VM validation remains.
 
 ## Context and Orientation
 
@@ -102,9 +117,10 @@ Apply [Scenario discrimination](../../assets/skills/design-preflight/references/
 | Existing Windows executables | Present `uv.exe` and `repowise.exe` versus absent names | platform discovery to runtime result | Existing commands are reused without installation | `test_windows_runtime_discovery_uses_executable_suffix` | Passed locally |
 | Missing Windows uv | Missing `uv.exe` versus the POSIX missing path; statement stream versus one script block | download, hash, and `pwsh` stdin | The exact verified installer executes as one script and creates `uv.exe` in `UV_INSTALL_DIR` | `test_missing_windows_uv_runs_verified_powershell_installer_once`; executable multi-line installer check | Passed locally; native install rerun pending |
 | Missing Windows RepoWise | Missing `repowise.exe` after uv is ready | uv tool installation to discovery | One pinned persistent tool install returns `repowise.exe` | `test_missing_windows_repowise_uses_executable_result` | Passed locally |
-| Broken recorded Windows RepoWise | Nonzero version result with both manifest and fixed-target ownership versus either predicate absent | reinstall through runtime selection, forced uv replacement, and manifest writer | One forced pinned install replaces the stale bytes and the completed manifest records `repowise.exe` | `test_install_repairs_manifest_owned_broken_windows_repowise` | Passed locally; native install pending |
+| Broken recorded Windows RepoWise | Nonzero version result with both manifest and fixed-target ownership versus either predicate absent; ambient RepoWise present versus absent | fixture-scoped discovery, reinstall through runtime selection, forced uv replacement, and manifest writer | The temporary launcher is probed, one forced pinned install replaces its stale bytes, and the completed manifest records `repowise.exe` | `test_install_repairs_manifest_owned_broken_windows_repowise`; full `run-tests.ps1` with ambient RepoWise | Passed native Windows |
 | Unowned, wrong-version, and POSIX commands | Broken unowned path versus broken owned Windows path; successful 0.40.0 versus failed process; Windows versus POSIX | selection and validation gate | Unowned, successful wrong-version, and POSIX commands stop without mutation | ownership, version, reuse, and POSIX runtime tests | Passed locally |
 | Watcher platform | Valid POSIX shebang versus Windows executable | bootstrap watcher selector | POSIX uses patched Python; Windows uses `repowise.exe watch` | `test_watch_command_is_platform_specific` | Passed locally; native rerun pending |
+| Watcher cleanup | Windows launcher plus child versus launcher-only termination; cleanup output versus MCP stdout | bootstrap cleanup after normal MCP completion | Both watcher processes exit before return, the repository is immediately removable, and cleanup emits no MCP stdout | `test_windows_bootstrap_stops_complete_watcher_tree`; `test_stop_watcher_is_platform_specific`; stream-ownership test | Passed native Windows |
 | Watcher readiness | Watcher stays alive versus exits during the gate | watcher to MCP terminal owner | Early exit returns nonzero and MCP never starts | `test_bootstrap_stops_when_watcher_fails_to_start` | Passed locally |
 | Existing Git lifecycle | Missing index versus existing index; no `HEAD` versus `HEAD` | bootstrap through watcher, MCP, and cleanup | Init occurs once, hook occurs always, update needs `HEAD`, and cleanup occurs | `test_bootstrap_initializes_once_and_always_installs_hook` | Passed locally |
 | Empty and non-empty non-Git folders | Empty directory versus one existing file | bootstrap through terminal owner | Empty path gets the full no-update lifecycle; non-empty path remains unchanged and starts only MCP | `test_bootstrap_initializes_only_empty_non_git_directory` | Passed locally |
@@ -112,6 +128,7 @@ Apply [Scenario discrimination](../../assets/skills/design-preflight/references/
 | Install and Doctor | Managed block versus unrelated TOML | install to Doctor | Python bootstrap command is valid; hooks and unrelated TOML remain | installer tests and isolated `kit.py doctor` | Passed locally |
 | Eager setup | Repository without `HEAD` versus with `HEAD` | setup entry point to RepoWise | Both initialize and install the hook; only the latter updates | `test_setup_skips_catch_up_before_first_commit`; `test_setup_preserves_roadmap_and_unrelated_blocks` | Passed locally |
 | Uninstall ownership | Normal uninstall versus `--purge` | ownership manifest to filesystem | Normal mode retains the runtime root; purge removes it | `test_install_preserves_global_config_and_uninstall_removes_owned_block` | Passed locally |
+| Repository cleanup command | Windows `python` versus POSIX `python3` | README uninstall instructions to `kit.py remove-repo` | Each supported platform receives a command that resolves its required interpreter | `test_windows_launchers_and_runtime_are_complete_distribution_artifacts` | Passed locally |
 | Native release gate | Local proof versus exact pushed Windows commit | checkpoint to Codex MCP use | Windows tests pass and a fresh Codex session can use RepoWise | user VM record bound to commit | Failed at `a80ca4f`; next checkpoint pending |
 
 ## Plan of Work

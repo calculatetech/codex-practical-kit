@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import os
 import shlex
 import subprocess
 import sys
@@ -75,6 +76,25 @@ def watch_command(repowise: str, platform: str | None = None) -> list[str]:
     return [interpreter, "-c", WATCH_PATCH]
 
 
+def stop_watcher(
+    watcher: subprocess.Popen[bytes], platform: str | None = None
+) -> None:
+    if (platform or sys.platform) == "win32":
+        taskkill = Path(os.environ.get("SystemRoot", r"C:\Windows")) / "System32" / "taskkill.exe"
+        subprocess.run(
+            [str(taskkill), "/PID", str(watcher.pid), "/T", "/F"],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            check=True,
+        )
+    else:
+        try:
+            watcher.terminate()
+        except OSError:
+            pass
+    watcher.wait()
+
+
 def bootstrap(repowise: str, cwd: Path) -> int:
     root = git_root(cwd)
     if root is None:
@@ -123,11 +143,9 @@ def bootstrap(repowise: str, cwd: Path) -> int:
             return subprocess.run([repowise, "mcp", str(root)], cwd=root, check=False).returncode
         finally:
             if watcher.poll() is None:
-                try:
-                    watcher.terminate()
-                except OSError:
-                    pass
-            watcher.wait()
+                stop_watcher(watcher)
+            else:
+                watcher.wait()
 
 
 def main(argv: list[str] | None = None) -> int:

@@ -1213,11 +1213,14 @@ class RepoWiseRuntimeTests(unittest.TestCase):
             with mock.patch.object(kit, "is_windows", return_value=True), mock.patch.object(
                 kit, "ensure_uv", return_value=r"C:\Tools\uv.exe"
             ), mock.patch.object(
+                kit.shutil, "which", return_value=None
+            ), mock.patch.object(
                 kit, "stage_upstream_skills", side_effect=fake_stage
             ), mock.patch.object(kit, "run", side_effect=fake_run):
                 kit.install_core(Namespace(), paths)
 
             manifest = json.loads((paths.install_root / "install-manifest.json").read_text())
+            self.assertIn([str(repowise), "--version"], commands)
             self.assertEqual(repowise.read_bytes(), b"repaired")
             self.assertEqual(manifest["repowise"], str(repowise))
             self.assertIn(
@@ -1315,6 +1318,7 @@ class RepoWiseRuntimeTests(unittest.TestCase):
     class Watcher:
         def __init__(self, status=None):
             self.status = status
+            self.pid = 123
             self.terminated = False
             self.waited = False
 
@@ -1328,6 +1332,92 @@ class RepoWiseRuntimeTests(unittest.TestCase):
         def wait(self):
             self.waited = True
             return self.status
+
+    def test_stop_watcher_is_platform_specific(self):
+        windows = self.Watcher()
+        posix = self.Watcher()
+        with mock.patch.dict(bootstrap.os.environ, {"SystemRoot": r"C:\Windows"}), mock.patch.object(
+            bootstrap.subprocess, "run"
+        ) as run:
+            bootstrap.stop_watcher(windows, "win32")
+
+        run.assert_called_once_with(
+            [
+                str(Path(r"C:\Windows") / "System32" / "taskkill.exe"),
+                "/PID",
+                "123",
+                "/T",
+                "/F",
+            ],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            check=True,
+        )
+        self.assertTrue(windows.waited)
+        self.assertFalse(windows.terminated)
+
+        bootstrap.stop_watcher(posix, "linux")
+        self.assertTrue(posix.terminated and posix.waited)
+
+    @unittest.skipUnless(os.name == "nt", "Windows process trees require native Windows")
+    def test_windows_bootstrap_stops_complete_watcher_tree(self):
+        real_run = subprocess.run
+        with tempfile.TemporaryDirectory() as temp:
+            base = Path(temp)
+            root = base / "repo"
+            root.mkdir()
+            (root / ".repowise").mkdir()
+            pid_file = base / "watcher-pids.txt"
+            launcher = base / "watcher.py"
+            launcher.write_text(
+                "import os, subprocess, sys\n"
+                "from pathlib import Path\n"
+                "child = subprocess.Popen([sys.executable, '-c', 'import time; time.sleep(300)'])\n"
+                f"Path({str(pid_file)!r}).write_text(f'{{os.getpid()}}\\n{{child.pid}}\\n', encoding='utf-8')\n"
+                "child.wait()\n",
+                encoding="utf-8",
+            )
+            pids = []
+            taskkill = Path(os.environ["SystemRoot"]) / "System32" / "taskkill.exe"
+            tasklist = Path(os.environ["SystemRoot"]) / "System32" / "tasklist.exe"
+
+            def run(command, **kwargs):
+                if command[0] == "repowise":
+                    return subprocess.CompletedProcess(command, 0)
+                return real_run(command, **kwargs)
+
+            try:
+                with mock.patch.object(
+                    bootstrap, "git_root", return_value=root
+                ), mock.patch.object(
+                    bootstrap, "has_head", return_value=False
+                ), mock.patch.object(
+                    bootstrap, "run_setup"
+                ), mock.patch.object(
+                    bootstrap, "watch_command", return_value=[sys.executable, str(launcher)]
+                ), mock.patch.object(bootstrap.subprocess, "run", side_effect=run):
+                    self.assertEqual(bootstrap.bootstrap("repowise", root), 0)
+
+                pids = [int(value) for value in pid_file.read_text().splitlines()]
+                self.assertEqual(len(pids), 2)
+                for pid in pids:
+                    result = real_run(
+                        [str(tasklist), "/FI", f"PID eq {pid}", "/FO", "CSV", "/NH"],
+                        text=True,
+                        capture_output=True,
+                        check=True,
+                    )
+                    self.assertNotIn(f'"{pid}"', result.stdout)
+                shutil.rmtree(root)
+                self.assertFalse(root.exists())
+            finally:
+                for pid in pids:
+                    real_run(
+                        [str(taskkill), "/PID", str(pid), "/T", "/F"],
+                        stdout=subprocess.DEVNULL,
+                        stderr=subprocess.DEVNULL,
+                        check=False,
+                    )
 
     def test_bootstrap_initializes_once_and_always_installs_hook(self):
         with tempfile.TemporaryDirectory() as temp:
@@ -1357,7 +1447,9 @@ class RepoWiseRuntimeTests(unittest.TestCase):
                 bootstrap, "watch_command", return_value=["watcher"]
             ), mock.patch.object(bootstrap.subprocess, "Popen", side_effect=popen), mock.patch.object(
                 bootstrap.subprocess, "run", side_effect=foreground
-            ), mock.patch.object(bootstrap.time, "sleep"):
+            ), mock.patch.object(bootstrap.time, "sleep"), mock.patch.object(
+                bootstrap.sys, "platform", "linux"
+            ):
                 self.assertEqual(bootstrap.bootstrap("repowise", root), 0)
                 self.assertEqual(bootstrap.bootstrap("repowise", root), 0)
 
@@ -1394,7 +1486,9 @@ class RepoWiseRuntimeTests(unittest.TestCase):
                 "run",
                 side_effect=lambda command, **_kwargs: calls.append(command)
                 or subprocess.CompletedProcess(command, 0),
-            ), mock.patch.object(bootstrap.time, "sleep"):
+            ), mock.patch.object(bootstrap.time, "sleep"), mock.patch.object(
+                bootstrap.sys, "platform", "linux"
+            ):
                 self.assertEqual(bootstrap.bootstrap("repowise", empty), 0)
 
             self.assertTrue((empty / ".git").is_dir())
@@ -1464,7 +1558,7 @@ class RepoWiseRuntimeTests(unittest.TestCase):
                 bootstrap.subprocess, "Popen", return_value=watcher
             ), mock.patch.object(bootstrap.subprocess, "run", side_effect=run), mock.patch.object(
                 bootstrap.time, "sleep"
-            ):
+            ), mock.patch.object(bootstrap.sys, "platform", "linux"):
                 self.assertEqual(bootstrap.bootstrap("repowise", root), 0)
 
             hook_kwargs = next(kwargs for command, kwargs in calls if command[1] == "hook")
@@ -2167,6 +2261,18 @@ class IntegrationTests(unittest.TestCase):
         self.assertTrue(all(path.parent == Path(".") for path in shell_paths | powershell_paths))
         self.assertFalse(any(ROOT.rglob("*.bat")))
         self.assertFalse(any(ROOT.rglob("*.cmd")))
+
+        readme = (ROOT / "README.md").read_text()
+        self.assertIn(
+            "On macOS or Linux, run:\n\n```bash\n"
+            "python3 kit.py remove-repo <repository>\n```",
+            readme,
+        )
+        self.assertIn(
+            "On Windows, run:\n\n```powershell\n"
+            "python kit.py remove-repo <repository>\n```",
+            readme,
+        )
 
         records = {}
         for line in (ROOT / "MANIFEST.sha256").read_text().splitlines():
