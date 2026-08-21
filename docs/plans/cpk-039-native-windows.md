@@ -18,6 +18,8 @@ Windows users must be able to operate every root toolkit entry point with PowerS
 - [x] (2026-08-21) Reproduced the uv installer failure and isolated PowerShell statement-at-a-time parsing as its cause.
 - [x] (2026-08-21) Passed 67 tests through both local launchers after the uv invocation correction.
 - [x] (2026-08-21) Removed ambient Windows `python` resolution from the PowerShell launcher tests and bounded their subprocess runtime.
+- [x] (2026-08-21) Defined an ownership-safe Windows recovery path for a RepoWise launcher broken by Python replacement.
+- [x] (2026-08-21) Completed clean correctness review of the RepoWise recovery candidate.
 - [ ] Pass local validation and the native Windows checkpoint (completed: corrected local validation; remaining: exact-commit Windows VM validation).
 - [ ] Complete adversarial review and review closure.
 
@@ -33,6 +35,7 @@ No earlier Plan history record applies to CPK-039.
 - The accepted scope is unchanged. The correction changes the Windows test environment, host-specific test contracts, and checkout bytes.
 - The first correction did not rewrite `kit.py` or the RepoWise bootstrap. The uv correction changes one `ensure_uv` command argument.
 - Native installation at `9850d63` proved that `pwsh -Command -` did not execute the verified multi-line uv installer as one script. The next correction changes only the `ensure_uv` PowerShell invocation and its direct test.
+- The reported Python replacement adds one Windows-only recovery case. A failed RepoWise launcher is repairable only when the previous manifest records the selected fixed user-bin path.
 
 ## Surprises and Discoveries
 
@@ -47,6 +50,8 @@ No earlier Plan history record applies to CPK-039.
   Evidence: A local executable check reproduced a missing marker with status zero. Evaluating the complete input as one script block created the marker.
 - Observation: The launcher-forwarding test could wait indefinitely on the host's ambient Windows `python` command.
   Evidence: The test did not bind the temporary launcher to the interpreter that started the suite and had no subprocess timeout.
+- Observation: A retained `repowise.exe` can become non-executable after its Python installation is replaced.
+  Evidence: Native reinstall reported the removed Python 3.14 path, but classified the manifest-recorded launcher as a different RepoWise version.
 
 ## Decision Log
 
@@ -80,7 +85,7 @@ Apply [Scope boundaries](../../assets/skills/design-preflight/references/scope-b
 
 The task composes the five Windows entry points, platform tool selection, bootstrap installation, MCP configuration, user instructions, manifest, lock, version, and tests. Existing POSIX outcomes and managed hook `commandWindows` behavior are opaque and must remain unchanged. There is no deferred owner.
 
-The supported model is one user on native Windows 10 or 11 with PowerShell 7, Python 3.11 or later, Git, and Codex. macOS and Linux remain supported. The task excludes PowerShell 5.1, batch files, Windows CI, WSL-only support, dependency installation for Python or Git, retries, recovery, concurrency, and changes to managed install locations.
+The supported model is one user on native Windows 10 or 11 with PowerShell 7, Python 3.11 or later, Git, and Codex. macOS and Linux remain supported. A Windows reinstall repairs a failed RepoWise launcher only when the previous manifest records the selected fixed user-bin path. The task excludes PowerShell 5.1, batch files, Windows CI, WSL-only support, dependency installation for Python or Git, other recovery, retries, concurrency, and changes to managed install locations.
 
 ## Scenario Proof
 
@@ -97,6 +102,8 @@ Apply [Scenario discrimination](../../assets/skills/design-preflight/references/
 | Existing Windows executables | Present `uv.exe` and `repowise.exe` versus absent names | platform discovery to runtime result | Existing commands are reused without installation | `test_windows_runtime_discovery_uses_executable_suffix` | Passed locally |
 | Missing Windows uv | Missing `uv.exe` versus the POSIX missing path; statement stream versus one script block | download, hash, and `pwsh` stdin | The exact verified installer executes as one script and creates `uv.exe` in `UV_INSTALL_DIR` | `test_missing_windows_uv_runs_verified_powershell_installer_once`; executable multi-line installer check | Passed locally; native install rerun pending |
 | Missing Windows RepoWise | Missing `repowise.exe` after uv is ready | uv tool installation to discovery | One pinned persistent tool install returns `repowise.exe` | `test_missing_windows_repowise_uses_executable_result` | Passed locally |
+| Broken recorded Windows RepoWise | Nonzero version result with both manifest and fixed-target ownership versus either predicate absent | reinstall through runtime selection, forced uv replacement, and manifest writer | One forced pinned install replaces the stale bytes and the completed manifest records `repowise.exe` | `test_install_repairs_manifest_owned_broken_windows_repowise` | Passed locally; native install pending |
+| Unowned, wrong-version, and POSIX commands | Broken unowned path versus broken owned Windows path; successful 0.40.0 versus failed process; Windows versus POSIX | selection and validation gate | Unowned, successful wrong-version, and POSIX commands stop without mutation | ownership, version, reuse, and POSIX runtime tests | Passed locally |
 | Watcher platform | Valid POSIX shebang versus Windows executable | bootstrap watcher selector | POSIX uses patched Python; Windows uses `repowise.exe watch` | `test_watch_command_is_platform_specific` | Passed locally; native rerun pending |
 | Watcher readiness | Watcher stays alive versus exits during the gate | watcher to MCP terminal owner | Early exit returns nonzero and MCP never starts | `test_bootstrap_stops_when_watcher_fails_to_start` | Passed locally |
 | Existing Git lifecycle | Missing index versus existing index; no `HEAD` versus `HEAD` | bootstrap through watcher, MCP, and cleanup | Init occurs once, hook occurs always, update needs `HEAD`, and cleanup occurs | `test_bootstrap_initializes_once_and_always_installs_hook` | Passed locally |
@@ -112,6 +119,8 @@ Apply [Scenario discrimination](../../assets/skills/design-preflight/references/
 First add the five thin PowerShell files and tests for argument, exit, and test-phase behavior. Use `python`, `$PSScriptRoot`, `@args`, and `$LASTEXITCODE`. Do not add a shared PowerShell helper.
 
 Then add small platform helpers in `kit.py`. Select executable suffixes and the pinned uv installer by the running platform. Keep the current POSIX path unchanged. Add the Windows installer URL and SHA-256 to `upstream.lock.json`.
+
+For retained runtime recovery, keep `ensure_repowise` as the only owner. Probe process status and output. Force the existing pinned uv install only after a nonzero Windows result when the manifest path, selected path, and fixed user-bin path are equal after platform normalization. Do not delete a launcher. Keep command-start errors, POSIX failures, unowned failures, and successful wrong versions as hard stops.
 
 Move bootstrap behavior into `assets/runtime/repowise_bootstrap.py`. Use only Python standard-library process and path functions. Copy this file into the managed runtime during installation. Generate the RepoWise MCP table with `sys.executable` and an argument array that names the installed bootstrap and RepoWise executable.
 

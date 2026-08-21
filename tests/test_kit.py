@@ -1174,16 +1174,143 @@ class RepoWiseRuntimeTests(unittest.TestCase):
                 repowise, str(paths.home / ".local" / "bin" / "repowise.exe")
             )
 
+    def test_install_repairs_manifest_owned_broken_windows_repowise(self):
+        with tempfile.TemporaryDirectory() as temp:
+            paths = self.paths(Path(temp))
+            repowise = paths.home / ".local" / "bin" / "repowise.exe"
+            repowise.parent.mkdir(parents=True)
+            repowise.write_bytes(b"stale")
+            paths.install_root.mkdir(parents=True)
+            (paths.install_root / "install-manifest.json").write_text(
+                json.dumps(
+                    {
+                        "schema_version": 1,
+                        "skills_home": str(paths.skills_home),
+                        "plans_file": str(paths.codex_home / "PLANS.md"),
+                        "repowise": str(repowise),
+                        "skills": [],
+                    }
+                ),
+                encoding="utf-8",
+            )
+            commands = []
+
+            def fake_stage(destination):
+                for name in kit.UPSTREAM_SKILLS:
+                    skill = destination / name
+                    skill.mkdir(parents=True)
+                    (skill / "SKILL.md").write_text(name + "\n", encoding="utf-8")
+                return {}
+
+            def fake_run(command, **_kwargs):
+                commands.append(command)
+                if command == [str(repowise), "--version"]:
+                    return subprocess.CompletedProcess(command, 1, "", "missing Python")
+                if command[1:4] == ["tool", "install", "--force"]:
+                    repowise.write_bytes(b"repaired")
+                return subprocess.CompletedProcess(command, 0, "", "")
+
+            with mock.patch.object(kit, "is_windows", return_value=True), mock.patch.object(
+                kit, "ensure_uv", return_value=r"C:\Tools\uv.exe"
+            ), mock.patch.object(
+                kit, "stage_upstream_skills", side_effect=fake_stage
+            ), mock.patch.object(kit, "run", side_effect=fake_run):
+                kit.install_core(Namespace(), paths)
+
+            manifest = json.loads((paths.install_root / "install-manifest.json").read_text())
+            self.assertEqual(repowise.read_bytes(), b"repaired")
+            self.assertEqual(manifest["repowise"], str(repowise))
+            self.assertIn(
+                [r"C:\Tools\uv.exe", "tool", "install", "--force", "repowise==0.41.0"],
+                commands,
+            )
+
+    def test_broken_repowise_requires_manifest_and_fixed_windows_path(self):
+        with tempfile.TemporaryDirectory() as temp:
+            paths = self.paths(Path(temp))
+            fixed = paths.home / ".local" / "bin" / "repowise.exe"
+            external = paths.home / "external" / "repowise.exe"
+            for selected, recorded in ((fixed, external), (external, external)):
+                with self.subTest(selected=selected, recorded=recorded):
+                    selected.parent.mkdir(parents=True, exist_ok=True)
+                    selected.write_bytes(b"unchanged")
+                    paths.install_root.mkdir(parents=True, exist_ok=True)
+                    (paths.install_root / "install-manifest.json").write_text(
+                        json.dumps({"repowise": str(recorded)}), encoding="utf-8"
+                    )
+                    with mock.patch.object(
+                        kit, "is_windows", return_value=True
+                    ), mock.patch.object(
+                        kit, "find_runtime_command", return_value=str(selected)
+                    ), mock.patch.object(
+                        kit,
+                        "run",
+                        return_value=subprocess.CompletedProcess([], 1, "", "missing Python"),
+                    ) as run, self.assertRaises(kit.KitError):
+                        kit.ensure_repowise(paths, r"C:\Tools\uv.exe")
+                    self.assertEqual(selected.read_bytes(), b"unchanged")
+                    run.assert_called_once_with(
+                        [str(selected), "--version"], check=False, timeout=20
+                    )
+
+    def test_broken_posix_repowise_is_not_repaired(self):
+        with tempfile.TemporaryDirectory() as temp:
+            paths = self.paths(Path(temp))
+            repowise = paths.home / ".local" / "bin" / "repowise"
+            repowise.parent.mkdir(parents=True)
+            repowise.write_bytes(b"unchanged")
+            paths.install_root.mkdir(parents=True)
+            (paths.install_root / "install-manifest.json").write_text(
+                json.dumps({"repowise": str(repowise)}), encoding="utf-8"
+            )
+            with mock.patch.object(
+                kit, "is_windows", return_value=False
+            ), mock.patch.object(
+                kit, "find_runtime_command", return_value=str(repowise)
+            ), mock.patch.object(
+                kit,
+                "run",
+                return_value=subprocess.CompletedProcess([], 1, "", "missing Python"),
+            ) as run, self.assertRaises(kit.KitError):
+                kit.ensure_repowise(paths, "/usr/bin/uv")
+            self.assertEqual(repowise.read_bytes(), b"unchanged")
+            run.assert_called_once_with([str(repowise), "--version"], check=False, timeout=20)
+
+    def test_matching_repowise_version_is_reused(self):
+        with tempfile.TemporaryDirectory() as temp:
+            paths = self.paths(Path(temp))
+            repowise = paths.home / ".local" / "bin" / "repowise.exe"
+            with mock.patch.object(kit, "is_windows", return_value=True), mock.patch.object(
+                kit, "find_runtime_command", return_value=str(repowise)
+            ), mock.patch.object(
+                kit,
+                "run",
+                return_value=subprocess.CompletedProcess([], 0, "RepoWise 0.41.0", ""),
+            ) as run:
+                result = kit.ensure_repowise(paths, r"C:\Tools\uv.exe")
+            self.assertEqual(result, str(repowise))
+            run.assert_called_once_with([str(repowise), "--version"], check=False, timeout=20)
+
     def test_different_repowise_version_stops_install(self):
         with tempfile.TemporaryDirectory() as temp:
             paths = self.paths(Path(temp))
-            with mock.patch.object(
-                kit, "find_runtime_command", return_value="/usr/bin/repowise"
+            repowise = paths.home / ".local" / "bin" / "repowise.exe"
+            repowise.parent.mkdir(parents=True)
+            repowise.write_bytes(b"unchanged")
+            paths.install_root.mkdir(parents=True)
+            (paths.install_root / "install-manifest.json").write_text(
+                json.dumps({"repowise": str(repowise)}), encoding="utf-8"
+            )
+            with mock.patch.object(kit, "is_windows", return_value=True), mock.patch.object(
+                kit, "find_runtime_command", return_value=str(repowise)
             ), mock.patch.object(
-                kit, "command_version", return_value="RepoWise 0.40.0"
-            ), mock.patch.object(kit, "run") as run, self.assertRaises(kit.KitError):
+                kit,
+                "run",
+                return_value=subprocess.CompletedProcess([], 0, "RepoWise 0.40.0", ""),
+            ) as run, self.assertRaises(kit.KitError):
                 kit.ensure_repowise(paths, "/usr/bin/uv")
-            run.assert_not_called()
+            self.assertEqual(repowise.read_bytes(), b"unchanged")
+            run.assert_called_once_with([str(repowise), "--version"], check=False, timeout=20)
 
     class Watcher:
         def __init__(self, status=None):

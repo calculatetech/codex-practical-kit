@@ -54,6 +54,8 @@ RepoWise is a large external tool and uses AGPL-3.0. The kit does not copy it, m
 
 Core installation reuses `uv` when present. If it is absent, the kit installs pinned uv 0.12.4 from a checksum-verified upstream script. Windows uses the official PowerShell installer. macOS and Linux use the official shell installer. The kit installs RepoWise 0.41.0 as a persistent uv tool when no matching command exists.
 
+On Windows, reinstall repairs a failed `repowise.exe` only when the previous kit manifest records the fixed user-bin path. The installer does not replace an unrecorded command or a command that reports a different version.
+
 The installer adds a user-level RepoWise MCP server. If Codex starts in a completely empty folder, the server command initializes Git first. It does not initialize Git in a non-empty folder.
 
 The first start in a Git repository initializes a no-prose index when `.repowise` is absent. Each start then installs RepoWise's marker-delimited `post-commit` hook and catches up the index.

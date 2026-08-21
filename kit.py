@@ -669,21 +669,44 @@ def ensure_uv(paths: InstallPaths) -> str:
 
 def ensure_repowise(paths: InstallPaths, uv: str) -> str:
     repowise = find_runtime_command(paths, "repowise")
+    force = False
     if repowise:
-        version = command_version([repowise, "--version"])
-        if version and REPOWISE_VERSION in version:
+        try:
+            result = run([repowise, "--version"], check=False, timeout=20)
+        except KitError:
+            result = None
+        detail = ((result.stdout or result.stderr).strip() if result else "")
+        version = detail.splitlines()[0] if detail else None
+        if result and result.returncode == 0 and version and REPOWISE_VERSION in version:
             return repowise
-        raise KitError(
-            f"Found a different RepoWise command at {repowise}: {version or 'unknown version'}. "
-            f"Install RepoWise {REPOWISE_VERSION} or remove that command before retrying."
+        manifest = json_load(manifest_path(paths), {})
+        recorded = manifest.get("repowise") if isinstance(manifest, dict) else None
+        expected = user_bin(paths) / runtime_executable("repowise")
+        force = bool(
+            result
+            and result.returncode != 0
+            and is_windows()
+            and isinstance(recorded, str)
+            and os.path.normcase(os.path.abspath(repowise))
+            == os.path.normcase(os.path.abspath(recorded))
+            == os.path.normcase(os.path.abspath(expected))
         )
+        if not force:
+            raise KitError(
+                f"Found a different RepoWise command at {repowise}: {version or 'unknown version'}. "
+                f"Install RepoWise {REPOWISE_VERSION} or remove that command before retrying."
+            )
 
     destination = user_bin(paths)
     env = os.environ.copy()
     env["HOME"] = str(paths.home)
     env["UV_TOOL_BIN_DIR"] = str(destination)
     env["UV_TOOL_DIR"] = str(paths.home / ".local" / "share" / "uv" / "tools")
-    run([uv, "tool", "install", f"repowise=={REPOWISE_VERSION}"], env=env, timeout=1800)
+    command = [uv, "tool", "install"]
+    if force:
+        command.append("--force")
+    command.append(f"repowise=={REPOWISE_VERSION}")
+    run(command, env=env, timeout=1800)
     run([uv, "tool", "update-shell"], env=env, timeout=60)
     repowise = destination / runtime_executable("repowise")
     if not repowise.is_file():
