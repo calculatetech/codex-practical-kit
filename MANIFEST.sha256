@@ -87,9 +87,9 @@ c0ce736dd17cb03d20e1e9b42cb2a5744e260b67bfc51c27a61c097e90d2399f  ./docs/plans/c
 a62dad1d86447d19d9afc9e613c5ff2bb3a95262982467893c3fe67b0fe9e7e4  ./docs/plans/cpk-037-stop-hook-context-limit.md
 161d0a0259014e55757840e85ecec21c0bf3d0f1111d0992edcb401f9be7ee35  ./docs/plans/cpk-038-shared-roadmap-view.md
 a1cd5f2295a96c88678e3e2be7b178a7bb85cb7d602393320d6ca6911c787019  ./docs/plans/cpk-038-shared-roadmap-view.plan-summary.20260819T195712262086Z.manual-recovery.md
-d92eff7f4b753382c368a6f039569186e4e56bf14f46f04cac47f146f871b77c  ./docs/plans/cpk-039-native-windows.md
+56992532a34d03d55bba3d5bf2c05068afd015de2e58886081d91059448d8899  ./docs/plans/cpk-039-native-windows.md
 41e360c522fa007184479a3db96bfeeeb42e89e7e6cf13ff111e0a853640b7b3  ./docs/plans/cpk-039-native-windows.plan-summary.20260819T211423672232Z.manual-recovery.md
-dc7704511a64cf6672bbac271ba6a446b440d86f5c05a311594114e027d2d1b8  ./docs/roadmap.md
+7938ff8964cde7de00867ff7d3fab6d56119eea6cb12a3e23d2d0e2eb9405c1d  ./docs/roadmap.md
 6f8f14ca5fd8ad935eee66256b3f7c49d5c40957eedff938ba21365e30869719  ./doctor.ps1
 ab56a88d9188979f06ea142d1f58ea0d6ad9088e83a965bd324209d83da513ad  ./doctor.sh
 8087bdb3ee654c0baac278a8e3bf85e33e314f8acfd486e7ebf675126a697058  ./install.ps1

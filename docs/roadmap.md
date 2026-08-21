@@ -13,7 +13,7 @@ Status legend:
 
 ## Active
 
-- 🎯 **CPK-039 — Add native Windows compatibility.** Add PowerShell 7 entry points and make the required RepoWise runtime work without a POSIX shell. Native validation found portability failures; correction and rerun are in progress.
+No task is active.
 
 ## Planned next
 
@@ -33,6 +33,7 @@ No residual risk is accepted.
 
 ## Completed
 
+- ✅ **CPK-039 — Add native Windows compatibility.** Add PowerShell 7 entry points and make the required RepoWise runtime work without a POSIX shell. Native Windows validation passed at `d5957f81b61893934a046446d8fdf0f8cf62c7c8`.
 - ✅ **CPK-038 — Keep one live roadmap view across worktrees.** Generate a stable primary-checkout projection only after the active worktree roadmap changes.
 - ✅ **CPK-037 — Remove the invalid Stop context limit.** Install `additionalContextLimit` only for managed hooks that can emit additional context.
 - ✅ **CPK-036 — Preserve Plan Mode decisions.** Save each completed Plan Mode summary as immutable project evidence and require later planning sessions to reconcile it.
