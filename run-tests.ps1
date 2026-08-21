@@ -1,5 +1,6 @@
 #Requires -Version 7.0
 $ErrorActionPreference = "Stop"
+$env:PYTHONUTF8 = "1"
 Set-Location $PSScriptRoot
 try {
     & python -m unittest discover -s tests -v

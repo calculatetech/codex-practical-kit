@@ -14,7 +14,8 @@ Windows users must be able to operate every root toolkit entry point with PowerS
 - [x] (2026-08-19) Implemented PowerShell entry points and platform-aware tool installation.
 - [x] (2026-08-19) Replaced the shell-only RepoWise bootstrap with one cross-platform Python runtime.
 - [x] (2026-08-19) Updated user instructions, the release manifest, the lock, and version surfaces.
-- [ ] Pass local validation and the native Windows checkpoint (completed: local validation; remaining: exact-commit Windows VM validation).
+- [x] (2026-08-21) Recorded the failed native Windows test checkpoint and completed a two-phase correction preflight.
+- [ ] Pass local validation and the native Windows checkpoint (completed: corrected local validation; remaining: exact-commit Windows VM validation).
 - [ ] Complete adversarial review and review closure.
 
 ## Prior Plan Reconciliation
@@ -25,7 +26,9 @@ No earlier Plan history record applies to CPK-039.
 
 ## Plan Deviations
 
-No accepted decision has changed.
+- Native checkpoint `a80ca4f446e9c1d73e20b1b18d33d716072ddd4c` is superseded only as validation evidence.
+- The accepted scope is unchanged. The correction changes the Windows test environment, host-specific test contracts, and checkout bytes.
+- The correction does not rewrite `kit.py` or the RepoWise bootstrap.
 
 ## Surprises and Discoveries
 
@@ -33,6 +36,9 @@ No accepted decision has changed.
   Evidence: No CPK-039 record existed in `.agent/plan-history/` or beside the future specification after Plan Mode ended.
 - Observation: PowerShell can leave `$LASTEXITCODE` unset after command resolution fails.
   Evidence: The first local `doctor.ps1` check reported a missing `python` command but returned status 0. Each launcher now catches this error and returns status 1.
+- Observation: Native Windows validation found 11 errors and 9 failures in the test checkpoint.
+  Evidence: Python used cp1252 for repository text. Some tests selected the wrong host command or platform branch.
+  Evidence: One excluded migration fixture required link privilege. Windows paths and Git checkout conversion changed test results.
 
 ## Decision Log
 
@@ -48,15 +54,17 @@ No accepted decision has changed.
 
 ## Outcomes and Retrospective
 
-The five PowerShell entry points and the cross-platform RepoWise bootstrap are implemented. Local validation passes. Native Windows validation and adversarial review remain.
+The five PowerShell entry points and the cross-platform RepoWise bootstrap are implemented. The first native Windows checkpoint exposed test-environment and checkout portability defects. Correction, repeated native validation, and adversarial review remain.
 
 ## Context and Orientation
 
 The task worktree is `/home/mbeutler/Projects/codex-practical-kit-cpk-039`. The branch is `cpk-039-native-windows`, based on completed CPK-038 commit `66a8db7fb4627a4a281d21a0a7965a40f85f5ca3`.
 
-The root `.sh` files are thin entry points for `kit.py`. `kit.py` owns installation, configuration, RepoWise setup, Doctor, and uninstall behavior. It currently embeds a POSIX shell program as the RepoWise MCP command. `tests/test_kit.py` owns the executable contract checks. `README.md`, `CODEX-INSTALL-PROMPT.md`, and `docs/REPOWISE.md` own user instructions.
+The root launchers are thin entry points for `kit.py`. This module owns installation, configuration, RepoWise setup, Doctor, and uninstall behavior.
 
-A bootstrap is the installed command that prepares RepoWise before it starts the MCP server. The new bootstrap is `assets/runtime/repowise_bootstrap.py`. Installation copies it into the managed runtime directory.
+The installed Python bootstrap prepares RepoWise before it starts the MCP server. Its source is `assets/runtime/repowise_bootstrap.py`.
+
+`tests/test_kit.py` owns the executable contract checks. `README.md`, `CODEX-INSTALL-PROMPT.md`, and `docs/REPOWISE.md` own user instructions.
 
 ## Product Boundary
 
@@ -72,13 +80,16 @@ Apply [Scenario discrimination](../../assets/skills/design-preflight/references/
 
 | Scenario | Discriminator and contrast | Production path | Required oracle | Runnable check | Result |
 | --- | --- | --- | --- | --- | --- |
-| Distributed artifact set | Each current `.sh` entry point versus its peer | Source inventory to manifest | Exactly five `.ps1` peers and one bootstrap source occur once with valid hashes | `test_windows_launchers_and_runtime_are_complete_distribution_artifacts` | Passed locally |
+| Distributed artifact set | Each current `.sh` entry point versus its peer; LF versus converted checkout bytes | Git attributes and source inventory to manifest | Exactly five `.ps1` peers and one bootstrap source occur once with valid hashes after a checkout with `core.autocrlf=true` | `test_windows_launchers_and_runtime_are_complete_distribution_artifacts`; fresh clone with `core.autocrlf=true` | Passed local checkout; forced clone pending |
 | Action launcher | Simple argument versus path with spaces; success versus error | `.ps1` to Python subcommand | Arguments and exit status remain unchanged | `test_action_launchers_forward_arguments_and_exit_status`; `test_action_launcher_reports_missing_python` | Passed locally |
-| Test launcher | Passing unit phase versus failing unit phase | unit discovery to Python compilation | Success compiles every hook; failure does not compile | `test_test_launcher_compiles_kit_and_every_hook`; `test_test_launcher_stops_after_failed_unit_phase` | Passed locally |
+| Test launcher | Passing unit phase versus failing unit phase; cp1252 default versus inherited UTF-8 mode | unit discovery and child hooks to Python compilation | Success reads UTF-8 and compiles every source; failure does not compile | `test_test_launcher_compiles_kit_and_every_hook`; `test_test_launcher_stops_after_failed_unit_phase`; native `run-tests.ps1` | Passed locally; native rerun pending |
+| Hook command syntax | POSIX `command` versus `commandWindows` | generated TOML to hook subprocess | The host-specific command starts the hook and preserves exact output | `test_plan_mode_prompt_selects_normal_mode` | Passed locally; native rerun pending |
+| Hook interpreter | `python3` alias versus the current interpreter | test subprocess to Session Start JSON | The router test uses the interpreter running the suite | `test_session_start_still_announces_router` | Passed locally; native rerun pending |
+| Platform-specific unit contracts | Unmocked host versus explicit POSIX and Windows predicates | test fixture to uv and RepoWise selectors | Each test proves its named platform branch on either host | missing-uv and missing-RepoWise POSIX and Windows tests | Passed locally; native rerun pending |
 | Existing Windows executables | Present `uv.exe` and `repowise.exe` versus absent names | platform discovery to runtime result | Existing commands are reused without installation | `test_windows_runtime_discovery_uses_executable_suffix` | Passed locally |
 | Missing Windows uv | Missing `uv.exe` versus the POSIX missing path | download, hash, and `pwsh` stdin | Exact URL and hash are used once; result is `uv.exe` | `test_missing_windows_uv_runs_verified_powershell_installer_once` | Passed locally |
 | Missing Windows RepoWise | Missing `repowise.exe` after uv is ready | uv tool installation to discovery | One pinned persistent tool install returns `repowise.exe` | `test_missing_windows_repowise_uses_executable_result` | Passed locally |
-| Watcher platform | Same RepoWise tool on POSIX versus Windows | bootstrap watcher selector | POSIX uses patched Python; Windows uses `repowise.exe watch` | `test_watch_command_is_platform_specific` | Passed locally |
+| Watcher platform | Valid POSIX shebang versus Windows executable | bootstrap watcher selector | POSIX uses patched Python; Windows uses `repowise.exe watch` | `test_watch_command_is_platform_specific` | Passed locally; native rerun pending |
 | Watcher readiness | Watcher stays alive versus exits during the gate | watcher to MCP terminal owner | Early exit returns nonzero and MCP never starts | `test_bootstrap_stops_when_watcher_fails_to_start` | Passed locally |
 | Existing Git lifecycle | Missing index versus existing index; no `HEAD` versus `HEAD` | bootstrap through watcher, MCP, and cleanup | Init occurs once, hook occurs always, update needs `HEAD`, and cleanup occurs | `test_bootstrap_initializes_once_and_always_installs_hook` | Passed locally |
 | Empty and non-empty non-Git folders | Empty directory versus one existing file | bootstrap through terminal owner | Empty path gets the full no-update lifecycle; non-empty path remains unchanged and starts only MCP | `test_bootstrap_initializes_only_empty_non_git_directory` | Passed locally |
@@ -86,7 +97,7 @@ Apply [Scenario discrimination](../../assets/skills/design-preflight/references/
 | Install and Doctor | Managed block versus unrelated TOML | install to Doctor | Python bootstrap command is valid; hooks and unrelated TOML remain | installer tests and isolated `kit.py doctor` | Passed locally |
 | Eager setup | Repository without `HEAD` versus with `HEAD` | setup entry point to RepoWise | Both initialize and install the hook; only the latter updates | `test_setup_skips_catch_up_before_first_commit`; `test_setup_preserves_roadmap_and_unrelated_blocks` | Passed locally |
 | Uninstall ownership | Normal uninstall versus `--purge` | ownership manifest to filesystem | Normal mode retains the runtime root; purge removes it | `test_install_preserves_global_config_and_uninstall_removes_owned_block` | Passed locally |
-| Native release gate | Local proof versus exact pushed Windows commit | checkpoint to Codex MCP use | Windows tests pass and a fresh Codex session can use RepoWise | user VM record bound to commit | Pending |
+| Native release gate | Local proof versus exact pushed Windows commit | checkpoint to Codex MCP use | Windows tests pass and a fresh Codex session can use RepoWise | user VM record bound to commit | Failed at `a80ca4f`; next checkpoint pending |
 
 ## Plan of Work
 
@@ -112,9 +123,9 @@ Run local validation with:
     git diff --check
     sha256sum --check MANIFEST.sha256
 
-After local validation, make and push one checkpoint. The VM checkout command is:
+After local validation, make and push one checkpoint. Force the reported normal Windows conversion setting during a fresh clone:
 
-    gh repo clone calculatetech/codex-practical-kit codex-practical-kit-cpk-039 -- --branch cpk-039-native-windows --single-branch
+    git -c core.autocrlf=true clone --branch cpk-039-native-windows --single-branch https://github.com/calculatetech/codex-practical-kit.git codex-practical-kit-cpk-039
 
 In the VM, run `run-tests.ps1`, install, `setup-repo.ps1 .`, and Doctor. Start a fresh Codex session in the clone. Make sure that RepoWise initializes and answers one codebase query. Save `.repowise/.update.log` evidence. Test normal uninstall, reinstall, and purge.
 

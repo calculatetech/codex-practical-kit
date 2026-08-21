@@ -200,7 +200,8 @@ class InstallerTests(unittest.TestCase):
             script.parent.mkdir(parents=True)
             script.write_bytes((ROOT / "assets" / "hooks" / "session_start.py").read_bytes())
             hooks = tomllib.loads(kit.hooks_config_block(paths))["hooks"]
-            command = hooks["UserPromptSubmit"][0]["hooks"][0]["command"]
+            command_key = "commandWindows" if os.name == "nt" else "command"
+            command = hooks["UserPromptSubmit"][0]["hooks"][0][command_key]
 
             def run(event):
                 return subprocess.run(
@@ -279,7 +280,7 @@ class InstallerTests(unittest.TestCase):
         contexts = {}
         for source in ("startup", "compact"):
             result = subprocess.run(
-                ["python3", str(ROOT / "assets" / "hooks" / "session_start.py")],
+                [sys.executable, str(ROOT / "assets" / "hooks" / "session_start.py")],
                 input=json.dumps(
                     {
                         "hook_event_name": "SessionStart",
@@ -440,6 +441,7 @@ class InstallerTests(unittest.TestCase):
 
             self.assertEqual((conflict / "SKILL.md").read_text(), "user\n")
 
+    @unittest.skipIf(os.name == "nt", "directory links are outside Windows normal use")
     def test_v021_recorded_links_upgrade_to_copies(self):
         with tempfile.TemporaryDirectory() as temp:
             base = Path(temp)
@@ -909,9 +911,9 @@ class PowerShellLauncherTests(unittest.TestCase):
                 )
             else:
                 (tests / "test_success.py").write_text(
-                    "import unittest\n"
+                    "import os, unittest\n"
                     "class Success(unittest.TestCase):\n"
-                    "    def test_success(self): self.assertTrue(True)\n",
+                    "    def test_success(self): self.assertEqual(os.environ.get('PYTHONUTF8'), '1')\n",
                     encoding="utf-8",
                 )
             env = os.environ.copy()
@@ -936,7 +938,7 @@ class PowerShellLauncherTests(unittest.TestCase):
             )
             call = json.loads(log.read_text()) if log.exists() else None
             compiled = {
-                str(path.relative_to(root))
+                path.relative_to(root).as_posix()
                 for path in (
                     root / "kit.py",
                     *sorted(hooks.glob("*.py")),
@@ -1000,11 +1002,11 @@ class RepoWiseRuntimeTests(unittest.TestCase):
     def test_watch_command_is_platform_specific(self):
         with tempfile.TemporaryDirectory() as temp:
             launcher = Path(temp) / "repowise"
-            launcher.write_text(f"#!{sys.executable}\n")
+            launcher.write_text("#!/usr/bin/python3\n")
             posix = bootstrap.watch_command(str(launcher), "linux")
             windows = bootstrap.watch_command(r"C:\Tools\repowise.exe", "win32")
 
-        self.assertEqual(posix[:2], [sys.executable, "-c"])
+        self.assertEqual(posix[:2], ["/usr/bin/python3", "-c"])
         for event in ("opened", "closed", "closed_no_write"):
             self.assertIn(event, posix[2])
         self.assertEqual(windows, [r"C:\Tools\repowise.exe", "watch"])
@@ -1041,7 +1043,7 @@ class RepoWiseRuntimeTests(unittest.TestCase):
                 (destination / "uv").write_text("uv")
                 return subprocess.CompletedProcess(command, 0, "", "")
 
-            with mock.patch.object(
+            with mock.patch.object(kit, "is_windows", return_value=False), mock.patch.object(
                 kit, "find_runtime_command", return_value=None
             ), mock.patch.object(
                 kit, "download_sha256", return_value=b"installer"
@@ -1114,7 +1116,7 @@ class RepoWiseRuntimeTests(unittest.TestCase):
                     (destination / "repowise").write_text("repowise")
                 return subprocess.CompletedProcess(command, 0, "", "")
 
-            with mock.patch.object(
+            with mock.patch.object(kit, "is_windows", return_value=False), mock.patch.object(
                 kit, "find_runtime_command", return_value=None
             ), mock.patch.object(kit, "run", side_effect=fake_run):
                 repowise = kit.ensure_repowise(paths, "/usr/bin/uv")
@@ -2018,6 +2020,7 @@ class IntegrationTests(unittest.TestCase):
             digest, path = line.split("  ", 1)
             records.setdefault(path, []).append(digest)
         required = [
+            "./.gitattributes",
             *(f"./{name}.ps1" for name in sorted(powershell)),
             "./assets/runtime/repowise_bootstrap.py",
         ]
