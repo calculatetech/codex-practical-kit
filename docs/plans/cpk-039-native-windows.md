@@ -17,6 +17,7 @@ Windows users must be able to operate every root toolkit entry point with PowerS
 - [x] (2026-08-21) Recorded the failed native Windows test checkpoint and completed a two-phase correction preflight.
 - [x] (2026-08-21) Reproduced the uv installer failure and isolated PowerShell statement-at-a-time parsing as its cause.
 - [x] (2026-08-21) Passed 67 tests through both local launchers after the uv invocation correction.
+- [x] (2026-08-21) Removed ambient Windows `python` resolution from the PowerShell launcher tests and bounded their subprocess runtime.
 - [ ] Pass local validation and the native Windows checkpoint (completed: corrected local validation; remaining: exact-commit Windows VM validation).
 - [ ] Complete adversarial review and review closure.
 
@@ -44,6 +45,8 @@ No earlier Plan history record applies to CPK-039.
   Evidence: One excluded migration fixture required link privilege. Windows paths and Git checkout conversion changed test results.
 - Observation: PowerShell returned zero after it skipped the body of a multi-line installer received through `-Command -`.
   Evidence: A local executable check reproduced a missing marker with status zero. Evaluating the complete input as one script block created the marker.
+- Observation: The launcher-forwarding test could wait indefinitely on the host's ambient Windows `python` command.
+  Evidence: The test did not bind the temporary launcher to the interpreter that started the suite and had no subprocess timeout.
 
 ## Decision Log
 

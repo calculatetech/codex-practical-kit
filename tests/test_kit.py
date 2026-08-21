@@ -919,11 +919,15 @@ class PowerShellLauncherTests(unittest.TestCase):
             env = os.environ.copy()
             env["CPK_LOG"] = str(log)
             env["CPK_EXIT"] = str(exit_code)
-            if shutil.which("python") is None:
-                command_dir = Path(temp) / "commands"
-                command_dir.mkdir()
+            command_dir = Path(temp) / "commands"
+            command_dir.mkdir()
+            if os.name == "nt":
+                (command_dir / "python.cmd").write_text(
+                    f'@"{sys.executable}" %*\n', encoding="utf-8"
+                )
+            else:
                 (command_dir / "python").symlink_to(sys.executable)
-                env["PATH"] = str(command_dir) + os.pathsep + env["PATH"]
+            env["PATH"] = str(command_dir) + os.pathsep + env["PATH"]
             arguments = (
                 []
                 if script.name == "run-tests.ps1"
@@ -935,6 +939,7 @@ class PowerShellLauncherTests(unittest.TestCase):
                 capture_output=True,
                 env=env,
                 check=False,
+                timeout=30,
             )
             call = json.loads(log.read_text()) if log.exists() else None
             compiled = {
