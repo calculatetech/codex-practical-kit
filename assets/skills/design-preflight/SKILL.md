@@ -103,6 +103,11 @@ Before implementation, each retained scenario must have a planned runnable check
 
 For an initial non-runtime preflight, use this same single challenge only when normal-use ownership or scope remains unclear.
 
+## Human decision
+
+<!-- cpk-rule-route-only: decision-handoffs -->
+[Decision handoffs](../delivery-lifecycle/references/decision-handoffs.md)
+
 ## Stop condition
 
 Stop for human direction when supported normal use has duplicate authority, duplicate writers, or an unresolved public contract. Do not invent an outcome for a contract gap.

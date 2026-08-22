@@ -2060,6 +2060,7 @@ class IntegrationTests(unittest.TestCase):
             "design-preflight": (
                 "scope-boundaries.md",
                 "supported-model.md",
+                "decision-handoffs.md",
                 "owner-composition.md",
                 "full-set-results.md",
                 "scenario-discrimination.md",
@@ -2092,6 +2093,43 @@ class IntegrationTests(unittest.TestCase):
                 if "{{" in target or Path(target).is_absolute():
                     continue
                 self.assertTrue((path.parent / target).resolve().is_file(), (path, target))
+
+    def test_material_code_decisions_explain_implementation_before_choice(self):
+        handoff = (
+            ROOT
+            / "assets"
+            / "skills"
+            / "delivery-lifecycle"
+            / "references"
+            / "decision-handoffs.md"
+        ).read_text()
+        preflight = (ROOT / "assets" / "skills" / "design-preflight" / "SKILL.md").read_text()
+
+        self.assertIn("Apply `simple-english` before you draft", handoff)
+        self.assertIn("Treat an internal code term as unfamiliar", handoff)
+        self.assertIn("Before a material technical decision", handoff)
+        self.assertIn("selects a material technical option", handoff)
+        self.assertNotIn("material code decision", handoff)
+        self.assertNotIn("material code option", handoff)
+        fields = [
+            "`What you get`",
+            "`Code change`",
+            "`Source`",
+            "`New moving parts`",
+            "`Tests and maintenance`",
+        ]
+        positions = [handoff.index(field) for field in fields]
+        self.assertEqual(positions, sorted(positions))
+        self.assertIn("reuses, extends, replaces, or adds a code owner", handoff)
+        self.assertIn("local, multi-owner, or a new subsystem", handoff)
+        self.assertIn("If source cannot prove an impact, write `unknown`", handoff)
+        self.assertIn("Do not estimate line counts.", handoff)
+        self.assertIn("The tool only collects the answer.", handoff)
+        self.assertLess(
+            handoff.index("Show the complete decision brief"),
+            handoff.index("Keep the tool question"),
+        )
+        self.assertIn("references/decision-handoffs.md", preflight)
 
     def test_runtime_scenario_preflight_has_one_rule_owner(self):
         skill = (ROOT / "assets" / "skills" / "design-preflight" / "SKILL.md").read_text()
@@ -2430,9 +2468,9 @@ class IntegrationTests(unittest.TestCase):
         self.assertIn("`pwsh -File .\\doctor.ps1`", publication)
         self.assertIn("from the reviewed candidate", publication)
         self.assertIn("`Result: ready`", publication)
-        self.assertEqual(kit.KIT_VERSION, "0.19.1")
-        self.assertNotIn("Version `0.19.1`", (ROOT / "README.md").read_text())
-        self.assertNotIn("version 0.19.1", (ROOT / "CODEX-INSTALL-PROMPT.md").read_text())
+        self.assertEqual(kit.KIT_VERSION, "0.20.0")
+        self.assertNotIn("Version `0.20.0`", (ROOT / "README.md").read_text())
+        self.assertNotIn("version 0.20.0", (ROOT / "CODEX-INSTALL-PROMPT.md").read_text())
 
     def test_windows_launchers_and_runtime_are_complete_distribution_artifacts(self):
         shell_paths = {path.relative_to(ROOT) for path in ROOT.rglob("*.sh")}
