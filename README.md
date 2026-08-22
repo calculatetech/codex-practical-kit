@@ -49,11 +49,11 @@ The installer writes a managed block in `~/.codex/AGENTS.md`. It renders the abs
 
 The installer also writes `$CODEX_HOME/PLANS.md` and managed Codex hooks. Session Start announces the AGENTS router.
 
-Prompt submission selects normal mode before Plan-mode prompts. The passive Stop hook saves completed Plan Mode responses without continuing the turn.
+Prompt submission selects normal mode before Plan-mode prompts. Managed hooks save a completed Plan before the next prompt continues and at session lifecycle boundaries.
 
 The edit hooks update `<primary-checkout>/.codex/roadmap-view.md` after an agent changes `docs/roadmap.md`. Keep this generated file open to follow worktree progress. Edit only `docs/roadmap.md`.
 
-The `plan-history` skill puts immutable summaries beside related specifications. It uses `.agent/plan-history/` when no specification exists. Later planning sessions read and reconcile these records.
+The `plan-history` skill puts every repository summary in `.agent/plan-history/`. It also puts exact copies beside related specifications. Later planning sessions read and reconcile these records.
 
 An unrecorded destination skill is a conflict. The installer stops before it changes that directory.
 

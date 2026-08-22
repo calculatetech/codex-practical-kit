@@ -33,6 +33,7 @@ No residual risk is accepted.
 
 ## Completed
 
+- ✅ **CPK-040 — Save Plans at acceptance.** The next prompt saves the completed Plan before the managed prompt hook completes. The managed `SessionEnd` timeout now meets the Codex limit.
 - ✅ **CPK-039 — Add native Windows compatibility.** Add PowerShell 7 entry points and make the required RepoWise runtime work without a POSIX shell. Native Windows validation passed at `d5957f81b61893934a046446d8fdf0f8cf62c7c8`.
 - ✅ **CPK-038 — Keep one live roadmap view across worktrees.** Generate a stable primary-checkout projection only after the active worktree roadmap changes.
 - ✅ **CPK-037 — Remove the invalid Stop context limit.** Install `additionalContextLimit` only for managed hooks that can emit additional context.

@@ -164,9 +164,95 @@ def completed_plan(message: str) -> bool:
     return (
         stripped.startswith("<proposed_plan>\n")
         and stripped.endswith("\n</proposed_plan>")
-        and stripped.count("<proposed_plan>") == 1
-        and stripped.count("</proposed_plan>") == 1
     )
+
+
+def reverse_lines(stream, block_size: int = 64 * 1024):
+    stream.seek(0, os.SEEK_END)
+    position = stream.tell()
+    remainder = b""
+    while position:
+        size = min(block_size, position)
+        position -= size
+        stream.seek(position)
+        parts = (stream.read(size) + remainder).split(b"\n")
+        remainder = parts[0]
+        for line in reversed(parts[1:]):
+            if line:
+                yield line.removesuffix(b"\r")
+    if remainder:
+        yield remainder.removesuffix(b"\r")
+
+
+def transcript_plan(event: dict[str, object]) -> dict[str, object] | None:
+    value = event.get("transcript_path")
+    if not isinstance(value, str):
+        return None
+    path = Path(value)
+    if not path.is_file():
+        return None
+
+    turn_id = None
+    message = None
+    thread_id = None
+    with path.open("rb") as stream:
+        for line in reverse_lines(stream):
+            try:
+                record = json.loads(line)
+            except (UnicodeDecodeError, json.JSONDecodeError):
+                continue
+            payload = record.get("payload")
+            if not isinstance(payload, dict):
+                continue
+
+            if turn_id is None:
+                if record.get("type") != "event_msg" or payload.get("type") != "task_complete":
+                    continue
+                if payload.get("last_agent_message") is not None:
+                    return None
+                turn_id = payload.get("turn_id")
+                if not isinstance(turn_id, str):
+                    return None
+                continue
+
+            if record.get("type") == "response_item":
+                metadata = payload.get("internal_chat_message_metadata_passthrough")
+                content = payload.get("content")
+                if (
+                    payload.get("type") == "message"
+                    and payload.get("role") == "assistant"
+                    and payload.get("phase") == "final_answer"
+                    and isinstance(metadata, dict)
+                    and metadata.get("turn_id") == turn_id
+                    and isinstance(content, list)
+                    and content
+                    and isinstance(content[0], dict)
+                    and isinstance(content[0].get("text"), str)
+                    and completed_plan(content[0]["text"])
+                ):
+                    message = content[0]["text"]
+
+            if record.get("type") == "event_msg" and payload.get("turn_id") == turn_id:
+                item = payload.get("item")
+                if (
+                    payload.get("type") == "item_completed"
+                    and isinstance(item, dict)
+                    and item.get("type") == "Plan"
+                    and isinstance(payload.get("thread_id"), str)
+                ):
+                    thread_id = payload["thread_id"]
+                elif payload.get("type") == "task_started":
+                    return None
+
+            if message is not None and thread_id is not None:
+                captured = dict(event)
+                captured.update(
+                    session_id=thread_id,
+                    turn_id=turn_id,
+                    last_assistant_message=message,
+                )
+                return captured
+    return None
 
 
 def event_key(event: dict[str, object]) -> str:
@@ -235,6 +321,14 @@ def save_plan(event: dict[str, object]) -> list[str]:
     content = message.encode("utf-8")
     collisions = False
 
+    if root is not None:
+        history = root / ".agent" / "plan-history"
+    else:
+        codex_home = Path(os.environ.get("CODEX_HOME", Path.home() / ".codex"))
+        cwd_key = hashlib.sha256(str(cwd).encode()).hexdigest()
+        history = codex_home / "plan-history" / cwd_key
+    collisions |= write_record(history, "plan-summary", timestamp, key, content)
+
     for target in targets:
         collisions |= write_record(
             target.parent,
@@ -244,21 +338,17 @@ def save_plan(event: dict[str, object]) -> list[str]:
             content,
         )
 
-    if not targets or failures:
-        if root is not None:
-            history = root / ".agent" / "plan-history"
-        else:
-            codex_home = Path(os.environ.get("CODEX_HOME", Path.home() / ".codex"))
-            cwd_key = hashlib.sha256(str(cwd).encode()).hexdigest()
-            history = codex_home / "plan-history" / cwd_key
-        collisions |= write_record(history, "plan-summary", timestamp, key, content)
-
     warnings = []
     if failures:
         warnings.append("Plan history used unlinked storage: " + ", ".join(failures))
     if collisions:
         warnings.append("Plan history preserved different content for the same event identity")
     return warnings
+
+
+def save_transcript_plan(event: dict[str, object]) -> list[str]:
+    captured = transcript_plan(event)
+    return save_plan(captured) if captured is not None else []
 
 event = json.load(sys.stdin)
 
@@ -281,15 +371,33 @@ elif event.get("hook_event_name") == "Stop":
     )
     print(json.dumps(output, separators=(",", ":")))
 elif event.get("hook_event_name") == "UserPromptSubmit":
+    warnings = save_transcript_plan(event)
+    context = []
+    if warnings:
+        context.append("Codex Practical Kit: " + "; ".join(warnings))
     if event.get("permission_mode") == "plan":
-        print("normal mode\nUse plan-history before planning. Read and reconcile all applicable Plan history records.")
+        context.append("normal mode")
+        context.append("Use plan-history before planning. Read and reconcile all applicable Plan history records.")
+    if context:
+        print("\n".join(context))
 elif event.get("hook_event_name") == "SessionStart":
+    warnings = save_transcript_plan(event)
     context = "Codex Practical Kit is active. Read the managed AGENTS.md links that apply to this task."
     if event.get("source") == "compact":
         context += " Apply repository-knowledge before the next repository lookup. Keep it active until the task ends. Before later planning, use plan-history and reconcile all applicable records."
+    if warnings:
+        context += " Plan history warning: " + "; ".join(warnings)
     print(json.dumps({
         "hookSpecificOutput": {
             "hookEventName": "SessionStart",
             "additionalContext": context,
         }
     }, separators=(",", ":")))
+elif event.get("hook_event_name") == "SessionEnd":
+    warnings = save_transcript_plan(event)
+    output = (
+        {"systemMessage": "Codex Practical Kit: " + "; ".join(warnings)}
+        if warnings
+        else {}
+    )
+    print(json.dumps(output, separators=(",", ":")))

@@ -24,7 +24,7 @@ from pathlib import Path
 from typing import Any, Iterable
 
 KIT_ID = "codex-practical-kit"
-KIT_VERSION = "0.19.0"
+KIT_VERSION = "0.19.1"
 REPOWISE_VERSION = "0.41.0"
 UV_VERSION = "0.12.4"
 UV_INSTALLER_URL = f"https://astral.sh/uv/{UV_VERSION}/install.sh"
@@ -45,6 +45,7 @@ ROADMAP_EXCLUDE_END = "# <<< codex-practical-kit:roadmap-view <<<"
 INSTALLED_HOOK_BASENAMES = {"session_start.py"}
 MANAGED_HOOK_EVENTS = (
     "SessionStart",
+    "SessionEnd",
     "PreToolUse",
     "PostToolUse",
     "UserPromptSubmit",
@@ -371,6 +372,10 @@ def hook_command(python: Path, script: Path) -> tuple[str, str]:
     return posix, windows
 
 
+def hook_timeout(event: str) -> int:
+    return 3 if event == "SessionEnd" else 10
+
+
 def hooks_config_block(
     paths: InstallPaths, events: tuple[str, ...] = MANAGED_HOOK_EVENTS
 ) -> str:
@@ -390,7 +395,7 @@ def hooks_config_block(
             f"command = {toml_string(command)}",
             f"commandWindows = {toml_string(command_windows)}",
             'statusMessage = "Loading practical defaults"',
-            "timeout = 10",
+            f"timeout = {hook_timeout(event)}",
         ])
         if event in CONTEXT_HOOK_EVENTS:
             lines.append("additionalContextLimit = 1200")
@@ -415,7 +420,6 @@ def configured_hook_events(paths: InstallPaths, text: str) -> set[str]:
         "command": command,
         "commandWindows": command_windows,
         "statusMessage": "Loading practical defaults",
-        "timeout": 10,
     }
     hooks = config.get("hooks", {})
     return {
@@ -429,6 +433,7 @@ def configured_hook_events(paths: InstallPaths, text: str) -> set[str]:
             )
             and
             all(handler.get(key) == value for key, value in expected.items())
+            and handler.get("timeout") == hook_timeout(event)
             and (
                 handler.get("additionalContextLimit") == 1200
                 if event in CONTEXT_HOOK_EVENTS

@@ -161,7 +161,14 @@ class InstallerTests(unittest.TestCase):
             hooks = tomllib.loads(config_text)["hooks"]
             self.assertEqual(
                 set(hooks),
-                {"PreToolUse", "PostToolUse", "SessionStart", "UserPromptSubmit", "Stop"},
+                {
+                    "PreToolUse",
+                    "PostToolUse",
+                    "SessionStart",
+                    "SessionEnd",
+                    "UserPromptSubmit",
+                    "Stop",
+                },
             )
             self.assertEqual(
                 hooks["PreToolUse"][0]["hooks"][0]["command"],
@@ -170,8 +177,11 @@ class InstallerTests(unittest.TestCase):
             self.assertEqual(hooks["PreToolUse"][1]["matcher"], "^apply_patch$")
             self.assertEqual(hooks["PostToolUse"][0]["matcher"], "^apply_patch$")
             self.assertEqual(len(hooks["SessionStart"]), 1)
+            self.assertEqual(len(hooks["SessionEnd"]), 1)
             self.assertEqual(len(hooks["UserPromptSubmit"]), 1)
             self.assertEqual(len(hooks["Stop"]), 1)
+            self.assertEqual(hooks["SessionEnd"][0]["hooks"][0]["timeout"], 3)
+            self.assertEqual(hooks["SessionStart"][0]["hooks"][0]["timeout"], 10)
             self.assertEqual(
                 hooks["SessionStart"][0]["hooks"][0]["additionalContextLimit"], 1200
             )
@@ -180,6 +190,9 @@ class InstallerTests(unittest.TestCase):
             )
             self.assertNotIn(
                 "additionalContextLimit", hooks["Stop"][0]["hooks"][0]
+            )
+            self.assertNotIn(
+                "additionalContextLimit", hooks["SessionEnd"][0]["hooks"][0]
             )
             self.assertNotIn(
                 "additionalContextLimit", hooks["PreToolUse"][1]["hooks"][0]
@@ -566,6 +579,8 @@ class InstallerTests(unittest.TestCase):
 
 
 class PlanHistoryHookTests(unittest.TestCase):
+    FIXTURE = ROOT / "tests" / "fixtures" / "codex-0.149-plan-acceptance.jsonl"
+
     def run_hook(self, event: dict, *, codex_home: Path | None = None):
         env = os.environ.copy()
         if codex_home is not None:
@@ -589,6 +604,28 @@ class PlanHistoryHookTests(unittest.TestCase):
             "last_assistant_message": message,
         }
 
+    def transcript_event(self, root: Path, name: str, source: str | None = None) -> dict:
+        event = {
+            "hook_event_name": name,
+            "permission_mode": "default",
+            "session_id": "new-session",
+            "turn_id": "acceptance-turn",
+            "cwd": str(root),
+            "transcript_path": str(self.FIXTURE),
+            "prompt": "Implement the plan.",
+        }
+        if source is not None:
+            event["source"] = source
+        return event
+
+    def fixture_message(self) -> str:
+        for line in self.FIXTURE.read_text(encoding="utf-8").splitlines():
+            record = json.loads(line)
+            payload = record.get("payload", {})
+            if payload.get("phase") == "final_answer":
+                return payload["content"][0]["text"]
+        self.fail("fixture has no final Plan response")
+
     def test_plan_history_preserves_exact_bytes_and_event_identity(self):
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
@@ -597,7 +634,7 @@ class PlanHistoryHookTests(unittest.TestCase):
             spec.parent.mkdir()
             spec.write_text("# Feature\n", encoding="utf-8")
             message = (
-                "<proposed_plan>\n# Café plan\n"
+                "<proposed_plan>\n# Café plan\nDiscuss `<proposed_plan>` safely.\n"
                 "<!-- cpk-plan-spec: docs/feature[1].md -->\n"
                 "</proposed_plan>"
             )
@@ -616,6 +653,9 @@ class PlanHistoryHookTests(unittest.TestCase):
             self.assertEqual(len(records), 1)
             self.assertEqual(records[0].read_bytes(), message.encode("utf-8"))
             self.assertNotIn("/", records[0].name)
+            history = list((root / ".agent" / "plan-history").glob("*.md"))
+            self.assertEqual(len(history), 1)
+            self.assertEqual(history[0].read_bytes(), message.encode("utf-8"))
 
             changed = message.replace("Café", "Changed")
             collision = self.run_hook(self.stop_event(root, changed))
@@ -717,6 +757,141 @@ class PlanHistoryHookTests(unittest.TestCase):
             records = list((codex_home / "plan-history").rglob("*.md"))
             self.assertEqual(len(records), 1)
             self.assertEqual(records[0].read_bytes(), message.encode())
+
+    def test_acceptance_and_session_events_capture_the_real_rollout_shape(self):
+        message = self.fixture_message()
+        cases = (
+            ("UserPromptSubmit", None),
+            ("SessionStart", "resume"),
+            ("SessionStart", "compact"),
+            ("SessionStart", "clear"),
+            ("SessionEnd", None),
+        )
+        for name, source in cases:
+            with self.subTest(name=name, source=source), tempfile.TemporaryDirectory() as temp:
+                root = Path(temp)
+                GitFixture(root)
+                spec = root / "docs" / "feature.md"
+                spec.parent.mkdir()
+                spec.write_text("# Feature\n", encoding="utf-8")
+
+                result = self.run_hook(self.transcript_event(root, name, source))
+
+                history = list((root / ".agent" / "plan-history").glob("*.md"))
+                siblings = list(spec.parent.glob("feature.plan-summary.*.md"))
+                self.assertEqual(len(history), 1)
+                self.assertEqual(len(siblings), 1)
+                self.assertEqual(history[0].read_bytes(), message.encode())
+                self.assertEqual(siblings[0].read_bytes(), message.encode())
+                if name == "SessionStart":
+                    output = json.loads(result.stdout)
+                    self.assertEqual(
+                        output["hookSpecificOutput"]["hookEventName"], "SessionStart"
+                    )
+                    self.assertIn("Codex Practical Kit is active", result.stdout)
+                elif name == "SessionEnd":
+                    self.assertEqual(result.stdout, "{}\n")
+                else:
+                    self.assertEqual(result.stdout, "")
+
+    def test_transcript_capture_uses_only_the_newest_completed_turn(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            GitFixture(root)
+            transcript = root / "rollout.jsonl"
+            transcript.write_bytes(
+                b"not-json\n" * 100_000
+                + self.FIXTURE.read_bytes()
+                + json.dumps(
+                    {
+                        "type": "event_msg",
+                        "payload": {
+                            "type": "task_complete",
+                            "turn_id": "newer-default",
+                            "last_agent_message": "done",
+                        },
+                    }
+                ).encode()
+                + b"\n"
+            )
+            event = self.transcript_event(root, "UserPromptSubmit")
+            event["transcript_path"] = str(transcript)
+
+            self.assertEqual(self.run_hook(event).stdout, "")
+            self.assertFalse((root / ".agent" / "plan-history").exists())
+
+    def test_transcript_capture_accepts_crlf_and_is_idempotent_with_stop(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            GitFixture(root)
+            spec = root / "docs" / "feature.md"
+            spec.parent.mkdir()
+            spec.write_text("# Feature\n", encoding="utf-8")
+            transcript = root / "rollout.jsonl"
+            transcript.write_bytes(self.FIXTURE.read_bytes().replace(b"\n", b"\r\n"))
+            event = self.transcript_event(root, "UserPromptSubmit")
+            event["transcript_path"] = str(transcript)
+
+            self.run_hook(event)
+            message = self.fixture_message()
+            stop = self.stop_event(root, message, "plan-turn")
+            stop["session_id"] = "thread-observed"
+            self.run_hook(stop)
+
+            self.assertEqual(
+                len(list((root / ".agent" / "plan-history").glob("*.md"))), 1
+            )
+            self.assertEqual(len(list(spec.parent.glob("feature.plan-summary.*.md"))), 1)
+
+    def test_transcript_capture_rejects_incomplete_plan_shapes(self):
+        lines = self.FIXTURE.read_text(encoding="utf-8").splitlines()
+        variants = {
+            "missing Plan item": lines[1:],
+            "missing final response": lines[:1] + lines[2:],
+            "incomplete envelope": [
+                line.replace("\\n</proposed_plan>", "") if index == 1 else line
+                for index, line in enumerate(lines)
+            ],
+        }
+        for name, content in variants.items():
+            with self.subTest(name=name), tempfile.TemporaryDirectory() as temp:
+                root = Path(temp)
+                GitFixture(root)
+                transcript = root / "rollout.jsonl"
+                transcript.write_text("\n".join(content) + "\n", encoding="utf-8")
+                event = self.transcript_event(root, "UserPromptSubmit")
+                event["transcript_path"] = str(transcript)
+
+                self.assertEqual(self.run_hook(event).stdout, "")
+                self.assertFalse((root / ".agent" / "plan-history").exists())
+
+    def test_transcript_association_warnings_preserve_each_hook_output(self):
+        fixture = self.FIXTURE.read_text(encoding="utf-8").replace(
+            "docs/feature.md", "../missing.md"
+        )
+        for name, source in (
+            ("UserPromptSubmit", None),
+            ("SessionStart", "clear"),
+            ("SessionEnd", None),
+        ):
+            with self.subTest(name=name), tempfile.TemporaryDirectory() as temp:
+                root = Path(temp)
+                GitFixture(root)
+                transcript = root / "rollout.jsonl"
+                transcript.write_text(fixture, encoding="utf-8")
+                event = self.transcript_event(root, name, source)
+                event["transcript_path"] = str(transcript)
+
+                result = self.run_hook(event)
+
+                self.assertEqual(
+                    len(list((root / ".agent" / "plan-history").glob("*.md"))), 1
+                )
+                self.assertIn("../missing.md", result.stdout)
+                if name in {"SessionStart", "SessionEnd"}:
+                    json.loads(result.stdout)
+                if name == "SessionStart":
+                    self.assertIn("Codex Practical Kit is active", result.stdout)
 
 
 class RoadmapViewHookTests(unittest.TestCase):
@@ -2255,9 +2430,9 @@ class IntegrationTests(unittest.TestCase):
         self.assertIn("`pwsh -File .\\doctor.ps1`", publication)
         self.assertIn("from the reviewed candidate", publication)
         self.assertIn("`Result: ready`", publication)
-        self.assertEqual(kit.KIT_VERSION, "0.19.0")
-        self.assertNotIn("Version `0.19.0`", (ROOT / "README.md").read_text())
-        self.assertNotIn("version 0.19.0", (ROOT / "CODEX-INSTALL-PROMPT.md").read_text())
+        self.assertEqual(kit.KIT_VERSION, "0.19.1")
+        self.assertNotIn("Version `0.19.1`", (ROOT / "README.md").read_text())
+        self.assertNotIn("version 0.19.1", (ROOT / "CODEX-INSTALL-PROMPT.md").read_text())
 
     def test_windows_launchers_and_runtime_are_complete_distribution_artifacts(self):
         shell_paths = {path.relative_to(ROOT) for path in ROOT.rglob("*.sh")}
@@ -2315,6 +2490,8 @@ class IntegrationTests(unittest.TestCase):
         self.assertIn("plan-history", kit.CUSTOM_SKILLS)
         self.assertIn("cpk-rule-owner: plan-history", skill)
         self.assertIn("Read every file in `.agent/plan-history/`", skill)
+        self.assertIn("before the next submitted prompt continues", skill)
+        self.assertIn("Every repository Plan capture has a record", skill)
         self.assertIn("Do not trust a RepoWise match limit", skill)
         self.assertIn("Do not continue with partial history", skill)
         self.assertIn("same event key and identical bytes", skill)

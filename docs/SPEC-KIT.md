@@ -30,6 +30,6 @@ Apply [Rule ownership](../assets/skills/toolkit-maintainer/SKILL.md).
 When Spec Kit supplies the behavior specification:
 
 - Its specification is the durable behavior source.
-- Plan Mode summaries remain as immutable sibling records for later reconciliation.
+- Plan Mode summaries remain as immutable repository records and specification siblings for later reconciliation.
 - The task ExecPlan records implementation decisions and progress.
 - Applicable managed skills link from AGENTS.

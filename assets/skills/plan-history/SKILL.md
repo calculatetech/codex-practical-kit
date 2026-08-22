@@ -11,10 +11,18 @@ description: >
 <!-- cpk-rule-guard: Read every applicable Plan history record before later planning. -->
 <!-- cpk-rule-guard: A completed Plan Mode response declares every known related specification or explicitly declares none. -->
 <!-- cpk-rule-guard: Stop planning when retained decisions conflict without a recorded supersession. -->
+<!-- cpk-rule-guard: Save a completed Plan before the next submitted prompt continues. -->
+<!-- cpk-rule-guard: Every repository Plan capture has a record in `.agent/plan-history/`. -->
 
 # Plan history
 
 Plan history is immutable source evidence. An ExecPlan remains the only mutable implementation plan.
+
+## Capture
+
+Save a completed Plan before the next submitted prompt continues. Session start and session end also recover the newest completed Plan.
+
+Every repository Plan capture has a record in `.agent/plan-history/`. Valid specification markers also create exact sibling records.
 
 ## Before planning
 
