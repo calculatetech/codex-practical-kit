@@ -2432,6 +2432,9 @@ class IntegrationTests(unittest.TestCase):
         packet = (root / "references" / "review-packet.md").read_text()
         finding = (root / "references" / "finding-format.md").read_text()
         lenses = (root / "references" / "reviewer-lenses.md").read_text()
+        lifecycle = (
+            ROOT / "assets" / "skills" / "delivery-lifecycle" / "references" / "delivery-lifecycle.md"
+        ).read_text()
 
         self.assertIn("`git write-tree`", review)
         self.assertIn("review only the staged-tree delta and its direct impact", review)
@@ -2441,12 +2444,24 @@ class IntegrationTests(unittest.TestCase):
         self.assertIn("Run the coherence pass once", review)
         self.assertIn("A clean fix delta before coherence is an intermediate result", review)
         self.assertIn("clean delta review of a coherence correction", review)
+        self.assertIn("`checkpoint`: Compare the current staged tree", review)
+        self.assertIn("Do not reopen unchanged completed work", review)
+        self.assertIn("always ends with one coherence pass", review)
+        self.assertIn("production-code-defect count across every checkpoint", review)
+        self.assertIn("clean delta review of its correction", review)
+        self.assertIn("This result permits its planned local commit", review)
         self.assertIn("Previous reviewed tree", packet)
+        self.assertIn("Stable subtask identifier", packet)
+        self.assertIn("Previous accepted checkpoint", packet)
         self.assertIn("Pre-stage tracked-change classification", packet)
         self.assertIn("Checkpoint invalidation reason", packet)
-        self.assertIn('"review_mode": "full | delta | coherence"', finding)
+        self.assertIn('"review_mode": "full | checkpoint | delta | coherence"', finding)
         self.assertIn("## Delta correctness", lenses)
+        self.assertIn("## Checkpoint correctness", lenses)
         self.assertIn("## Final coherence", lenses)
+        self.assertIn("local checkpoint commit after Adversarial Review records", lifecycle)
+        self.assertIn("Keep the task and roadmap Active", lifecycle)
+        self.assertIn("does not authorize review closure", lifecycle)
 
     def test_lifecycle_skills_and_version(self):
         publication = (

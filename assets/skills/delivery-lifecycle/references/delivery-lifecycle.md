@@ -24,9 +24,11 @@ Finalize substantive documentation before review.
 
 Run Adversarial Review after source, tests, dependencies, migrations, configuration, or substantive documentation changes.
 
-Do not start review after a commit, push, pull request, or CI action. Report a missed pre-commit review.
+Do not start review of a candidate after its commit, push, pull request, or CI action. Report a missed pre-commit review.
 
-After clean review, apply Review Closure.
+After a final clean review, apply Review Closure.
+
+A planned subtask can receive a local checkpoint commit after Adversarial Review records its clean checkpoint result. Keep the task and roadmap Active. The checkpoint does not authorize review closure, push, merge, tag, release, or publication.
 
 Freeze every tracked task record before the task commit, CI, push, pull request, merge, or publication.
 

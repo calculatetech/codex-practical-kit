@@ -13,6 +13,7 @@ license: MIT
 <!-- cpk-rule-guard: Tests, test fixtures, documentation, static configuration, dependencies, manifests, and review housekeeping never increment or reset the count and never trigger a review stop. -->
 <!-- cpk-rule-guard: After a full review finds defects, later correctness passes review only the staged-tree delta and its direct impact. -->
 <!-- cpk-rule-guard: Run one cumulative coherence pass after fix deltas are clean. Do not repeat local correctness review of unchanged code. -->
+<!-- cpk-rule-guard: A checkpoint review covers one planned subtask since the previous accepted checkpoint and does not trigger review closure. -->
 
 # Adversarial review
 
@@ -48,20 +49,29 @@ Stage the complete candidate. Require `git diff --quiet` to succeed so no tracke
 Use these review modes:
 
 - `full`: Review the complete task diff from its base to the staged tree.
+- `checkpoint`: Compare the current staged tree with the previous accepted checkpoint. Review the current planned subtask, its direct dependencies, and its interactions with completed checkpoints. Do not reopen unchanged completed work.
 - `delta`: Compare the last reviewed tree with the current staged tree. Review the changed lines, their owners, direct callers and callees, affected tests, and prior findings.
 - `coherence`: Review interactions across the complete task diff after all fix deltas are clean.
+
+A checkpoint review covers one planned subtask since the previous accepted checkpoint and does not trigger review closure.
 
 After a full review finds defects, later correctness passes review only the staged-tree delta and its direct impact.
 
 A delta reviewer does not reopen unchanged code. It can inspect unchanged context only when the delta changes its contract or execution path. A requirement, scope, base, supported-model, or unrelated tracked-file change invalidates the checkpoint and requires a new full review.
 
-If the first full review is clean, finish without a coherence pass.
+If a task has one review boundary and its first full review is clean, finish without a coherence pass. A task with reviewed subtask checkpoints always ends with one coherence pass across the complete task diff.
 
 Run one cumulative coherence pass after fix deltas are clean. Do not repeat local correctness review of unchanged code.
 
 The coherence reviewer checks cross-component interactions and unresolved findings only. Run the coherence pass once. If it finds a defect, review that correction in delta mode and do not repeat coherence.
 
-A clean fix delta before coherence is an intermediate result and does not trigger review closure. Final clean results are a clean first full review, a clean coherence review, or the clean delta review of a coherence correction.
+A clean checkpoint review is an intermediate result. A clean fix delta before coherence is an intermediate result. Neither result triggers review closure or roadmap completion.
+
+A checkpoint has a clean result after its clean checkpoint review or the clean delta review of its correction. This result permits its planned local commit.
+
+Final clean results are a clean first full review for a task with one review boundary, a clean coherence review, or the clean delta review of a coherence correction.
+
+Use delta mode for corrections to the current checkpoint. Keep the consecutive production-code-defect count across every checkpoint, delta, and coherence pass in the task.
 
 Give the reviewer:
 
@@ -73,6 +83,7 @@ Give the reviewer:
 - Completed checks.
 - The supported model and explicit exclusions.
 - The review mode, base revision, previous reviewed tree, and current staged tree.
+- For checkpoint mode, the stable subtask identifier and previous accepted checkpoint.
 - Prior validated findings and their current disposition.
 - The accepted scenario mapping with its production paths, required oracles, runnable checks, and results.
 

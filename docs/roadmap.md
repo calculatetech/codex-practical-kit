@@ -13,7 +13,7 @@ Status legend:
 
 ## Active
 
-No task is active.
+- 🎯 **CPK-042 — Split large plans into reviewed checkpoints.** Divide large Plan Mode work at semantic proof boundaries, review each subtask before its local commit, and run one final coherence review.
 
 ## Planned next
 

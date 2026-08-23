@@ -23,6 +23,10 @@ Apply [Scenario discrimination](../../design-preflight/references/scenario-discr
 
 Inspect the candidate slice, direct-impact sources, and prior findings named in the review packet.
 
+## Checkpoint correctness
+
+Inspect the current subtask delta, its direct dependencies, and its interactions with completed checkpoints. Do not reopen unchanged completed work.
+
 ## Final coherence
 
 Inspect the cross-component interactions, transition-closed scenario mappings, and unresolved findings named in the review packet.

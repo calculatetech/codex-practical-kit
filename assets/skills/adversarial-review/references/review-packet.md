@@ -8,7 +8,7 @@ Quote or link the accepted requirement, ExecPlan, specification, or user request
 
 ## Scope
 
-- Review mode: `full | delta | coherence`
+- Review mode: `full | checkpoint | delta | coherence`
 - Base revision:
 - Previous reviewed tree, or `none`:
 - Current staged tree:
@@ -18,6 +18,8 @@ Quote or link the accepted requirement, ExecPlan, specification, or user request
 
 ## Checkpoint
 
+- Stable subtask identifier, or `none`:
+- Previous accepted checkpoint, or `none`:
 - Pre-stage tracked-change classification:
 - `git diff --quiet` result:
 - Prior validated findings:

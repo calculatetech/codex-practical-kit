@@ -12,7 +12,7 @@ Return JSON only.
 ```json
 {
   "reviewer": "correctness",
-  "review_mode": "full | delta | coherence",
+  "review_mode": "full | checkpoint | delta | coherence",
   "findings": [
     {
       "id": "R1",
