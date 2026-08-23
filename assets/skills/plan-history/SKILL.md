@@ -53,6 +53,16 @@ If these fields are absent or incomplete, stop planning and ask the user to reso
 
 Stop planning when retained decisions conflict without a recorded supersession.
 
+## Replan checkpointed work
+
+Before a replan, read the current ExecPlan, every applicable Plan record, and the completed checkpoint history in Git.
+
+Keep completed subtask identifiers, outcomes, accepted contracts, and commits unchanged. Split, merge, reorder, or replace only unfinished subtasks. Never amend or rewrite a completed checkpoint commit.
+
+If a new requirement changes completed behavior, add a new corrective subtask. Do not rewrite the completed subtask.
+
+When a new Plan replaces only unfinished work, record a scoped supersession. Use the normal supersession fields. Add `Scope: unfinished subtasks <stable identifiers>`. Keep all decisions outside that scope as carried.
+
 When the user resolves a conflict in Plan Mode, put these fields in `Prior plan reconciliation`. The new immutable record becomes the durable resolution. During implementation, update `Plan deviations` in the specification or ExecPlan before code changes.
 
 If history exists, each completed later plan contains a concise `Prior plan reconciliation` section. Mark each applicable record as `carried` or `superseded`.

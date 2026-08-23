@@ -657,6 +657,16 @@ class PlanHistoryHookTests(unittest.TestCase):
             self.assertEqual(len(history), 1)
             self.assertEqual(history[0].read_bytes(), message.encode("utf-8"))
 
+            replan = message.replace("Café plan", "Café replan")
+            self.run_hook(self.stop_event(root, replan, "turn-2"))
+            records = [
+                path
+                for path in spec.parent.glob("*.plan-summary.*.md")
+                if path.name.startswith("feature[1].plan-summary.")
+            ]
+            self.assertEqual(len(records), 2)
+            self.assertEqual({path.read_bytes() for path in records}, {message.encode(), replan.encode()})
+
             changed = message.replace("Café", "Changed")
             collision = self.run_hook(self.stop_event(root, changed))
             records = [
@@ -664,12 +674,15 @@ class PlanHistoryHookTests(unittest.TestCase):
                 for path in spec.parent.glob("*.plan-summary.*.md")
                 if path.name.startswith("feature[1].plan-summary.")
             ]
-            self.assertEqual(len(records), 2)
+            self.assertEqual(len(records), 3)
             self.assertIn("same event identity", json.loads(collision.stdout)["systemMessage"])
-            self.assertEqual({path.read_bytes() for path in records}, {message.encode(), changed.encode()})
+            self.assertEqual(
+                {path.read_bytes() for path in records},
+                {message.encode(), replan.encode(), changed.encode()},
+            )
 
             with_newline = message + "\n"
-            self.run_hook(self.stop_event(root, with_newline, "turn-2"))
+            self.run_hook(self.stop_event(root, with_newline, "turn-3"))
             self.assertIn(
                 with_newline.encode(),
                 {
@@ -2435,6 +2448,8 @@ class IntegrationTests(unittest.TestCase):
         lifecycle = (
             ROOT / "assets" / "skills" / "delivery-lifecycle" / "references" / "delivery-lifecycle.md"
         ).read_text()
+        docs = (ROOT / "assets" / "skills" / "docs-maintainer" / "SKILL.md").read_text()
+        roadmap = (ROOT / "assets" / "skills" / "roadmap-maintainer" / "SKILL.md").read_text()
 
         self.assertIn("`git write-tree`", review)
         self.assertIn("review only the staged-tree delta and its direct impact", review)
@@ -2462,6 +2477,44 @@ class IntegrationTests(unittest.TestCase):
         self.assertIn("local checkpoint commit after Adversarial Review records", lifecycle)
         self.assertIn("Keep the task and roadmap Active", lifecycle)
         self.assertIn("does not authorize review closure", lifecycle)
+        self.assertIn("after Adversarial Review records a final clean result", docs)
+        self.assertIn("After Adversarial Review records a final clean result", roadmap)
+
+    def test_execplans_split_semantically_and_replans_preserve_checkpoints(self):
+        plans = (ROOT / ".agent" / "PLANS.md").read_text()
+        history = (ROOT / "assets" / "skills" / "plan-history" / "SKILL.md").read_text()
+
+        self.assertIn("Split an ExecPlan at semantic proof boundaries", plans)
+        self.assertIn("Do not use a numeric action limit", plans)
+        for trigger in (
+            "user-visible outcomes",
+            "primary code owners",
+            "foundation from its consumers",
+            "migration from later adoption",
+            "interface from later consumers",
+        ):
+            self.assertIn(trigger, plans)
+        self.assertIn("atomic migration or one stateful sequence", plans)
+        self.assertIn("Give each subtask a stable identifier", plans)
+        self.assertIn("Do not renumber a completed subtask", plans)
+        for required_fact in (
+            "observable outcome",
+            "primary owner",
+            "allowed change boundary",
+            "dependencies on earlier subtasks",
+            "implementation result",
+            "exact validation command and required oracle",
+            "checkpoint review boundary and local commit boundary",
+        ):
+            self.assertIn(required_fact, plans)
+        self.assertIn("one final coherence review across the complete task", plans)
+
+        self.assertIn("current ExecPlan, every applicable Plan record", history)
+        self.assertIn("completed checkpoint history in Git", history)
+        self.assertIn("Split, merge, reorder, or replace only unfinished subtasks", history)
+        self.assertIn("Never amend or rewrite a completed checkpoint commit", history)
+        self.assertIn("add a new corrective subtask", history)
+        self.assertIn("Scope: unfinished subtasks <stable identifiers>", history)
 
     def test_lifecycle_skills_and_version(self):
         publication = (
@@ -2483,9 +2536,9 @@ class IntegrationTests(unittest.TestCase):
         self.assertIn("`pwsh -File .\\doctor.ps1`", publication)
         self.assertIn("from the reviewed candidate", publication)
         self.assertIn("`Result: ready`", publication)
-        self.assertEqual(kit.KIT_VERSION, "0.20.0")
-        self.assertNotIn("Version `0.20.0`", (ROOT / "README.md").read_text())
-        self.assertNotIn("version 0.20.0", (ROOT / "CODEX-INSTALL-PROMPT.md").read_text())
+        self.assertEqual(kit.KIT_VERSION, "0.21.0")
+        self.assertNotIn("Version `0.21.0`", (ROOT / "README.md").read_text())
+        self.assertNotIn("version 0.21.0", (ROOT / "CODEX-INSTALL-PROMPT.md").read_text())
 
     def test_windows_launchers_and_runtime_are_complete_distribution_artifacts(self):
         shell_paths = {path.relative_to(ROOT) for path in ROOT.rglob("*.sh")}

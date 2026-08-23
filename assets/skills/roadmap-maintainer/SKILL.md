@@ -81,7 +81,7 @@ If review finds a validated defect, keep the task Active. Make the correction an
 
 ## Close a reviewed task
 
-After a clean review, move the reviewed Active task to one terminal section.
+After Adversarial Review records a final clean result, move the reviewed Active task to one terminal section.
 
 1. Use Completed when no accepted limitation remains.
 2. Use Accepted residual risk when bounded work is complete and the user accepts a documented limitation.
@@ -89,7 +89,7 @@ After a clean review, move the reviewed Active task to one terminal section.
 4. Never put one identifier in more than one terminal section.
 5. Reread the complete roadmap and make sure that no task is incorrectly Active.
 
-Apply [Review closure](../adversarial-review/references/review-closure.md) after a clean review.
+Apply [Review closure](../adversarial-review/references/review-closure.md) after that final clean result.
 
 Publication does not change roadmap state.
 

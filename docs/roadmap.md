@@ -13,7 +13,7 @@ Status legend:
 
 ## Active
 
-- 🎯 **CPK-042 — Split large plans into reviewed checkpoints.** Divide large Plan Mode work at semantic proof boundaries, review each subtask before its local commit, and run one final coherence review.
+No task is active.
 
 ## Planned next
 
@@ -33,6 +33,7 @@ No residual risk is accepted.
 
 ## Completed
 
+- ✅ **CPK-042 — Split large plans into reviewed checkpoints.** Large Plans now use stable semantic subtasks, reviewed local checkpoints, safe replanning, and one final coherence review.
 - ✅ **CPK-041 — Explain code consequences before decisions.** Material technical choices now show the visible result, implementation shape, source, new moving parts, and maintenance effects before the choice tool.
 - ✅ **CPK-040 — Save Plans at acceptance.** The next prompt saves the completed Plan before the managed prompt hook completes. The managed `SessionEnd` timeout now meets the Codex limit.
 - ✅ **CPK-039 — Add native Windows compatibility.** Add PowerShell 7 entry points and make the required RepoWise runtime work without a POSIX shell. Native Windows validation passed at `d5957f81b61893934a046446d8fdf0f8cf62c7c8`.

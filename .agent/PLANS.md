@@ -1,5 +1,6 @@
 <!-- cpk-rule-owner: execplans -->
 <!-- cpk-rule-guard: An ExecPlan is the only durable implementation plan for a task. -->
+<!-- cpk-rule-guard: Split an ExecPlan at semantic proof boundaries, not at a numeric action limit. -->
 
 # Codex Execution Plans (ExecPlans):
 
@@ -76,6 +77,20 @@ Capture evidence. When your steps produce terminal output, short diffs, or logs,
 Milestones are narrative, not bureaucracy. If you break the work into milestones, introduce each with a brief paragraph that describes the scope, what will exist at the end of the milestone that did not exist before, the commands to run, and the acceptance you expect to observe. Keep it readable as a story: goal, work, result, proof. Progress and milestones are distinct: milestones tell the story, progress tracks granular work. Both must exist. Never abbreviate a milestone merely for the sake of brevity, do not leave out details that could be crucial to a future implementation.
 
 Each milestone must be independently verifiable and incrementally implement the overall goal of the execution plan.
+
+### Semantic subtasks and checkpoint boundaries
+
+Split an ExecPlan at semantic proof boundaries, not at a numeric action limit.
+
+Use multiple ordered subtasks when the work has outcomes that can remain valid and receive separate proof. Separate user-visible outcomes and primary code owners when they can change independently. Separate a foundation from its consumers when the foundation has a useful, verifiable contract. Separate a migration from later adoption when each stage can leave the product valid. Separate an interface from later consumers when the interface can remain valid by itself.
+
+Keep one subtask when an atomic migration or one stateful sequence needs one proof boundary. Do not split work by an action count. Do not use a numeric action limit.
+
+Use one ExecPlan for the task. Do not create child ExecPlans. Give each subtask a stable identifier. Do not renumber a completed subtask.
+
+For each subtask, state its observable outcome and primary owner. State the allowed change boundary and its dependencies on earlier subtasks. State the implementation result. Give the exact validation command and required oracle. State the checkpoint review boundary and local commit boundary.
+
+Complete each subtask with its focused validation and checkpoint review before its planned local commit. Keep the roadmap task active between checkpoints. After all subtasks are complete, run one final coherence review across the complete task.
 
 ## Living plans and design decisions
 

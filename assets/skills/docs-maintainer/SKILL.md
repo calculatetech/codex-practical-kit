@@ -34,7 +34,7 @@ Keep the documentation true. Do not write documentation to prove that you wrote 
 7. Keep code, commands, paths, identifiers, and quoted errors exact.
 8. Make sure that examples can still run as written.
 9. Apply [Delivery lifecycle](../delivery-lifecycle/references/delivery-lifecycle.md).
-10. Apply [Review closure](../adversarial-review/references/review-closure.md) after a clean review.
+10. Apply [Review closure](../adversarial-review/references/review-closure.md) after Adversarial Review records a final clean result.
 
 ## RepoWise
 

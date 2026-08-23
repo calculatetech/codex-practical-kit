@@ -12,7 +12,7 @@ Plan Mode must divide large work at independently verifiable boundaries. One Exe
 - [x] (2026-08-23) Created branch `cpk-042-large-plan-checkpoints` from `0013a3c0d3c777514e9315ae46b7bd17f471962e`.
 - [x] (2026-08-23) Made CPK-042 the only Active roadmap task.
 - [x] (2026-08-23) CP1: Added checkpoint review and delivery rules. Validation and the correction delta review passed.
-- [ ] CP2: Add semantic plan splitting and safe replanning, validate them, review them, run final coherence, and create a local commit.
+- [x] (2026-08-23) CP2: Added semantic plan splitting and safe replanning. Validation, checkpoint review, live smokes, and final coherence passed.
 
 ## Prior Plan Reconciliation
 
@@ -78,9 +78,13 @@ Primary owner and change boundary: `.agent/PLANS.md` owns subtask structure. Pla
 
 Dependencies: CP1 checkpoint review and commit rules.
 
-Implementation result: Pending.
+Implementation result: `.agent/PLANS.md` defines semantic split triggers, stable subtask facts, and checkpoint proof boundaries. Plan History preserves completed checkpoints and scopes replans to unfinished work. The toolkit version is `0.21.0`.
 
-Validation and oracle: Run focused plan-rule and history tests, the complete suite, compilation, shell syntax, owner, route, manifest, and diff checks. Install the toolkit, require Doctor `Result: ready`, then run one clean planning smoke and one completed-checkpoint replan smoke.
+Validation and oracle: The focused plan, history, owner, and version checks passed. All 81 default checks passed, with one native Windows skip. Shell syntax and `git diff --check` passed. The live install used version `0.21.0`, and Doctor reported `Result: ready`. The first planning smoke produced one checkpointed ExecPlan. The clean replan smoke preserved the completed checkpoint, scoped supersession to unfinished work, and added a corrective subtask.
+
+Checkpoint review result: Clean. The reviewer checked CP2 against commit `1200a8d2622ba4bf418ec7b7bdd03adf60012f8d` and found no defects.
+
+Coherence result: The coherence pass found that two lifecycle consumers could treat an intermediate checkpoint as final. Docs Maintainer and Roadmap Maintainer now require Adversarial Review's final clean result. The correction delta review was clean.
 
 Checkpoint boundary: Review CP2 against the accepted CP1 commit. After it passes, run one cumulative coherence review from the task base. Close the task and commit locally only after both reviews pass.
 
@@ -94,4 +98,6 @@ The review mode enum gains `checkpoint`. Its packet gains the subtask identifier
 
 ## Outcome
 
-Pending.
+Version `0.21.0` splits large Plans at semantic proof boundaries. Stable subtasks receive focused review and local checkpoints. Replanning preserves completed work and changes only the unfinished tail. One final coherence review gates task closure.
+
+CP1 passed after one correction delta. CP2 passed its checkpoint review. The final coherence correction delta passed. The live planning smokes proved initial planning and completed-checkpoint replanning.
