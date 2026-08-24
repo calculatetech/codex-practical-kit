@@ -105,6 +105,11 @@ Before implementation, each retained scenario must have a planned runnable check
 
 For an initial non-runtime preflight that changes no behavioral boundary, use this same single challenge only when normal-use ownership or scope remains unclear.
 
+## Boundary trace closure
+
+<!-- cpk-rule-route-only: scenario-discrimination -->
+[Scenario discrimination](references/scenario-discrimination.md)
+
 ## Human decision
 
 <!-- cpk-rule-route-only: decision-handoffs -->

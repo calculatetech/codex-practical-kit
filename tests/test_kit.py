@@ -2404,7 +2404,7 @@ class IntegrationTests(unittest.TestCase):
         ).read_text()
 
         self.assertIn("<!-- cpk-rule-owner: scenario-discrimination -->", owner)
-        self.assertEqual(owner.count("<!-- cpk-rule-guard:"), 6)
+        self.assertEqual(owner.count("<!-- cpk-rule-guard:"), 9)
         self.assertIn("scenario-discrimination.md", preflight)
         self.assertIn("scenario-discrimination.md", card)
         self.assertIn("scenario-discrimination.md", result)
@@ -2439,6 +2439,61 @@ class IntegrationTests(unittest.TestCase):
         self.assertIn('"disposition": "mapped | non-boundary | opaque | deferred | contract-gap"', result)
         self.assertIn('"production_entry_points"', result)
         self.assertIn('"scenario_ids"', result)
+
+    def test_boundary_trace_closure_blocks_native_review(self):
+        skills = ROOT / "assets" / "skills"
+        preflight_root = skills / "design-preflight"
+        owner = (preflight_root / "references" / "scenario-discrimination.md").read_text()
+        card = (preflight_root / "references" / "preflight-card.md").read_text()
+        result = (preflight_root / "references" / "preflight-review.md").read_text()
+        preflight = (preflight_root / "SKILL.md").read_text()
+        review = (skills / "adversarial-review" / "SKILL.md").read_text()
+
+        self.assertIn("independently reconstructs the source boundary inventory", owner)
+        self.assertIn("inspects production paths and test bodies", owner)
+        self.assertIn("fixture must isolate the discriminator", owner)
+        self.assertIn("nearest wrong meaning must fail", owner)
+        self.assertIn("positive-only check", owner)
+        self.assertIn("Any false, unknown, missing, or unsupported", owner)
+        self.assertIn("change to a traced source invalidates", owner)
+        self.assertIn("unrelated documentation change does not invalidate", owner)
+        self.assertIn("Do not give the trace record to native review", owner)
+        self.assertIn('"reviewer": "boundary-trace-closure"', result)
+        for field in (
+            '"source_inventory_complete"',
+            '"entry_point"',
+            '"gates"',
+            '"enforcement_point"',
+            '"terminal_owner"',
+            '"implementation_matches"',
+            '"fixture_matches_discriminator"',
+            '"nearest_wrong_meaning_would_fail"',
+            '"both_sides_executed"',
+            '"terminal_oracle_reached"',
+        ):
+            self.assertIn(field, result)
+        self.assertNotIn("under 80 lines", card)
+        self.assertIn("Do not omit a required boundary or scenario row", card)
+        self.assertIn("## Boundary trace closure", preflight)
+        self.assertLess(review.index("## Boundary trace closure"), review.index("## Native discovery"))
+
+        forward = (ROOT / "tests" / "fixtures" / "cpk045-boundary-forward.md").read_text()
+        for evidence in (
+            "positive-only",
+            "component-only",
+            "aggregate-only",
+            "writer-report",
+        ):
+            self.assertIn(evidence, forward)
+        self.assertIn("Independently derive every behavioral boundary", forward)
+        self.assertIn("raw requirements, accepted inventory, Scenario Proof", forward)
+        self.assertIn("not the trace record or coordinator conclusions", forward)
+        self.assertIn("duplicate_prefix_omission_blocked", forward)
+        self.assertIn("equal_result_invariant_preserved", forward)
+        self.assertIn("unrelated_gate_fixture_rejected", forward)
+        self.assertIn("traced_changes_invalidate", forward)
+        self.assertIn("direct_arithmetic_can_use_exception", forward)
+        self.assertIn("all_native_review_modes_gated", forward)
 
     def test_product_scope_boundaries_gate_preflight_and_review(self):
         rules_root = ROOT / "assets" / "skills" / "design-preflight" / "references"
@@ -2612,7 +2667,7 @@ class IntegrationTests(unittest.TestCase):
         self.assertIn("`pwsh -File .\\doctor.ps1`", publication)
         self.assertIn("from the reviewed candidate", publication)
         self.assertIn("`Result: ready`", publication)
-        self.assertEqual(kit.KIT_VERSION, "0.22.0")
+        self.assertEqual(kit.KIT_VERSION, "0.23.0")
         self.assertNotIn("Version `0.22.0`", (ROOT / "README.md").read_text())
         self.assertNotIn("version 0.22.0", (ROOT / "CODEX-INSTALL-PROMPT.md").read_text())
 

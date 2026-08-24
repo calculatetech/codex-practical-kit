@@ -135,6 +135,38 @@ After the coordinator supplies the complete card and its decisions, return JSON 
 
 Empty `findings` is valid. Every finding must cite source and name the coordinator claim that it challenges.
 
+## Trace closure result
+
+After implementation and final substantive documentation, return JSON only.
+
+```json
+{
+  "reviewer": "boundary-trace-closure",
+  "source_inventory_complete": true,
+  "missing_or_unsupported": [],
+  "boundaries": [
+    {
+      "boundary_id": "B1",
+      "path_id": "P1",
+      "entry_point": "path:line",
+      "gates": ["path:line"],
+      "enforcement_point": "path:line",
+      "terminal_owner": "path:line",
+      "implementation_matches": true,
+      "fixture_matches_discriminator": true,
+      "nearest_wrong_meaning_would_fail": true,
+      "both_sides_executed": true,
+      "terminal_oracle_reached": true,
+      "check": "exact command",
+      "result": "pass"
+    }
+  ],
+  "decision": "pass"
+}
+```
+
+Apply [Scenario discrimination](scenario-discrimination.md). Any false, unknown, missing, or unsupported value makes `decision` equal `fail`.
+
 ## Supported-model classification
 
 <!-- cpk-rule-route-only: supported-model -->

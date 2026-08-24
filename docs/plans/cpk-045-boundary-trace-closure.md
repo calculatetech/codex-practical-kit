@@ -13,9 +13,9 @@ The release version is `0.23.0`. Work occurs on branch `cpk-045-boundary-trace-c
 - [x] (2026-08-24 16:47Z) Recovered and reconciled all Plan history records.
 - [x] (2026-08-24 17:05Z) Completed research and the two-phase Design Preflight challenge.
 - [x] (2026-08-24 16:56Z) CP1: Added the complete boundary inventory to Design Preflight and its checks.
-- [ ] CP1: Validate and review the first checkpoint.
-- [ ] CP2: Add trace closure before native review and its checks.
-- [ ] CP2: Finalize documentation, version, and distribution manifest.
+- [x] (2026-08-24 17:05Z) CP1: Validated and reviewed checkpoint commit `7fb115a`.
+- [x] (2026-08-24 17:14Z) CP2: Added trace closure before native review and its checks.
+- [x] (2026-08-24 17:14Z) CP2: Finalized documentation, version `0.23.0`, and the distribution manifest.
 - [ ] CP2: Validate and review the second checkpoint.
 - [ ] Run final complete-candidate review, install the toolkit, and run Doctor.
 - [ ] Close review records and the roadmap.
@@ -43,6 +43,9 @@ The release version is `0.23.0`. Work occurs on branch `cpk-045-boundary-trace-c
 - Decision: Do not provide the trace record to native review.
   Rationale: Native review remains an independent defect-discovery lens.
   Date/Author: 2026-08-24 / Codex and user.
+- Decision: Replace the preflight card's numeric line cap with a compactness rule.
+  Rationale: Multiple mandatory boundary and scenario rows cannot fit under the old limit. Required proof rows take priority.
+  Date/Author: 2026-08-24 / Codex.
 
 ## Outcomes & Retrospective
 
@@ -86,12 +89,65 @@ Preflight: ready — extend the existing Scenario Proof record and add one fresh
 | Boundary | Source | Condition or invariant | Required sides and oracle | Entry points | Scenario Proof |
 | --- | --- | --- | --- | --- | --- |
 | B1 | Accepted CPK-045 Plan, CP1 | Every authoritative clause that defines a behavioral boundary receives a disposition. | Mapped clauses enter the trace. Non-boundary, opaque, deferred, and contract-gap clauses retain an explicit disposition. An omitted later clause blocks work. | Design Preflight before implementation and accepted boundary corrections. | S1 source list with duplicate-looking prefix and later distinct clause. |
-| B2 | Accepted CPK-045 Plan, CP1 | Each boundary covers every applicable production path. | One scenario per path, or one composed scenario that proves all paths. Equal-result invariants use the nearest wrong meaning as the contrast. | Each production entry point named by B1. | S2 mapped and unmapped staging paths. S3 equal-result invariant. |
-| B3 | Accepted CPK-045 Plan, CP2 | Trace closure proves actual implementation and tests before native review. | Every boolean is true. Every path runs both boundary sides to its terminal oracle. Any missing, false, unknown, or unsupported item blocks native review. | Full, checkpoint, delta, and final review candidates when traced sources changed. | S4 positive-only failure. S5 unrelated fixture failure. S6 broader-helper failure. |
+| B2 | Accepted CPK-045 Plan, CP1 | Each boundary covers every applicable production path. | One scenario per path, or one composed scenario that proves all paths. Equal-result invariants use the nearest wrong meaning as the contrast. | Design Preflight before initial implementation and before accepted boundary corrections. | S2 mapped and unmapped staging paths. S3 equal-result invariant. |
+| B3 | Accepted CPK-045 Plan, CP2 | After implementation and final substantive documentation, one fresh read-only verifier receives every named input and independently enumerates source boundaries before it compares `B#` records. | Raw requirements, accepted inventory, Scenario Proof, diff, production source, and named tests are present. Reordered work, a reused verifier, or a missing input blocks review. | Full, checkpoint, delta, and final review candidates with a boundary inventory. | S4 positive-only failure. S5 unrelated fixture failure. S6 broader-helper failure. S10 verifier order and inputs. |
 | B4 | Accepted CPK-045 Plan, CP2 | Closure evidence remains valid only for the exact traced candidate. | A change to requirement sources, boundary records, production paths, or named tests invalidates closure. An unrelated document change does not. | Candidate preparation immediately before native review. | S7 traced change invalidates. S8 unrelated document keeps closure. |
 | B5 | User decision in the accepted Plan | A new or changed behavioral boundary cannot use the small-change exception. | Boundary change requires inventory and closure. A direct arithmetic bug with no boundary change retains the exception. | Initial work and accepted review corrections. | S9 boundary change and direct arithmetic contrast. |
+| B6 | Accepted CPK-045 Plan, CP2 | Native review remains independent from trace closure. | Native review receives the accepted intent, source, and synthetic commit. Giving it the trace record or coordinator conclusions violates the boundary. | Every native checkpoint, delta, and final review after trace closure. | S11 independent native-review input. |
 
-Source dispositions: The accepted Plan's summary and research decision are non-boundary context. CP1 maps to B1, B2, and B5. CP2 maps to B3 and B4. The Test Plan maps each B record to its direct checks. Assumptions are opaque constraints. No clause is deferred or a contract gap.
+The immutable Plan record and its byte-identical sibling copy contain one semantic clause set. Each clause has this disposition:
+
+| Source clause | Disposition | Boundary or reason |
+| --- | --- | --- |
+| Summary: the existing design is correct | non-boundary | Accepted premise. |
+| Summary: existing enforcement is incomplete | non-boundary | Problem context. |
+| Summary: Scenario Proof has no denominator | mapped | B1. |
+| Summary: no post-implementation conformance gate | mapped | B3 and B4. |
+| Version and branch | non-boundary | Delivery metadata. |
+| Research: use an external boundary trace with an evidence gate | mapped | B1 and B3. |
+| Research: surveyed traceability, evidence gates, executable properties, and intent-driven regression | non-boundary | Source evidence for the selected mechanism. |
+| Research: exclude semantic ranking, formal properties, mutation tooling, and recovery machinery | opaque | Scope ceiling; no product behavior. |
+| Research: ExecPlans do not supply a boundary-trace gate | non-boundary | Ownership context. |
+| Research: the toolkit owns the missing gate | mapped | B3. |
+| CP1: extend Scenario Discrimination; add no skill or durable plan | opaque | Ownership and implementation ceiling. |
+| CP1: enumerate every limiting, selecting, excluding, relating, or preserving requirement | mapped | B1. |
+| CP1: stable `B#` identifiers | mapped | B1. |
+| CP1: record source, condition, sides, oracles, entry points, and scenarios | mapped | B1 and B2. |
+| CP1: classify every relevant source clause | mapped | B1. |
+| CP1: inspect the complete set despite duplicate-looking clauses | mapped | B1. |
+| CP1: prove every distinct production path | mapped | B2. |
+| CP1: preserve equal-result invariants with the nearest wrong contrast | mapped | B2. |
+| CP1: boundary changes override the small-change exception | mapped | B5. |
+| CP1: store the inventory in the card, Phase 1 result, and ExecPlan | mapped | B1. |
+| CP2: run one fresh read-only verifier after implementation and final documentation | mapped | B3. |
+| CP2: give all named inputs and enumerate independently before `B#` comparison | mapped | B3. |
+| CP2: return the specified result shape | mapped | B3 and B4. |
+| CP2: false, unknown, missing, or unsupported evidence blocks review | mapped | B3. |
+| CP2: inspect test bodies and reject positive, component, aggregate, and writer evidence | mapped | B3. |
+| CP2: run immediately before review and invalidate traced changes | mapped | B4. |
+| CP2: do not send the trace record to native review | mapped | B6. |
+| Test Plan: every authoritative clause receives a disposition | mapped | B1 and S1. |
+| Test Plan: later distinct clauses survive duplicate-looking clauses | mapped | B1 and S1. |
+| Test Plan: mapped and unmapped staging outcomes | mapped | B2 and S2. |
+| Test Plan: equal-result invariants remain boundaries | mapped | B2 and S3. |
+| Test Plan: every applicable entry point receives proof | mapped | B2 and S2. |
+| Test Plan: positive-only evidence blocks review | mapped | B3 and S4. |
+| Test Plan: fixtures isolate the discriminator from unrelated gates | mapped | B3 and S5. |
+| Test Plan: broader helpers fail sensitivity | mapped | B3 and S6. |
+| Test Plan: traced documentation or implementation changes invalidate closure | mapped | B4 and S7. |
+| Test Plan: arithmetic repair without a boundary change retains the exception | mapped | B5 and S9. |
+| Test Plan: clean-context proof derives both staging cases and rejects weak evidence | mapped | B2 and B3; S2, S4, S6, and S11. |
+| Test Plan: complete toolkit validation | non-boundary | Delivery validation. |
+| Test Plan: use reviewed CP1 and CP2 checkpoints and one final review | non-boundary | Delivery sequencing. |
+| Test Plan: install the reviewed candidate and require Doctor ready | non-boundary | Delivery validation. |
+| Assumptions: no formal completeness, parser, or coverage percentage | opaque | Explicit mechanism ceiling. |
+| Assumptions: the fresh verifier is the semantic gate | mapped | B3. |
+| Assumptions: documentation is final first | mapped | B3. |
+| Assumptions: Review Closure changes invalidate only traced sources | mapped | B4. |
+| Assumptions: roadmap state and no publication | non-boundary | Coordination and delivery state. |
+| Prior Plan Reconciliation | non-boundary | Preserves earlier owners without changing them. |
+
+No clause is deferred or a contract gap.
 
 ## Scenario Proof
 
@@ -99,15 +155,17 @@ Source dispositions: The accepted Plan's summary and research decision are non-b
 
 | Scenario | Discriminator | Contrast | Production path | Required oracle | Runnable test or command | Result |
 | --- | --- | --- | --- | --- | --- | --- |
-| S1 | Source-clause identity | Two similar clauses followed by one distinct boundary | Raw sources to inventory to disposition | Every clause has one disposition | `test_preflight_inventories_every_behavioral_boundary` | Pass |
-| S2 | Mapped-plan status | Same staging input with mapped and unmapped base plans | Requirement to both production entry paths | Only the required path substitutes the plan | Fresh read-only Phase 1 forward check | Pass |
-| S3 | Preserved invariant | Both correct sides have the same terminal result but the nearest wrong meaning differs | Requirement to implementation and terminal owner | The invariant holds on both sides | `test_preflight_inventories_every_behavioral_boundary` | Pass |
-| S4 | Executed boundary side | Positive-only check versus paired check | Test body to terminal oracle | Positive-only evidence blocks review | Focused CPK-045 contract test | Planned |
-| S5 | Fixture isolation | Discriminator-only fixture versus discriminator plus unrelated gate | Test body to production predicates | Unrelated variation blocks review | Focused CPK-045 contract test | Planned |
-| S6 | Enforcement meaning | Exact boundary owner versus broader helper | Entry point through gates to terminal owner | Broader meaning fails sensitivity | Clean-context forward check | Planned |
-| S7 | Traced-source identity | Same candidate versus changed requirement, path, record, or named test | Final docs and source to closure evidence | A traced change invalidates closure | Focused CPK-045 contract test | Planned |
-| S8 | Change relevance | Traced change versus unrelated documentation change | Candidate diff to closure evidence | Unrelated documentation does not invalidate closure | Focused CPK-045 contract test | Planned |
-| S9 | Change type | Boundary change versus arithmetic repair with no boundary change | Design Preflight entry gate | Only the boundary change overrides the exception | `test_preflight_inventories_every_behavioral_boundary` | Pass |
+| S1 | Source-clause identity | Two similar clauses followed by one distinct boundary | Raw sources to inventory to disposition | Every clause has one disposition and omission blocks work | Clean-context command from S2 and `test_preflight_inventories_every_behavioral_boundary` | Pass |
+| S2 | Mapped-plan status | Same staging input with mapped and unmapped base plans | Requirement to both production entry paths | Only the required path substitutes the plan | `codex exec --ephemeral --sandbox read-only -C . -o .agent/test-results/cpk045-forward-output.json - < tests/fixtures/cpk045-boundary-forward.md` | Pass |
+| S3 | Preserved invariant | Both correct sides have the same terminal result but the nearest wrong meaning differs | Requirement to implementation and terminal owner | The invariant holds on both sides | Clean-context command from S2 and `test_preflight_inventories_every_behavioral_boundary` | Pass |
+| S4 | Executed boundary side | Positive-only check versus paired check | Test body to terminal oracle | Positive-only evidence blocks review | `test_boundary_trace_closure_blocks_native_review` | Pass |
+| S5 | Fixture isolation | Discriminator-only fixture versus discriminator plus unrelated gate | Test body to production predicates | Unrelated variation blocks review | Clean-context command from S2 and `test_boundary_trace_closure_blocks_native_review` | Pass |
+| S6 | Enforcement meaning | Exact boundary owner versus broader helper | Entry point through gates to terminal owner | Broader meaning fails sensitivity | Clean-context command from S2 and `test_boundary_trace_closure_blocks_native_review` | Pass |
+| S7 | Traced-source identity | Same candidate versus changed requirement, path, record, or named test | Final docs and source to closure evidence | A traced change invalidates closure | Clean-context command from S2 and `test_boundary_trace_closure_blocks_native_review` | Pass |
+| S8 | Change relevance | Traced change versus unrelated documentation change | Candidate diff to closure evidence | Unrelated documentation does not invalidate closure | Clean-context command from S2 and `test_boundary_trace_closure_blocks_native_review` | Pass |
+| S9 | Change type | Boundary change versus arithmetic repair with no boundary change | Design Preflight entry gate | Only the boundary change overrides the exception | Clean-context command from S2 and `test_preflight_inventories_every_behavioral_boundary` | Pass |
+| S10 | Trace preparation | Fresh verifier after final docs with every input versus reused, early, or incomplete verification | Final candidate to independent source enumeration and trace result | Only the complete ordered trace can pass | Clean-context command from S2 | Pass |
+| S11 | Evidence and review independence | Paired terminal proof and source-only native input versus component, aggregate, writer, or trace-primed evidence | Trace gate to native-review input | Weak evidence blocks closure; the trace record stays out of native review | Clean-context command from S2 and `test_boundary_trace_closure_blocks_native_review` | Pass |
 
 ## Plan of Work
 
@@ -123,7 +181,7 @@ Before each review, stage the complete checkpoint and require no unstaged tracke
 
 ## Validation and Acceptance
 
-Focused checks must prove B1 through B5 and S1 through S9. The clean-context forward check must derive both mapped and unmapped cases from the supplied broader-helper defect. It must reject the broader implementation and a positive-only test.
+Focused checks must prove B1 through B6 and S1 through S11. The clean-context forward check must derive both mapped and unmapped cases from the supplied broader-helper defect. It must reject the broader implementation, positive-only proof, component proof, aggregate result, and writer report. It must also prove trace ordering, named inputs, and native-review independence.
 
 The full toolkit suite, Python compilation, shell checks, PowerShell parsing, rule-owner checks, link checks, manifest validation, and `git diff --check` must pass. After final review, install the candidate with `python3 kit.py install --repo .`. Then run `python3 kit.py doctor --repo .` and require `Result: ready`.
 

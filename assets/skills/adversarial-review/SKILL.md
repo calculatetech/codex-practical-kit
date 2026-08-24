@@ -39,6 +39,11 @@ Apply [Review closure](references/review-closure.md) only after the checkpoint s
 <!-- cpk-rule-route-only: supported-model -->
 [Supported model](../design-preflight/references/supported-model.md)
 
+## Boundary trace closure
+
+<!-- cpk-rule-route-only: scenario-discrimination -->
+[Scenario discrimination](../design-preflight/references/scenario-discrimination.md)
+
 ## Native discovery
 
 Use native `codex review` for local defect discovery. Do not spawn a generic review subagent and do not delegate the native review.

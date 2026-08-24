@@ -1,6 +1,6 @@
 # Preflight card
 
-Keep the complete card under 80 lines.
+Keep the card compact. Do not omit a required boundary or scenario row to meet a line target.
 
 ## Goal
 
