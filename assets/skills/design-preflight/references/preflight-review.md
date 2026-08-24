@@ -24,6 +24,25 @@ Return JSON only.
     ],
     "inherited_specification_conflicts": []
   },
+  "source_clauses": [
+    {
+      "source": "path:line-line",
+      "clause": "Authoritative clause",
+      "disposition": "mapped | non-boundary | opaque | deferred | contract-gap",
+      "boundary_id": "B1 | null"
+    }
+  ],
+  "boundaries": [
+    {
+      "id": "B1",
+      "source": ["path:line-line"],
+      "condition_or_invariant": "Explicit behavioral boundary",
+      "contrast_sides": ["Required side", "Nearest contrasting side"],
+      "required_oracles": ["Observable terminal result"],
+      "production_entry_points": ["Entry point"],
+      "scenario_ids": ["S1"]
+    }
+  ],
   "scenarios": [
     {
       "id": "S1",
@@ -77,7 +96,7 @@ Return JSON only.
 
 Apply [Scenario discrimination](scenario-discrimination.md) to every retained scenario. Apply [Owner composition](owner-composition.md) and [Full-set results](full-set-results.md) to the independent result.
 
-The coordinator must verify each discriminator, contrast, production path, oracle, and planned runnable check. Do not create a Cartesian product.
+The coordinator must compare the source clauses with the complete authoritative source set. It must verify each boundary, discriminator, contrast, production path, oracle, and planned runnable check. Do not create a Cartesian product.
 
 Use the canonical classifications to fill `scenarios`, `contract_gaps`, and `exclusions`. Empty arrays are valid.
 

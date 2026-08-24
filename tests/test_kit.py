@@ -2404,7 +2404,7 @@ class IntegrationTests(unittest.TestCase):
         ).read_text()
 
         self.assertIn("<!-- cpk-rule-owner: scenario-discrimination -->", owner)
-        self.assertEqual(owner.count("<!-- cpk-rule-guard:"), 3)
+        self.assertEqual(owner.count("<!-- cpk-rule-guard:"), 6)
         self.assertIn("scenario-discrimination.md", preflight)
         self.assertIn("scenario-discrimination.md", card)
         self.assertIn("scenario-discrimination.md", result)
@@ -2419,6 +2419,26 @@ class IntegrationTests(unittest.TestCase):
         self.assertIn("complete the first six columns", card)
         self.assertIn("split a row when one contrast cannot prove all claimed outcomes", owner)
         self.assertIn("named requirement can be false while the check passes", owner)
+
+    def test_preflight_inventories_every_behavioral_boundary(self):
+        root = ROOT / "assets" / "skills" / "design-preflight"
+        skill = (root / "SKILL.md").read_text()
+        owner = (root / "references" / "scenario-discrimination.md").read_text()
+        card = (root / "references" / "preflight-card.md").read_text()
+        result = (root / "references" / "preflight-review.md").read_text()
+
+        self.assertIn("every authoritative source clause", owner)
+        self.assertIn("Do not stop after duplicate-looking clauses", owner)
+        self.assertIn("stable `B#` identifier", owner)
+        self.assertIn("every applicable production entry point", owner)
+        self.assertIn("nearest wrong meaning as the contrast", owner)
+        self.assertIn("adds or changes a behavioral boundary", skill)
+        self.assertIn("complete authoritative source set", skill)
+        self.assertIn("## Boundary inventory", card)
+        self.assertIn('"source_clauses"', result)
+        self.assertIn('"disposition": "mapped | non-boundary | opaque | deferred | contract-gap"', result)
+        self.assertIn('"production_entry_points"', result)
+        self.assertIn('"scenario_ids"', result)
 
     def test_product_scope_boundaries_gate_preflight_and_review(self):
         rules_root = ROOT / "assets" / "skills" / "design-preflight" / "references"

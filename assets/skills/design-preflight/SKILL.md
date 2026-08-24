@@ -32,7 +32,7 @@ Apply the trigger in this skill description before the first implementation edit
 
 Apply the same entry gate to an accepted correction. Runtime paths, retained state, reopening sources, terminal owners, event ordering, and shared-signal classification are common examples, not an exhaustive gate.
 
-Skip it for a small change with one proven owner and one direct check. The small-change exception still applies to an accepted correction.
+Skip it for a small change with one proven owner and one direct check. The small-change exception still applies to an accepted correction unless the task adds or changes a behavioral boundary.
 
 ## Scope gate
 
@@ -56,6 +56,8 @@ For non-trivial runtime behavior, derive a Scenario Proof with three lenses:
 
 Apply [Scenario discrimination](references/scenario-discrimination.md) to every retained scenario. Apply [Owner composition](references/owner-composition.md) to the path-and-transition lens. Apply [Full-set results](references/full-set-results.md) to collection semantics.
 
+Use Scenario discrimination to inventory every authoritative source clause when the task adds or changes a behavioral boundary. Merge the accepted inventory into the task ExecPlan.
+
 Close each retained path-and-transition scenario over every supported event that can act on its state until the required terminal result. Do not split one stateful sequence into component scenarios.
 
 Use source predicates and requirements. Select the minimum cases that exercise each distinct outcome or disprove an invariant. Do not create a Cartesian product.
@@ -75,13 +77,13 @@ Every non-trivial runtime preflight requires one task ExecPlan. Merge the accept
 
 ## Two-phase challenge
 
-The coordinator owns the preflight. For non-trivial runtime behavior, spawn one fresh read-only planning challenger with no inherited task conversation. Use the same fresh read-only challenger for an unanchored derivation and an informed adversarial challenge. A small change that skips Design Preflight also skips this challenge.
+The coordinator owns the preflight. For non-trivial runtime behavior or a task that adds or changes a behavioral boundary, spawn one fresh read-only planning challenger with no inherited task conversation. Use the same fresh read-only challenger for an unanchored derivation and an informed adversarial challenge. A small change that skips Design Preflight also skips this challenge.
 
 For an accepted correction that passes the entry gate, spawn one fresh read-only planning challenger even when the correction is not runtime behavior.
 
 ### Phase 1: independent derivation
 
-Give the challenger raw requirements, the supported model, exact source, owners, selectors, filters, state writers, current tests, and applicable focused rule links.
+Give the challenger raw requirements, the complete authoritative source set, the supported model, exact source, owners, selectors, filters, state writers, current tests, and applicable focused rule links. Require it to enumerate source clauses before it derives scenarios.
 
 Keep Phase 1 unanchored. Do not give it the coordinator's card, decisions, assumptions, exclusions, Scenario Proof, implementation, known edge cases, prior diagnostics, reviewer corrections, severity, research result, or preferred outcome.
 
@@ -101,7 +103,7 @@ Use the canonical classifications. Merge `applicable` scenarios. Record `contrac
 
 Before implementation, each retained scenario must have a planned runnable check and oracle. Before review, update the mapping with the actual test or command and its result. A suite pass or test count does not replace this mapping.
 
-For an initial non-runtime preflight, use this same single challenge only when normal-use ownership or scope remains unclear.
+For an initial non-runtime preflight that changes no behavioral boundary, use this same single challenge only when normal-use ownership or scope remains unclear.
 
 ## Human decision
 

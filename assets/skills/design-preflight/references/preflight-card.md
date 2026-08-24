@@ -13,9 +13,7 @@ State one observable outcome.
 
 ## Task boundary facts
 
-- Authoritative product specification:
-- Current production use cases:
-- Inherited-specification conflicts:
+Record the authoritative product specification, current production use cases, and inherited-specification conflicts.
 
 | Relevant owner | Classification | Linked product fact |
 | --- | --- | --- |
@@ -28,11 +26,7 @@ State one observable outcome.
 
 ## Existing owner
 
-- Entry point:
-- Outcome owner:
-- Authoritative state:
-- Readers and writers:
-- Boundaries:
+Record the entry point, outcome owner, authoritative state, readers, writers, and boundaries.
 
 Cite source. Write `unknown` when source does not prove a claim.
 
@@ -47,6 +41,14 @@ List work that must not exist. Include excluded conditions, abstractions, depend
 ## Smallest implementation
 
 Name the existing owner to change and the minimum supporting edits.
+
+## Boundary inventory
+
+Apply [Scenario discrimination](scenario-discrimination.md). Give every authoritative source clause one disposition. For each mapped boundary, record its stable identifier, source, condition or invariant, both contrast sides, required oracles, applicable production entry points, and Scenario Proof rows.
+
+| Boundary | Source | Condition or invariant | Contrast sides and oracles | Production entry points | Scenario rows |
+| --- | --- | --- | --- | --- | --- |
+|  |  |  |  |  |  |
 
 ## Scenario Proof
 

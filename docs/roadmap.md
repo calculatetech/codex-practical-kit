@@ -13,7 +13,7 @@ Status legend:
 
 ## Active
 
-No task is active.
+- 🎯 **CPK-045 — Close every behavioral boundary.** Design Preflight inventories every explicit behavioral boundary. A fresh trace-closure check verifies the implemented paths and tests before native review.
 
 ## Planned next
 
