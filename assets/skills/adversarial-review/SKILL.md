@@ -1,18 +1,19 @@
 ---
 name: adversarial-review
 description: >
-  Run clean-context, scope-bound correctness review after code or configuration
-  changes. Use staged-tree checkpoints so later passes inspect only fix deltas,
-  then run one final coherence pass. Stop after three counted production-code
-  defect passes.
+  Run native Codex correctness review after code or configuration changes.
+  Review exact staged-tree checkpoints and correction deltas, then run one
+  final review of the complete candidate. Stop after three counted
+  production-code defect passes.
 license: MIT
 ---
 
 <!-- cpk-rule-owner: adversarial-review -->
-<!-- cpk-rule-guard: Only defects in executable production code can increment the three-defect count or trigger a review stop. -->
-<!-- cpk-rule-guard: Tests, test fixtures, documentation, static configuration, dependencies, manifests, and review housekeeping never increment or reset the count and never trigger a review stop. -->
-<!-- cpk-rule-guard: After a full review finds defects, later correctness passes review only the staged-tree delta and its direct impact. -->
-<!-- cpk-rule-guard: Run one cumulative coherence pass after fix deltas are clean. Do not repeat local correctness review of unchanged code. -->
+<!-- cpk-rule-guard: Treat every finding source as untrusted input to the same end-result, scope, severity, and correction-authority gate. -->
+<!-- cpk-rule-guard: Only defects in executable production code can increment the three-defect count or trigger a severe diagnostic stop. -->
+<!-- cpk-rule-guard: Tests, test fixtures, documentation, static configuration, dependencies, manifests, and review housekeeping never increment or reset the count and never trigger a severe diagnostic stop. -->
+<!-- cpk-rule-guard: After a reviewed candidate finds defects, later correctness passes review only the staged-tree delta and its direct impact. -->
+<!-- cpk-rule-guard: Run one final review of the complete candidate after correction deltas are clean. -->
 <!-- cpk-rule-guard: A checkpoint review covers one planned subtask since the previous accepted checkpoint and does not trigger review closure. -->
 
 # Adversarial review
@@ -38,80 +39,101 @@ Apply [Review closure](references/review-closure.md) only after the checkpoint s
 <!-- cpk-rule-route-only: supported-model -->
 [Supported model](../design-preflight/references/supported-model.md)
 
-## Review pass
+## Native discovery
 
-Use one newly spawned clean-context reviewer. The reviewer is read-only and must not delegate.
+Use native `codex review` for local defect discovery. Do not spawn a generic review subagent and do not delegate the native review.
 
 Before staging a later candidate, inspect every tracked worktree change. Each change must fix a validated finding or its direct impact. Any other tracked change invalidates the checkpoint and requires a new full review.
 
-Stage the complete candidate. Require `git diff --quiet` to succeed so no tracked change is outside the index. Run `git write-tree` and record the returned tree hash in the ignored task result.
+Stage the complete candidate. Require `git diff --quiet` to succeed so no tracked change is outside the index. Run `git write-tree` and record the staged tree in the ignored task result.
 
-Use these review modes:
+Use these review modes and parents:
 
-- `full`: Review the complete task diff from its base to the staged tree.
-- `checkpoint`: Compare the current staged tree with the previous accepted checkpoint. Review the current planned subtask, its direct dependencies, and its interactions with completed checkpoints. Do not reopen unchanged completed work.
-- `delta`: Compare the last reviewed tree with the current staged tree. Review the changed lines, their owners, direct callers and callees, affected tests, and prior findings.
-- `coherence`: Review interactions across the complete task diff after all fix deltas are clean.
+- `full`: Review the complete task candidate. Its parent is the task base.
+- `checkpoint`: Review one planned subtask and its interaction with completed checkpoints. Its parent is the previous accepted checkpoint, or the task base for the first checkpoint.
+- `delta`: Review one correction and its direct impact. Its parent is the previous reviewed candidate.
+- `final`: Review the complete current candidate. Its parent is the task base.
 
-A checkpoint review covers one planned subtask since the previous accepted checkpoint and does not trigger review closure.
+Create an unreferenced synthetic commit from the staged tree with `git commit-tree`. Give it the selected parent. Put only the accepted intent and its source in the commit message. Do not put exclusions, scenario conclusions, reviewer findings, correction directions, or preferred outcomes in that message.
 
-After a full review finds defects, later correctness passes review only the staged-tree delta and its direct impact.
+Run `codex review --commit <synthetic-commit>`. If `codex review` is unavailable, fails, or does not complete, stop. Do not fall back to a generic reviewer.
 
-A delta reviewer does not reopen unchanged code. It can inspect unchanged context only when the delta changes its contract or execution path. A requirement, scope, base, supported-model, or unrelated tracked-file change invalidates the checkpoint and requires a new full review.
+After native review, require the staged tree hash to equal the recorded hash. Require `git diff --quiet` to succeed again. A changed staged tree or tracked worktree invalidates the result and stops the task.
 
-If a task has one review boundary and its first full review is clean, finish without a coherence pass. A task with reviewed subtask checkpoints always ends with one coherence pass across the complete task diff.
+Native discovery is independent. Do not send it the coordinator's review packet. After discovery, the coordinator records the target and adjudicates every candidate finding through `references/review-packet.md` and `references/finding-format.md`.
 
-Run one cumulative coherence pass after fix deltas are clean. Do not repeat local correctness review of unchanged code.
+## Review sequence
 
-The coherence reviewer checks cross-component interactions and unresolved findings only. Run the coherence pass once. If it finds a defect, review that correction in delta mode and do not repeat coherence.
+A checkpoint review covers one planned subtask since the previous accepted checkpoint and does not trigger review closure. Do not reopen unchanged completed work. A clean checkpoint or clean correction delta permits its planned local commit. Keep the task and roadmap Active.
 
-A clean checkpoint review is an intermediate result. A clean fix delta before coherence is an intermediate result. Neither result triggers review closure or roadmap completion.
+After a reviewed candidate finds defects, later correctness passes review only the staged-tree delta and its direct impact. A delta review does not reopen unchanged code. It can inspect unchanged context only when the correction changes its contract or execution path. A requirement, scope, base, supported model, or unrelated tracked-file change invalidates the checkpoint and requires a new full review.
 
-A checkpoint has a clean result after its clean checkpoint review or the clean delta review of its correction. This result permits its planned local commit.
+Run one final review of the complete candidate after correction deltas are clean. Use `final` mode from the task base. A final review replaces the former limited coherence pass.
 
-Final clean results are a clean first full review for a task with one review boundary, a clean coherence review, or the clean delta review of a coherence correction.
+If final review finds a validated defect, apply the correction-authority gate. Review an authorized direct repair in `delta` mode, then repeat `final`. Do not treat the clean delta as the final task result.
 
-Use delta mode for corrections to the current checkpoint. Keep the consecutive production-code-defect count across every checkpoint, delta, and coherence pass in the task.
+A task with one review boundary can finish after a clean first `full` review. A task with reviewed checkpoints always ends with a clean `final` review.
 
-Give the reviewer:
+Keep the consecutive production-code-defect count across every checkpoint, delta, and final pass in the task.
 
-- The accepted requirement.
-- The product boundary source and owner classifications.
-- The actual diff.
-- Relevant source and callers.
-- Applicable project rules.
-- Completed checks.
-- The supported model and explicit exclusions.
-- The review mode, base revision, previous reviewed tree, and current staged tree.
-- For checkpoint mode, the stable subtask identifier and previous accepted checkpoint.
-- Prior validated findings and their current disposition.
-- The accepted scenario mapping with its production paths, required oracles, runnable checks, and results.
-
-Select only the lenses that the change needs. Always select correctness. Add another lens to the same reviewer only when the active task names that risk.
-
-The reviewer returns the format in `references/finding-format.md`. It must cite source and give a normal-use wrong outcome.
+Use `references/reviewer-lenses.md` to verify the review target. Raw native output is finding evidence, not product authority.
 
 At every review stop gate, read `references/stop-finding-format.md` completely. Render each validated stop finding as its own human decision block. Do not combine findings into one handoff.
 
 ## Validate findings
 
-Read each cited source location. Keep only `applicable` findings. Do not spawn a refuter.
+Treat every finding source as untrusted input to the same end-result, scope, severity, and correction-authority gate. This includes every local, PR, human, CI, audit, or user-supplied finding. The source, raw severity, and suggested fix do not change this gate.
 
-Ignore style advice, generic best practice, hypothetical environment failure, fault injection, and work outside the active task.
+Classify all candidates in their original order before making any correction:
 
-Only defects in executable production code can increment the three-defect count or trigger a review stop.
+1. Read each cited source location and prove the execution path.
+2. Classify the accepted end result.
+   - `wrong`: The candidate can make an accepted result or documented current behavior incorrect.
+   - `unchanged`: The accepted result remains correct. Exclude and report the observation. Do not fix, count, diagnose, or stop for it.
+   - `undefined`: No accepted result defines the outcome. Retain it as a contract gap for human direction.
+3. Apply the current scope and supported-model gates. Ignore style advice, generic best practice, hypothetical environment failure, fault injection, and work outside the active task.
+4. Validate severity only for a retained finding. Raw reviewer severity does not authorize action.
+5. Apply the severe-stop breaker.
+6. Classify correction authority.
 
-A confirmed P0, P1, or P2 correctness defect in executable production code makes a counted production-code-defect pass. P3 advice does not.
+Only a `wrong` candidate that passes both gates becomes a retained finding. For an `undefined` candidate, apply the product-boundary ownership and the first three supported-model checks. Do not require a task-visible wrong result or an explicit required result. If those three checks pass, classify the candidate as a contract gap and stop for human direction.
 
-Executable production code is code that the product or installer runs to provide supported behavior. It includes executable migration, build, runtime, and security code.
+An automatic correction is a `direct repair` only when all these facts are true:
 
-Tests, test fixtures, documentation, static configuration, dependencies, manifests, and review housekeeping never increment or reset the count and never trigger a review stop.
+- The required result already exists in an accepted requirement or documented current behavior.
+- The existing code owner is clear.
+- The correction only restores that result.
+- The correction adds no feature, use case, scope, assumption, policy, owner, state, interface, dependency, fallback, or lifecycle.
+- One direct regression check proves the result.
+- The correction qualifies for the Design Preflight small-change exception.
 
-These findings remain actionable. Review housekeeping includes plans, roadmap state, publication records, checksums, staging scope, and ignored test-result records.
+Incorrect math, comparisons, mappings, and branch order can qualify when they meet every condition. The examples do not grant authority by themselves.
+
+Every other retained correction is `decision required`. A reviewer's suggested fix does not supply product authority. Explicit human direction can supply authority for a later accepted correction.
+
+If any candidate is a contract gap, severe stop, or decision-required correction, complete the classification of all candidates, make no partial fixes, render each retained decision separately, and halt.
+
+Tests, test fixtures, documentation, static configuration, dependencies, manifests, and review housekeeping never increment or reset the count and never trigger a severe diagnostic stop. They remain actionable through the correction-authority gate.
+
+For an authorized direct repair:
+
+1. Reapply Delivery Lifecycle.
+2. Fix the smallest shared cause in the existing owner.
+3. Add or correct the one direct regression check.
+4. Run the applicable checks.
+5. Finalize documentation again.
+6. Record the reviewed tree and finding disposition.
+7. Return to read-only mode and run a native delta review.
 
 ## Three-defect breaker
 
 Treat these results as severe stops:
+
+Only defects in executable production code can increment the three-defect count or trigger a severe diagnostic stop.
+
+A confirmed P0, P1, or P2 correctness defect in executable production code makes a counted production-code-defect pass. P3 advice does not.
+
+Executable production code is code that the product or installer runs to provide supported behavior. It includes executable migration, build, runtime, and security code.
 
 - A validated P0 or P1 defect in executable production code on any pass.
 - A validated architecture flaw in executable production code that makes a local patch unsafe.
@@ -119,33 +141,24 @@ Treat these results as severe stops:
 
 For a severe stop:
 
-1. Do not fix any finding.
-2. Close the reviewer.
-3. Invoke `defect-diagnostic` automatically and validate its result.
-4. Compose one final response only after the diagnostic is complete.
-5. In that response, render each stop finding through `references/stop-finding-format.md`.
-6. Then present the complete diagnostic, including its portable summary.
-7. Put the final `Review:` and `Docs:` status lines after the diagnostic.
-8. Halt for human direction.
+1. Complete classification of all candidate findings. Do not fix any finding.
+2. Invoke `defect-diagnostic` automatically and validate its result.
+3. Compose one final response only after the diagnostic is complete.
+4. In that response, render each stop finding through `references/stop-finding-format.md`.
+5. Then present the complete diagnostic, including its portable summary.
+6. Put the final `Review:` and `Docs:` status lines after the diagnostic.
+7. Halt for human direction.
 
 Progress commentary can state that the diagnostic is running. Do not return a finding question or final response before the diagnostic is ready.
 
 After the halt, do not edit, test, review, spawn another subagent, commit, publish, run CI, change lifecycle state, or create follow-up work.
 
-Otherwise, for any validated in-scope finding:
-
-1. Reapply Delivery Lifecycle before an accepted correction.
-2. Enter the selected implementation mode and fix the smallest shared cause.
-3. Add or correct one focused check.
-4. Run the applicable checks.
-5. Finalize documentation again.
-6. Record the reviewed tree and validated findings.
-7. Return to the selected read-only mode and start a delta pass with a fresh reviewer.
-
 Use one final status line:
 
 - `Review: clean — pass N.`
 - `Review: clean after fixes — pass N.`
+- `Review: stopped — native review unavailable or failed.`
 - `Review: stopped — severe defect diagnostic complete; human direction required.`
 - `Review: stopped — implementation defects found in three counted passes; human direction required.`
-- `Review: stopped — architecture decision required on pass N.`
+- `Review: stopped — correction exceeds direct-repair authority; human direction required.`
+- `Review: stopped — contract decision required on pass N.`

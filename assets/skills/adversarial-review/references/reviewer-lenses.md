@@ -1,43 +1,28 @@
-# Reviewer lenses
+# Native review targets
+
+Native Codex review independently inspects the selected commit, repository, dependencies, and tests for actionable defects introduced by the candidate. Do not preload the coordinator's conclusions.
 
 ## Product scope
 
 <!-- cpk-rule-route-only: scope-boundaries -->
 [Scope boundaries](../../design-preflight/references/scope-boundaries.md)
 
-## Correctness
+## Full correctness
 
-Always check the supported normal path:
-
-- The requested result occurs.
-- Inputs and outputs keep their documented meaning.
-- Setup and cleanup agree.
-- A branch does not report success before the result exists.
-- Tests exercise the real owner.
-- Each retained Scenario Proof row follows its production path to the required oracle in the named runnable check.
-- A suite count does not substitute for a scenario result.
-
-Apply [Scenario discrimination](../../design-preflight/references/scenario-discrimination.md) to every retained scenario. Apply [Owner composition](../../design-preflight/references/owner-composition.md) and [Full-set results](../../design-preflight/references/full-set-results.md) when they are applicable.
+Use the task base as the synthetic commit parent. The staged tree is the complete task candidate.
 
 ## Delta correctness
 
-Inspect the candidate slice, direct-impact sources, and prior findings named in the review packet.
+Use the previous reviewed candidate as the parent. The staged tree adds only the correction and its direct impact. Native review can inspect repository context, but the coordinator rejects findings that reopen unchanged behavior without a changed contract or execution path.
 
 ## Checkpoint correctness
 
-Inspect the current subtask delta, its direct dependencies, and its interactions with completed checkpoints. Do not reopen unchanged completed work.
+Use the previous accepted checkpoint as the parent, or the task base for the first checkpoint. The staged tree adds one planned subtask and its interactions with completed checkpoints.
 
-## Final coherence
+## Final correctness
 
-Inspect the cross-component interactions, transition-closed scenario mappings, and unresolved findings named in the review packet.
+Use the task base as the parent. The staged tree is the complete current candidate. This is a full correctness review, not a limited coherence review.
 
-## Optional lenses
+## Adjudication
 
-Add one of these lenses to the same reviewer only when the active task names it:
-
-- Security for an explicit trust boundary.
-- API contract for an external interface.
-- Migration for a declared data change.
-- Performance for a measured resource problem.
-
-Do not review excluded conditions. Do not attack assumptions that define the supported operating model.
+After native discovery, the coordinator proves each finding's execution path and accepted end result. Then it applies product scope, the supported model, severity, the severe-stop breaker, and correction authority. A native severity or fix suggestion does not authorize a correction.

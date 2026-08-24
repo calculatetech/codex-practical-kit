@@ -1,27 +1,29 @@
-# Review packet
+# Review record
 
-Keep the packet factual and compact.
+Keep the record factual and compact. Native discovery receives only the synthetic commit.
 
-## Intent
+## Native discovery target
 
-Quote or link the accepted requirement, ExecPlan, specification, or user request.
-
-## Scope
-
-- Review mode: `full | checkpoint | delta | coherence`
-- Base revision:
-- Previous reviewed tree, or `none`:
+- Accepted intent:
+- Intent source:
+- Review mode: `full | checkpoint | delta | final`
+- Task base:
+- Previous reviewed candidate, or `none`:
+- Previous accepted checkpoint, or `none`:
+- Selected parent:
 - Current staged tree:
-- Diff command:
-- Changed paths:
-- Excluded paths and reason:
+- Synthetic commit:
+- Pre-review `git diff --quiet` result:
+- Post-review staged tree:
+- Post-review `git diff --quiet` result:
+- Native command result:
+
+The synthetic commit message contains only Accepted intent and Intent source. Do not send this complete record to native discovery. Do not add exclusions, scenario conclusions, findings, correction directions, or preferred outcomes to the native input.
 
 ## Checkpoint
 
 - Stable subtask identifier, or `none`:
-- Previous accepted checkpoint, or `none`:
 - Pre-stage tracked-change classification:
-- `git diff --quiet` result:
 - Prior validated findings:
 - Prior finding disposition:
 - Direct impact added for a delta review:
@@ -32,7 +34,7 @@ Quote or link the accepted requirement, ExecPlan, specification, or user request
 <!-- cpk-rule-route-only: scope-boundaries -->
 [Scope boundaries](../../design-preflight/references/scope-boundaries.md)
 
-## Task boundary facts
+## Coordinator adjudication
 
 - Authoritative product specification:
 - Current production use cases:
@@ -44,41 +46,20 @@ Quote or link the accepted requirement, ExecPlan, specification, or user request
 
 - Changed production entry points:
 - Task-visible outcomes:
+- Supported-model result:
+- Finding adjudication records:
+- Atomic correction result:
 
-## Diff
-
-Give the reviewer the actual relevant diff. Do not replace it with prose.
-
-## Execution path
-
-List exact source locations for:
-
-- Entry point.
-- Outcome owner.
-- State owner.
-- Readers and writers.
-- Callers and callees.
-- External, process, thread, FFI, database, or provider boundaries.
-
-Write `unknown` when the source does not establish a fact.
+Read cited source and relevant callers before adjudication. Write `unknown` when source does not establish a fact.
 
 ## Verification already run
 
-Copy the accepted Scenario Proof mapping. For every retained scenario, include its discriminator, contrast, production path, required oracle, actual runnable test or command, and result. An aggregate suite result is supporting evidence only.
-
-Apply [Scenario discrimination](../../design-preflight/references/scenario-discrimination.md) to the mapping.
-
-For each command, include:
-
-- Command.
-- Exit status.
-- Short result.
-- Which behavior it can fail on.
+Copy the accepted Scenario Proof mapping when one exists. For each retained scenario, include its discriminator, contrast, production path, required oracle, actual runnable check, and result. An aggregate suite result is supporting evidence only.
 
 ## Project standards
 
-Include only the AGENTS, CLAUDE, lint, test, architecture, or API rules that govern the reviewed files.
+List only rules that govern the reviewed files.
 
 ## RepoWise observations
 
-Apply [Repository knowledge](../../repository-knowledge/SKILL.md).
+Apply [Repository knowledge](../../repository-knowledge/SKILL.md). Record the indexed revision and freshness.

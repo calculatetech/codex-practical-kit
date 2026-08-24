@@ -2455,30 +2455,64 @@ class IntegrationTests(unittest.TestCase):
         self.assertIn("review only the staged-tree delta and its direct impact", review)
         self.assertIn("Before staging a later candidate", review)
         self.assertIn("unrelated tracked-file change invalidates the checkpoint", review)
-        self.assertIn("Do not repeat local correctness review of unchanged code", review)
-        self.assertIn("Run the coherence pass once", review)
-        self.assertIn("A clean fix delta before coherence is an intermediate result", review)
-        self.assertIn("clean delta review of a coherence correction", review)
-        self.assertIn("`checkpoint`: Compare the current staged tree", review)
+        self.assertIn("`codex review --commit <synthetic-commit>`", review)
+        self.assertIn("Do not fall back to a generic reviewer", review)
+        self.assertIn("`checkpoint`: Review one planned subtask", review)
         self.assertIn("Do not reopen unchanged completed work", review)
-        self.assertIn("always ends with one coherence pass", review)
+        self.assertIn("always ends with a clean `final` review", review)
         self.assertIn("production-code-defect count across every checkpoint", review)
-        self.assertIn("clean delta review of its correction", review)
-        self.assertIn("This result permits its planned local commit", review)
-        self.assertIn("Previous reviewed tree", packet)
+        self.assertIn("clean correction delta permits its planned local commit", review)
+        self.assertIn("Previous reviewed candidate", packet)
         self.assertIn("Stable subtask identifier", packet)
         self.assertIn("Previous accepted checkpoint", packet)
         self.assertIn("Pre-stage tracked-change classification", packet)
         self.assertIn("Checkpoint invalidation reason", packet)
-        self.assertIn('"review_mode": "full | checkpoint | delta | coherence"', finding)
+        self.assertIn("Review mode: `full | checkpoint | delta | final`", packet)
+        self.assertNotIn("coherence", finding)
         self.assertIn("## Delta correctness", lenses)
         self.assertIn("## Checkpoint correctness", lenses)
-        self.assertIn("## Final coherence", lenses)
+        self.assertIn("## Final correctness", lenses)
         self.assertIn("local checkpoint commit after Adversarial Review records", lifecycle)
         self.assertIn("Keep the task and roadmap Active", lifecycle)
         self.assertIn("does not authorize review closure", lifecycle)
         self.assertIn("after Adversarial Review records a final clean result", docs)
         self.assertIn("After Adversarial Review records a final clean result", roadmap)
+
+    def test_review_findings_need_source_independent_correction_authority(self):
+        root = ROOT / "assets" / "skills" / "adversarial-review"
+        review = (root / "SKILL.md").read_text()
+        finding = (root / "references" / "finding-format.md").read_text()
+
+        for source in ("local", "PR", "human", "CI", "audit", "user-supplied"):
+            self.assertIn(source, review)
+        self.assertLess(review.index("Classify the accepted end result"), review.index("Validate severity"))
+        self.assertIn("Raw reviewer severity does not authorize action.", review)
+        self.assertIn("The accepted result remains correct. Exclude and report", review)
+        self.assertIn("No accepted result defines the outcome", review)
+        self.assertIn("Do not require a task-visible wrong result or an explicit required result", review)
+        self.assertIn("first three supported-model checks", review)
+        self.assertIn("make no partial fixes", review)
+        self.assertIn("Incorrect math, comparisons, mappings, and branch order can qualify", review)
+        for forbidden_addition in (
+            "feature",
+            "use case",
+            "scope",
+            "assumption",
+            "policy",
+            "owner",
+            "state",
+            "interface",
+            "dependency",
+            "fallback",
+            "lifecycle",
+        ):
+            self.assertIn(forbidden_addition, review)
+        self.assertIn('"classification": "wrong | unchanged | undefined"', finding)
+        self.assertIn(
+            '"classification": "direct repair | decision required | excluded | contract gap | severe stop"',
+            finding,
+        )
+        self.assertNotIn("smallest_fix_direction", finding)
 
     def test_execplans_split_semantically_and_replans_preserve_checkpoints(self):
         plans = (ROOT / ".agent" / "PLANS.md").read_text()
@@ -2727,6 +2761,7 @@ class IntegrationTests(unittest.TestCase):
         self.assertIn("Tests, test fixtures, documentation, static configuration", review)
         self.assertIn("A validated P0 or P1 defect in executable production code on any pass.", review)
         self.assertIn("A production-code defect on the third consecutive counted pass.", review)
+        self.assertIn("P3 advice does not", review)
         self.assertNotIn("executable source, tests", review)
 
         labels = [

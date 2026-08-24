@@ -1,4 +1,6 @@
-# Finding format
+# Finding adjudication format
+
+Use this record after discovery. The reviewer does not complete it.
 
 ## Product scope
 
@@ -7,40 +9,47 @@
 
 ## Result
 
-Return JSON only.
+Record one object for every candidate finding in source order.
 
 ```json
 {
-  "reviewer": "correctness",
-  "review_mode": "full | checkpoint | delta | coherence",
-  "findings": [
-    {
-      "id": "R1",
-      "severity": "P0 | P1 | P2 | P3",
-      "confidence": 100,
-      "title": "Concrete wrong outcome",
-      "location": ["path:line-line"],
-      "trigger": "Supported normal-use trigger",
-      "execution_path": ["Step 1", "Step 2"],
-      "wrong_outcome": "Observable requirement violation",
-      "task_scope": {
-        "classification": "composes | opaque",
-        "boundary_source": "path:line-line",
-        "changed_production_entry_point": "path:line-line",
-        "task_visible_wrong_result": "Observable requirement violation"
-      },
-      "supported_model": {
-        "normal_use": true,
-        "project_controls_it": true,
-        "reproducible_without_fault_injection": true,
-        "violates_explicit_requirement": true
-      },
-      "smallest_fix_direction": "One bounded correction",
-      "verification": "One check"
-    }
-  ],
-  "coverage": ["Source and callers read"]
+  "source": "native-local | github-codex | human | ci | audit | user",
+  "source_id": "Stable source label",
+  "finding": {
+    "title": "Concrete observation",
+    "location": ["path:line-line"],
+    "trigger": "Supported normal-use trigger",
+    "execution_path": ["Step 1", "Step 2"],
+    "claimed_outcome": "Observable result"
+  },
+  "end_result": {
+    "classification": "wrong | unchanged | undefined",
+    "accepted_result": "Existing required result, or none",
+    "reason": "One source-backed reason"
+  },
+  "task_scope": {
+    "classification": "composes | opaque",
+    "boundary_source": "path:line-line",
+    "changed_production_entry_point": "path:line-line",
+    "task_visible_wrong_result": "Observable requirement violation, or none"
+  },
+  "supported_model": {
+    "normal_use": true,
+    "project_controls_it": true,
+    "reproducible_without_fault_injection": true,
+    "violates_explicit_requirement": true
+  },
+  "validated_severity": "P0 | P1 | P2 | P3 | none",
+  "correction_authority": {
+    "classification": "direct repair | decision required | excluded | contract gap | severe stop",
+    "required_result_exists": true,
+    "existing_owner": "path or none",
+    "only_restores_required_result": true,
+    "adds": ["none"],
+    "direct_regression_check": "One check, or none",
+    "small_change_exception": true
+  }
 }
 ```
 
-Drop a finding unless all four `supported_model` values are `true`. An empty findings list is valid.
+Do not copy raw reviewer severity or a suggested fix into correction authority. `unchanged` is `excluded`. `undefined` becomes a `contract gap` when it passes the scope and supported-model gates.
