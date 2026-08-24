@@ -2343,6 +2343,12 @@ class IntegrationTests(unittest.TestCase):
             / "references"
             / "owner-composition.md"
         ).read_text()
+        discrimination = (
+            root
+            / "design-preflight"
+            / "references"
+            / "scenario-discrimination.md"
+        ).read_text()
         preflight = (root / "design-preflight" / "SKILL.md").read_text()
         card = (
             root / "design-preflight" / "references" / "preflight-card.md"
@@ -2370,8 +2376,10 @@ class IntegrationTests(unittest.TestCase):
         for field in ('"production_path"', '"required_oracle"', '"planned_check"'):
             self.assertIn(field, result)
         self.assertIn("accepted Scenario Proof mapping", packet)
-        self.assertIn("aggregate suite result is supporting evidence only", packet)
-        self.assertIn("required oracle in the named runnable check", lenses)
+        self.assertIn("aggregate suite result is supporting evidence only", discrimination)
+        self.assertIn("Before review, run the named check", discrimination)
+        self.assertNotIn("aggregate suite result is supporting evidence only", packet)
+        self.assertNotIn("aggregate suite result is supporting evidence only", lenses)
 
     def test_scenario_proof_requires_a_discriminating_case(self):
         root = ROOT / "assets" / "skills"
@@ -2435,7 +2443,7 @@ class IntegrationTests(unittest.TestCase):
             self.assertIn("scope-boundaries.md", route)
         self.assertLess(review.index("## Scope gate"), review.index("## Supported-model gate"))
         self.assertIn('"classification": "composes | opaque | deferred"', result)
-        self.assertIn('"classification": "composes | opaque"', finding)
+        self.assertIn('"classification": "composes | opaque | deferred"', finding)
         self.assertIn('"changed_production_entry_point"', finding)
         self.assertIn('"task_visible_wrong_result"', finding)
 
@@ -2482,6 +2490,14 @@ class IntegrationTests(unittest.TestCase):
         root = ROOT / "assets" / "skills" / "adversarial-review"
         review = (root / "SKILL.md").read_text()
         finding = (root / "references" / "finding-format.md").read_text()
+        scope = (
+            ROOT
+            / "assets"
+            / "skills"
+            / "design-preflight"
+            / "references"
+            / "scope-boundaries.md"
+        ).read_text()
 
         for source in ("local", "PR", "human", "CI", "audit", "user-supplied"):
             self.assertIn(source, review)
@@ -2489,8 +2505,11 @@ class IntegrationTests(unittest.TestCase):
         self.assertIn("Raw reviewer severity does not authorize action.", review)
         self.assertIn("The accepted result remains correct. Exclude and report", review)
         self.assertIn("No accepted result defines the outcome", review)
-        self.assertIn("Do not require a task-visible wrong result or an explicit required result", review)
-        self.assertIn("first three supported-model checks", review)
+        self.assertIn("apply the contract-gap exception in Scope Boundaries", review)
+        self.assertIn("Do not require a changed production entry point", scope)
+        self.assertIn("or a task-visible wrong result", scope)
+        self.assertIn("An `opaque` owner still requires the direct regression trace", scope)
+        self.assertNotIn("Do not require a task-visible wrong result", review)
         self.assertIn("make no partial fixes", review)
         self.assertIn("Incorrect math, comparisons, mappings, and branch order can qualify", review)
         for forbidden_addition in (
@@ -2508,6 +2527,9 @@ class IntegrationTests(unittest.TestCase):
         ):
             self.assertIn(forbidden_addition, review)
         self.assertIn('"classification": "wrong | unchanged | undefined"', finding)
+        self.assertIn('"changed_production_entry_point": "path:line-line, or none"', finding)
+        self.assertIn('"explicit_requirement_defines_result": true', finding)
+        self.assertNotIn('"violates_explicit_requirement"', finding)
         self.assertIn(
             '"classification": "direct repair | decision required | excluded | contract gap | severe stop"',
             finding,
@@ -2541,7 +2563,7 @@ class IntegrationTests(unittest.TestCase):
             "checkpoint review boundary and local commit boundary",
         ):
             self.assertIn(required_fact, plans)
-        self.assertIn("one final coherence review across the complete task", plans)
+        self.assertIn("one final review of the complete task", plans)
 
         self.assertIn("current ExecPlan, every applicable Plan record", history)
         self.assertIn("completed checkpoint history in Git", history)
@@ -2570,9 +2592,9 @@ class IntegrationTests(unittest.TestCase):
         self.assertIn("`pwsh -File .\\doctor.ps1`", publication)
         self.assertIn("from the reviewed candidate", publication)
         self.assertIn("`Result: ready`", publication)
-        self.assertEqual(kit.KIT_VERSION, "0.21.1")
-        self.assertNotIn("Version `0.21.1`", (ROOT / "README.md").read_text())
-        self.assertNotIn("version 0.21.1", (ROOT / "CODEX-INSTALL-PROMPT.md").read_text())
+        self.assertEqual(kit.KIT_VERSION, "0.22.0")
+        self.assertNotIn("Version `0.22.0`", (ROOT / "README.md").read_text())
+        self.assertNotIn("version 0.22.0", (ROOT / "CODEX-INSTALL-PROMPT.md").read_text())
 
     def test_pr_publication_reviews_draft_before_ci(self):
         root = ROOT / "assets" / "skills"
@@ -2781,6 +2803,7 @@ class IntegrationTests(unittest.TestCase):
         self.assertIn("Do not use cumulative", formatter)
 
         self.assertIn("Spawn one fresh read-only diagnostic subagent.", diagnostic)
+        self.assertNotIn("Close the reviewer", diagnostic)
         self.assertIn("Omit reviewer fix directions and all proposed corrections.", diagnostic)
         self.assertIn("Do not give it a diagnosis, preferred fix, or toolkit correction.", diagnostic)
         self.assertIn("Complete and validate the diagnostic before the coordinator composes the final response.", diagnostic)
@@ -2790,7 +2813,22 @@ class IntegrationTests(unittest.TestCase):
         self.assertIn("After the diagnostic, halt.", diagnostic)
         self.assertIn("Do not edit files, run checks, start review", diagnostic)
         self.assertIn("Repeat the complete finding section for every validated stop finding.", summary)
-        self.assertIn("Portable summary", summary)
+        diagnostic_labels = (
+            "### Problem",
+            "### End result",
+            "### Prevention",
+            "### Required action",
+            "### Proof",
+            "### Portable summary",
+        )
+        diagnostic_positions = [summary.index(label) for label in diagnostic_labels]
+        self.assertEqual(diagnostic_positions, sorted(diagnostic_positions))
+        self.assertIn("`wrong`", summary)
+        self.assertIn("`still correct`", summary)
+        self.assertIn("`unknown`", summary)
+        self.assertNotIn("### Chronological reconstruction", summary)
+        self.assertIn("exact human decision that is required to resume", summary)
+        self.assertNotIn("If no decision is necessary", summary)
         self.assertIn("Human direction is required. Do not continue implementation.", summary)
 
 

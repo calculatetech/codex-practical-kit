@@ -13,7 +13,7 @@ Status legend:
 
 ## Active
 
-- 🎯 **CPK-044 — Separate review findings from correction authority.** Native Codex review discovers defects. A source-independent gate excludes irrelevant observations and permits only direct repairs without human direction. Severe diagnostics lead with plain outcomes and required action.
+No task is active.
 
 ## Planned next
 
@@ -33,6 +33,7 @@ No residual risk is accepted.
 
 ## Completed
 
+- ✅ **CPK-044 — Separate review findings from correction authority.** Native Codex review discovers defects. A source-independent gate excludes irrelevant observations and permits only direct repairs without human direction. Severe diagnostics lead with plain outcomes and required action.
 - ✅ **CPK-043 — Review PRs before hosted CI.** PR publication now reviews the current head while it remains draft. It scope-gates each finding before severity, correction, or stop behavior.
 - ✅ **CPK-042 — Split large plans into reviewed checkpoints.** Large Plans now use stable semantic subtasks, reviewed local checkpoints, safe replanning, and one final coherence review.
 - ✅ **CPK-041 — Explain code consequences before decisions.** Material technical choices now show the visible result, implementation shape, source, new moving parts, and maintenance effects before the choice tool.

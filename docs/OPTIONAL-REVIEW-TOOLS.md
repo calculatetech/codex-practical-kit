@@ -33,7 +33,9 @@ The kit borrowed these ideas, not its code:
 - Structured and deduplicated findings.
 - Clean review context.
 
-The core kit adds a supported-model gate and uses one reviewer. Install Compound Engineering only when a task explicitly needs broader review.
+The core kit uses native Codex review for each review target. It applies supported-model and correction-authority gates after discovery.
+
+Install Compound Engineering only when a task explicitly needs broader review.
 
 License: MIT.
 
@@ -48,7 +50,7 @@ Best fit:
 - Fresh implementer and reviewer subagents per task.
 - Durable task ledgers for long sessions.
 
-The kit uses its clean-context review-packet idea. It does not install the full workflow because that would add more ceremony than most tasks need.
+The kit uses an exact staged candidate with independent review context. It does not install the full workflow because most tasks do not need it.
 
 License: MIT.
 

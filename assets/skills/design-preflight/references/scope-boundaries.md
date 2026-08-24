@@ -30,4 +30,6 @@ For `composes`, derive task scenarios and review the required result. For `opaqu
 
 Every retained review finding must cite the boundary source and classification. It must name the changed production entry point and the task-visible wrong result.
 
+An undefined outcome in a `composes` owner is the contract-gap exception. Require its boundary source and classification. Do not require a changed production entry point or a task-visible wrong result before the Supported Model gate classifies it. An `opaque` owner still requires the direct regression trace above.
+
 Drop an observation that has no such trace. Do not fix it, count it, diagnose it, or add it to the roadmap.

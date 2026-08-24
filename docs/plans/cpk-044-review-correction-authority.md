@@ -13,7 +13,11 @@ Local review must discover defects without receiving the main thread's conclusio
 - [x] (2026-08-24) Made CPK-044 the only Active roadmap task.
 - [x] (2026-08-24) Completed Design Preflight for the review and diagnostic instruction owners.
 - [x] (2026-08-24) CP1 completed: native review discovery and correction authority passed a checkpoint review and a clean correction-delta review.
-- [ ] CP2: Improve severe diagnostic presentation, update documentation and version, then complete final validation and review.
+- [x] (2026-08-24) CP2 implementation completed: severe diagnostics now lead with the problem, end-result relevance, prevention, and required action.
+- [x] (2026-08-24) Updated documentation, version `0.22.0`, focused tests, and the distribution manifest.
+- [x] (2026-08-24) Completed the full test, compile, shell, PowerShell, manifest, Plan-history, and diff checks.
+- [x] (2026-08-24) CP2 passed its native checkpoint review.
+- [x] (2026-08-24) Completed the final complete-candidate review, installation, Doctor check, native-review smoke, and review closure.
 
 ## Surprises & Discoveries
 
@@ -21,6 +25,10 @@ Local review must discover defects without receiving the main thread's conclusio
   Evidence: The planning feasibility probe rejected the combined form. A synthetic commit message is therefore the only task-intent input.
 - Observation: The first native checkpoint review found two contract omissions in the new review instructions.
   Evidence: Review of synthetic commit `d57f668b266a968ab408e0793f71097a5ff5d1e0` found that an undefined result could be dropped by the wrong-result scope predicate and that the P0-P2 counted-pass threshold was missing.
+- Observation: The complete suite found that the native-review rewrite had dropped existing lifecycle and Scenario Proof routes.
+  Evidence: Four static contract tests failed. Restoring the prior route links and lifecycle phrase made all 83 tests pass, with one platform-specific skip.
+- Observation: The final native review challenged broad publication authority and found a real rule-owner conflict for contract gaps.
+  Evidence: Broad `publish` authority does not override CPK-044's required finding decision, so that observation was excluded. The contract-gap exception moved to the canonical scope owner.
 
 ## Decision Log
 
@@ -36,7 +44,7 @@ Local review must discover defects without receiving the main thread's conclusio
 
 ## Outcomes & Retrospective
 
-CP1 now uses native review for exact staged candidates. It applies one source-independent gate before any correction. The first native review found two instruction defects that the former preloaded reviewer had not exposed; both direct repairs passed delta review. CP2 remains.
+Version `0.22.0` now uses native review for exact staged candidates. One source-independent gate excludes findings that do not change the accepted result and permits only direct repairs without human direction. Severe diagnostics now lead with the problem, end-result relevance, prevention, and required action. All 83 tests passed, with one Windows-only skip. The installed candidate passed Doctor, the native-review smoke, correction-delta review, and final complete-candidate review.
 
 ## Prior Plan Reconciliation
 

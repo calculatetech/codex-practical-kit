@@ -96,7 +96,7 @@ Classify all candidates in their original order before making any correction:
 5. Apply the severe-stop breaker.
 6. Classify correction authority.
 
-Only a `wrong` candidate that passes both gates becomes a retained finding. For an `undefined` candidate, apply the product-boundary ownership and the first three supported-model checks. Do not require a task-visible wrong result or an explicit required result. If those three checks pass, classify the candidate as a contract gap and stop for human direction.
+Only a `wrong` candidate that passes both gates becomes a retained finding. For an `undefined` candidate, apply the contract-gap exception in Scope Boundaries, then apply the Supported Model gate. A contract gap stops for human direction.
 
 An automatic correction is a `direct repair` only when all these facts are true:
 
@@ -117,7 +117,7 @@ Tests, test fixtures, documentation, static configuration, dependencies, manifes
 
 For an authorized direct repair:
 
-1. Reapply Delivery Lifecycle.
+1. Reapply Delivery Lifecycle before an accepted correction.
 2. Fix the smallest shared cause in the existing owner.
 3. Add or correct the one direct regression check.
 4. Run the applicable checks.

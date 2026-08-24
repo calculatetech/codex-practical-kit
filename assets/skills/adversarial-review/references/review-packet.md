@@ -54,7 +54,12 @@ Read cited source and relevant callers before adjudication. Write `unknown` when
 
 ## Verification already run
 
-Copy the accepted Scenario Proof mapping when one exists. For each retained scenario, include its discriminator, contrast, production path, required oracle, actual runnable check, and result. An aggregate suite result is supporting evidence only.
+Record the accepted Scenario Proof mapping and result when one exists.
+
+## Scenario discrimination
+
+<!-- cpk-rule-route-only: scenario-discrimination -->
+[Scenario discrimination](../../design-preflight/references/scenario-discrimination.md)
 
 ## Project standards
 

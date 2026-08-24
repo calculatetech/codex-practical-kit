@@ -28,16 +28,16 @@ Record one object for every candidate finding in source order.
     "reason": "One source-backed reason"
   },
   "task_scope": {
-    "classification": "composes | opaque",
+    "classification": "composes | opaque | deferred",
     "boundary_source": "path:line-line",
-    "changed_production_entry_point": "path:line-line",
+    "changed_production_entry_point": "path:line-line, or none",
     "task_visible_wrong_result": "Observable requirement violation, or none"
   },
   "supported_model": {
     "normal_use": true,
     "project_controls_it": true,
     "reproducible_without_fault_injection": true,
-    "violates_explicit_requirement": true
+    "explicit_requirement_defines_result": true
   },
   "validated_severity": "P0 | P1 | P2 | P3 | none",
   "correction_authority": {

@@ -7,6 +7,21 @@ Native Codex review independently inspects the selected commit, repository, depe
 <!-- cpk-rule-route-only: scope-boundaries -->
 [Scope boundaries](../../design-preflight/references/scope-boundaries.md)
 
+## Scenario discrimination
+
+<!-- cpk-rule-route-only: scenario-discrimination -->
+[Scenario discrimination](../../design-preflight/references/scenario-discrimination.md)
+
+## Owner composition
+
+<!-- cpk-rule-route-only: owner-composition -->
+[Owner composition](../../design-preflight/references/owner-composition.md)
+
+## Full-set results
+
+<!-- cpk-rule-route-only: full-set-results -->
+[Full-set results](../../design-preflight/references/full-set-results.md)
+
 ## Full correctness
 
 Use the task base as the synthetic commit parent. The staged tree is the complete task candidate.

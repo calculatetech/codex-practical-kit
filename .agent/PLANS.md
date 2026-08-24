@@ -90,7 +90,7 @@ Use one ExecPlan for the task. Do not create child ExecPlans. Give each subtask 
 
 For each subtask, state its observable outcome and primary owner. State the allowed change boundary and its dependencies on earlier subtasks. State the implementation result. Give the exact validation command and required oracle. State the checkpoint review boundary and local commit boundary.
 
-Complete each subtask with its focused validation and checkpoint review before its planned local commit. Keep the roadmap task active between checkpoints. After all subtasks are complete, run one final coherence review across the complete task.
+Complete each subtask with its focused validation and checkpoint review before its planned local commit. Keep the roadmap task active between checkpoints. After all subtasks are complete, run one final review of the complete task.
 
 ## Living plans and design decisions
 

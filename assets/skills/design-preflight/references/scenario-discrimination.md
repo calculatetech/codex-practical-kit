@@ -17,6 +17,6 @@ Hold unrelated factors constant when practical and split a row when one contrast
 
 Follow the production path to the required terminal oracle. A runnable check is insufficient when the named requirement can be false while the check passes.
 
-Before implementation, record the discriminator, contrast, production path, required oracle, and planned check. Before review, record the actual check and result.
+Before implementation, record the discriminator, contrast, production path, required oracle, and planned check. Before review, run the named check, record its result, and verify each retained row. An aggregate suite result is supporting evidence only.
 
 Do not require mutation-testing software, coverage metrics, or exhaustive combinations.
