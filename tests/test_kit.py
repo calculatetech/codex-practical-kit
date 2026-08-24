@@ -390,7 +390,7 @@ class InstallerTests(unittest.TestCase):
                 kit.install_core(Namespace(repo=None, repowise_prose=False), paths)
             plans = paths.codex_home / "PLANS.md"
             plans_text = plans.read_text()
-            self.assertEqual(plans_text, (ROOT / ".agent" / "PLANS.md").read_text())
+            self.assertEqual(plans_text, kit.global_plans_body(paths))
             for target in re.findall(r"]\(([^)]+)\)", plans_text):
                 if "://" not in target:
                     self.assertTrue(Path(target.strip("<>")).is_absolute(), target)
@@ -403,7 +403,7 @@ class InstallerTests(unittest.TestCase):
             plans.write_text("changed\n")
             with mock.patch.object(kit, "stage_upstream_skills", fake_stage):
                 kit.install_core(Namespace(repo=None, repowise_prose=False), paths)
-            self.assertEqual(plans.read_text(), (ROOT / ".agent" / "PLANS.md").read_text())
+            self.assertEqual(plans.read_text(), kit.global_plans_body(paths))
             self.assertTrue(kit.uninstall_core(Namespace(purge=False), paths))
             self.assertFalse(plans.exists())
 
@@ -1919,6 +1919,7 @@ class IntegrationTests(unittest.TestCase):
         publication = (
             ROOT / "assets" / "skills" / "publication" / "references" / "publication.md"
         ).read_text()
+        history = (ROOT / "assets" / "skills" / "plan-history" / "SKILL.md").read_text()
 
         freeze = (
             "Freeze every tracked task record before the task commit, CI, push, pull request, merge, "
@@ -1930,18 +1931,37 @@ class IntegrationTests(unittest.TestCase):
 
         self.assertNotIn("review is pending", roadmap)
         self.assertNotIn("Validation establishes a review candidate", roadmap)
-        self.assertIn("An ExecPlan is a living document until review closure", plans)
+        self.assertIn("An ExecPlan is a living specification until review closure", plans)
         self.assertIn("Do not write a readiness or authorization statement", plans)
-        self.assertIn("Do not add a `Progress` item for a delivery action", plans)
-        self.assertIn("limited to four updates", closure)
+        self.assertNotIn("## Progress", plans)
+        self.assertNotIn("Date/Author:", plans)
+        self.assertNotIn("Preflight: ready", plans)
+        self.assertIn("Do not record operational progress or results in an ExecPlan", plans)
+        self.assertIn("cpk-rule-route-only: delivery-lifecycle", plans)
+        self.assertNotIn("roadmap is the only tracked progress and lifecycle-state record", plans)
+        self.assertNotIn("Untracked or ignored working files can record progress", plans)
+        self.assertIn("The roadmap is the only tracked lifecycle-state record", delivery)
+        self.assertIn("Untracked or ignored working files can record progress", delivery)
+        self.assertIn("ignored `.agent/test-results/`", delivery)
+        self.assertIn("limited to three updates", closure)
+        self.assertNotIn("task ExecPlan review result", closure)
+        self.assertIn("reviewed task roadmap transition", closure)
+        self.assertIn("untracked test-result record", closure)
+        self.assertIn("completed checkpoint history in Git", history)
+        self.assertIn("current conversation when available", history)
+        self.assertIn("Do not rewrite completed ExecPlans", history)
+        self.assertIn("Never edit or remove a Plan history record", history)
         self.assertNotIn("publication status", closure)
         self.assertIn("cpk-rule-route-only: delivery-lifecycle", publication)
 
     def test_execplan_is_the_only_durable_task_model(self):
         rules = (ROOT / "assets" / "AGENTS.block.md").read_text()
         plans = (ROOT / ".agent" / "PLANS.md").read_text()
+        spec_kit = (ROOT / "docs" / "SPEC-KIT.md").read_text()
         preflight = (ROOT / "assets" / "skills" / "design-preflight" / "SKILL.md").read_text()
         self.assertIn("{{PLANS_FILE}}", rules)
+        self.assertNotIn("ExecPlan records implementation decisions and progress", spec_kit)
+        self.assertIn("delivery-lifecycle/references/delivery-lifecycle.md", spec_kit)
         self.assertIn("cpk-rule-owner: execplans", plans)
         self.assertNotIn("Task Brief", preflight)
         self.assertNotIn("task-brief", kit.ALL_SKILLS)
@@ -2369,8 +2389,9 @@ class IntegrationTests(unittest.TestCase):
         self.assertIn("Before implementation", preflight)
         self.assertIn("Before review", preflight)
         self.assertIn("suite pass or test count does not replace", preflight)
+        self.assertIn("ignored task-result record", preflight)
         self.assertIn(
-            "| Production path | Required oracle | Runnable test or command | Result |",
+            "| Production path | Required oracle | Runnable test or command |",
             card,
         )
         for field in ('"production_path"', '"required_oracle"', '"planned_check"'):
@@ -2413,10 +2434,10 @@ class IntegrationTests(unittest.TestCase):
         self.assertIn('"discriminator"', result)
         self.assertIn('"contrast"', result)
         self.assertIn(
-            "| Scenario | Discriminator | Contrast | Production path | Required oracle | Runnable test or command | Result |",
+            "| Scenario | Discriminator | Contrast | Production path | Required oracle | Runnable test or command |",
             card,
         )
-        self.assertIn("complete the first six columns", card)
+        self.assertIn("complete every column", card)
         self.assertIn("split a row when one contrast cannot prove all claimed outcomes", owner)
         self.assertIn("named requirement can be false while the check passes", owner)
 
@@ -2432,7 +2453,7 @@ class IntegrationTests(unittest.TestCase):
         self.assertIn("stable `B#` identifier", owner)
         self.assertIn("every applicable production entry point", owner)
         self.assertIn("nearest wrong meaning as the contrast", owner)
-        self.assertIn("adds or changes a behavioral boundary", skill)
+        self.assertIn("every non-trivial implementation or refactor of behavior", skill)
         self.assertIn("complete authoritative source set", skill)
         self.assertIn("## Boundary inventory", card)
         self.assertIn('"source_clauses"', result)
@@ -2450,6 +2471,14 @@ class IntegrationTests(unittest.TestCase):
         review = (skills / "adversarial-review" / "SKILL.md").read_text()
 
         self.assertIn("independently reconstructs the source boundary inventory", owner)
+        self.assertIn("Do not disclose the accepted `B#` inventory or Scenario Proof before phase 1 returns", owner)
+        self.assertIn("Do not require or infer production entry points", owner)
+        self.assertIn(
+            "Trace phase 2 maps each behavioral boundary to every applicable production entry point",
+            owner,
+        )
+        self.assertIn("later unimplemented subtasks are outside that checkpoint boundary", owner)
+        self.assertIn("A final review cannot reuse checkpoint-limited closure", owner)
         self.assertIn("inspects production paths and test bodies", owner)
         self.assertIn("fixture must isolate the discriminator", owner)
         self.assertIn("nearest wrong meaning must fail", owner)
@@ -2459,6 +2488,13 @@ class IntegrationTests(unittest.TestCase):
         self.assertIn("unrelated documentation change does not invalidate", owner)
         self.assertIn("Do not give the trace record to native review", owner)
         self.assertIn('"reviewer": "boundary-trace-closure"', result)
+        self.assertIn('"reviewer": "boundary-trace-inventory"', result)
+        self.assertIn('"independent_inventory_frozen_before_comparison"', result)
+        self.assertIn('"review_mode": "full | checkpoint | delta | final"', result)
+        trace_phase_1 = result.split("## Trace closure phase 1 result", 1)[1].split(
+            "## Trace closure phase 2 result", 1
+        )[0]
+        self.assertNotIn('"production_entry_points"', trace_phase_1)
         for field in (
             '"source_inventory_complete"',
             '"entry_point"',
@@ -2494,6 +2530,19 @@ class IntegrationTests(unittest.TestCase):
         self.assertIn("traced_changes_invalidate", forward)
         self.assertIn("direct_arithmetic_can_use_exception", forward)
         self.assertIn("all_native_review_modes_gated", forward)
+        self.assertIn("tracked_execplan_status_rejected", forward)
+        self.assertIn("roadmap_only_lifecycle_state", forward)
+        self.assertIn("review_closure_execplan_update_rejected", forward)
+        self.assertIn("resumption_sources_complete", forward)
+        self.assertIn("completed_history_rewrite_rejected", forward)
+        self.assertIn("incomplete_resumption_rejected", forward)
+        self.assertIn("tracked_delivery_status_rejected", forward)
+        self.assertIn("spec_kit_progress_rejected", forward)
+        self.assertIn("untracked_progress_allowed", forward)
+        self.assertIn("anchored_trace_rejected", forward)
+        self.assertIn("two_phase_trace_ordered", forward)
+        self.assertIn("checkpoint_future_work_excluded", forward)
+        self.assertIn("final_complete_inventory_required", forward)
 
     def test_product_scope_boundaries_gate_preflight_and_review(self):
         rules_root = ROOT / "assets" / "skills" / "design-preflight" / "references"
@@ -2545,6 +2594,8 @@ class IntegrationTests(unittest.TestCase):
         self.assertIn("always ends with a clean `final` review", review)
         self.assertIn("production-code-defect count across every checkpoint", review)
         self.assertIn("clean correction delta permits its planned local commit", review)
+        self.assertIn("Keep the roadmap task Active", review)
+        self.assertNotIn("Keep the task and roadmap Active", review)
         self.assertIn("Previous reviewed candidate", packet)
         self.assertIn("Stable subtask identifier", packet)
         self.assertIn("Previous accepted checkpoint", packet)
@@ -2556,7 +2607,7 @@ class IntegrationTests(unittest.TestCase):
         self.assertIn("## Checkpoint correctness", lenses)
         self.assertIn("## Final correctness", lenses)
         self.assertIn("local checkpoint commit after Adversarial Review records", lifecycle)
-        self.assertIn("Keep the task and roadmap Active", lifecycle)
+        self.assertIn("Keep the roadmap task Active", lifecycle)
         self.assertIn("does not authorize review closure", lifecycle)
         self.assertIn("after Adversarial Review records a final clean result", docs)
         self.assertIn("After Adversarial Review records a final clean result", roadmap)
@@ -2633,7 +2684,6 @@ class IntegrationTests(unittest.TestCase):
             "primary owner",
             "allowed change boundary",
             "dependencies on earlier subtasks",
-            "implementation result",
             "exact validation command and required oracle",
             "checkpoint review boundary and local commit boundary",
         ):

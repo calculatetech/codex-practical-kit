@@ -69,7 +69,7 @@ Native discovery is independent. Do not send it the coordinator's review packet.
 
 ## Review sequence
 
-A checkpoint review covers one planned subtask since the previous accepted checkpoint and does not trigger review closure. Do not reopen unchanged completed work. A clean checkpoint or clean correction delta permits its planned local commit. Keep the task and roadmap Active.
+A checkpoint review covers one planned subtask since the previous accepted checkpoint and does not trigger review closure. Do not reopen unchanged completed work. A clean checkpoint or clean correction delta permits its planned local commit. Keep the roadmap task Active.
 
 After a reviewed candidate finds defects, later correctness passes review only the staged-tree delta and its direct impact. A delta review does not reopen unchanged code. It can inspect unchanged context only when the correction changes its contract or execution path. A requirement, scope, base, supported model, or unrelated tracked-file change invalidates the checkpoint and requires a new full review.
 

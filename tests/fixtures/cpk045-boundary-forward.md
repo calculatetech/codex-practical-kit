@@ -37,6 +37,23 @@ Then evaluate these proposed closure records separately:
 12. A change adds or changes a behavioral boundary, but claims the small-change exception because it edits one file.
 13. A direct arithmetic repair changes no behavioral boundary and has one proven owner and one direct check.
 14. For each of full, checkpoint, delta, and final native review, trace closure is fresh for the exact candidate and all required closure values are true.
+15. An ExecPlan adds progress checkboxes, timestamps, pass or fail results, a checkpoint commit, and native-review status.
+16. An ExecPlan keeps stable scope, decisions, instructions, design-shaping discoveries, planned checks, and final product outcomes. The roadmap alone marks the task Active or Completed. Detailed operational results stay in an ignored task-result file.
+17. Review Closure writes a clean-review result into the tracked ExecPlan.
+18. Resumed work reads the stable ExecPlan plus Plan history, roadmap, Git worktree and checkpoint history, ignored results when present, and the current conversation when available.
+19. A migration rewrites completed historical ExecPlans only to remove their old progress sections.
+20. Resumed work skips the ignored task result and current conversation even though both are available.
+21. After commit and push, the tracked ExecPlan records delivery and publication status.
+22. After commit and push, delivery evidence stays in Git, GitHub, the ignored task result, and the final response. The roadmap lifecycle state does not change because of publication.
+23. The optional Spec Kit guide says that the task ExecPlan records implementation progress.
+24. The optional Spec Kit guide says that the task ExecPlan records stable decisions and the roadmap is the only tracked lifecycle-state record.
+25. An untracked working file records current task progress for local use.
+26. The verifier sees the accepted `B#` inventory and Scenario Proof before it returns its independent inventory.
+27. The verifier receives only raw authoritative requirements and the exact review boundary, freezes its independent inventory, and then receives the accepted inventory, Scenario Proof, diff, production source, and named tests for comparison.
+28. A checkpoint traces its planned subtask and interactions with accepted earlier checkpoints. A later unimplemented subtask is outside the checkpoint boundary and is not missing evidence.
+29. A checkpoint is blocked only because a later planned subtask is not implemented.
+30. A final review reuses checkpoint-limited trace closure and omits another task boundary.
+31. A final review traces the complete task inventory.
 
 Return JSON only. Include:
 
@@ -50,6 +67,19 @@ Return JSON only. Include:
 - `traced_changes_invalidate` and `unrelated_document_preserves_closure`;
 - `boundary_change_requires_preflight` and `direct_arithmetic_can_use_exception`;
 - `all_native_review_modes_gated`;
+- `tracked_execplan_status_rejected`;
+- `roadmap_only_lifecycle_state`;
+- `review_closure_execplan_update_rejected`;
+- `resumption_sources_complete`;
+- `completed_history_rewrite_rejected`;
+- `incomplete_resumption_rejected`;
+- `tracked_delivery_status_rejected`;
+- `spec_kit_progress_rejected`;
+- `untracked_progress_allowed`;
+- `anchored_trace_rejected`;
+- `two_phase_trace_ordered`;
+- `checkpoint_future_work_excluded`;
+- `final_complete_inventory_required`;
 - `ordered_trace_inputs_complete`;
 - `native_review_independent`;
-- `overall` equal to `pass` only if the rules derive all source clauses and both staging cases; preserve the equal-result invariant; cover initial and correction paths; reject the broader helper and records 1-4, 6, 8-10, and 12; accept records 5, 7, 11, 13, and 14; and gate every native review mode.
+- `overall` equal to `pass` only if the rules derive all source clauses and both staging cases; preserve the equal-result invariant; cover initial and correction paths; reject the broader helper and records 1-4, 6, 8-10, 12, 15, 17, 19-21, 23, 26, 29, and 30; accept records 5, 7, 11, 13, 14, 16, 18, 22, 24, 25, 27, 28, and 31; gate every native review mode; derive before disclosing accepted trace records; scope checkpoints to current and earlier accepted work; require complete final closure; keep tracked lifecycle state only in the roadmap; and allow progress in untracked or ignored working files.

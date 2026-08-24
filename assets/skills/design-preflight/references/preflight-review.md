@@ -135,13 +135,47 @@ After the coordinator supplies the complete card and its decisions, return JSON 
 
 Empty `findings` is valid. Every finding must cite source and name the coordinator claim that it challenges.
 
-## Trace closure result
+## Trace closure phase 1 result
 
-After implementation and final substantive documentation, return JSON only.
+After receiving only the raw authoritative requirement sources and exact native-review boundary, return JSON only. Freeze this result before phase 2 inputs are disclosed.
+
+```json
+{
+  "reviewer": "boundary-trace-inventory",
+  "review_mode": "full | checkpoint | delta | final",
+  "review_boundary": "Complete task | stable subtask and earlier-checkpoint interactions | correction and direct impact",
+  "source_inventory_complete": true,
+  "missing_or_unsupported": [],
+  "source_clauses": [
+    {
+      "source": "path:line-line",
+      "clause": "Authoritative clause",
+      "disposition": "mapped | non-boundary | opaque | deferred | contract-gap",
+      "boundary_id": "B1 | null"
+    }
+  ],
+  "boundaries": [
+    {
+      "boundary_id": "B1",
+      "condition_or_invariant": "Explicit behavioral boundary",
+      "contrast_sides": ["Required side", "Nearest contrasting side"],
+      "required_oracles": ["Observable terminal result"]
+    }
+  ],
+  "decision": "pass"
+}
+```
+
+## Trace closure phase 2 result
+
+After phase 1 returns, supply the accepted boundary inventory, Scenario Proof, current diff, production source, and named tests. Return JSON only.
 
 ```json
 {
   "reviewer": "boundary-trace-closure",
+  "review_mode": "full | checkpoint | delta | final",
+  "review_boundary": "Same exact boundary as phase 1",
+  "independent_inventory_frozen_before_comparison": true,
   "source_inventory_complete": true,
   "missing_or_unsupported": [],
   "boundaries": [

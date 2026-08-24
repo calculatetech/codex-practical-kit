@@ -13,7 +13,7 @@ Status legend:
 
 ## Active
 
-- 🎯 **CPK-045 — Close every behavioral boundary.** Design Preflight inventories every explicit behavioral boundary. A fresh trace-closure check verifies the implemented paths and tests before native review.
+No task is active.
 
 ## Planned next
 
@@ -33,6 +33,7 @@ No residual risk is accepted.
 
 ## Completed
 
+- ✅ **CPK-045 — Close every behavioral boundary.** Design Preflight inventories every explicit behavioral boundary. A fresh two-phase trace verifies implementation paths and tests before native review. The roadmap remains the sole tracked lifecycle view.
 - ✅ **CPK-044 — Separate review findings from correction authority.** Native Codex review discovers defects. A source-independent gate excludes irrelevant observations and permits only direct repairs without human direction. Severe diagnostics lead with plain outcomes and required action.
 - ✅ **CPK-043 — Review PRs before hosted CI.** PR publication now reviews the current head while it remains draft. It scope-gates each finding before severity, correction, or stop behavior.
 - ✅ **CPK-042 — Split large plans into reviewed checkpoints.** Large Plans now use stable semantic subtasks, reviewed local checkpoints, safe replanning, and one final coherence review.
@@ -46,7 +47,7 @@ No residual risk is accepted.
 - ✅ **CPK-034 — Require discriminating Scenario Proof checks.** Each retained scenario proves its exact semantic distinction at the terminal oracle.
 - ✅ **CPK-033 — Keep RepoWise active for the full task.** Every repository lookup stays index-first after `no-llm-provider` and automatic compaction.
 - ✅ **CPK-032 — Invoke planning and RepoWise throughout applicable work.** Qualifying Default-mode implementation and review corrections apply Design Preflight with an xhigh planning challenger, then return to the configured implementation effort. Each new repository lookup returns through RepoWise.
-- ✅ **CPK-031 — Freeze tracked task status before delivery.** Tracked task records contain their final durable state before commit, CI, push, pull request, merge, or publication.
+- ✅ **CPK-031 — Keep operational progress untracked.** The roadmap is the sole tracked lifecycle-state record. Detailed task, validation, review, checkpoint, and delivery results stay outside tracked files.
 - ✅ **CPK-030 — Make RepoWise index-first and self-refreshing.** Exact lookups use indexed selectors, model synthesis remains optional, and active Codex sessions keep working-tree edits indexed without model calls.
 - ✅ **CPK-029 — Activate normal mode when Plan mode starts.** The managed prompt hook selects Ponytail normal mode before each Plan-mode prompt. Other modes keep their selected implementation mode.
 - ✅ **CPK-028 — Scope minimalism by lifecycle phase.** Planning, research, test-scope definition, and read-only review use normal mode. Implementation uses Ponytail after scenario obligations are fixed, and each retained runtime scenario maps to one production path, oracle, runnable check, and result.

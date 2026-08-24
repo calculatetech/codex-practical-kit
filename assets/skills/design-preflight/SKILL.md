@@ -56,7 +56,7 @@ For non-trivial runtime behavior, derive a Scenario Proof with three lenses:
 
 Apply [Scenario discrimination](references/scenario-discrimination.md) to every retained scenario. Apply [Owner composition](references/owner-composition.md) to the path-and-transition lens. Apply [Full-set results](references/full-set-results.md) to collection semantics.
 
-Use Scenario discrimination to inventory every authoritative source clause when the task adds or changes a behavioral boundary. Merge the accepted inventory into the task ExecPlan.
+For every non-trivial implementation or refactor of behavior, use Scenario discrimination to inventory every authoritative source clause. Merge the accepted inventory into the task ExecPlan.
 
 Close each retained path-and-transition scenario over every supported event that can act on its state until the required terminal result. Do not split one stateful sequence into component scenarios.
 
@@ -101,7 +101,7 @@ Compare both results with the coordinator's derivation once. Merge each supporte
 
 Use the canonical classifications. Merge `applicable` scenarios. Record `contract-gap` scenarios. Omit `excluded` scenarios.
 
-Before implementation, each retained scenario must have a planned runnable check and oracle. Before review, update the mapping with the actual test or command and its result. A suite pass or test count does not replace this mapping.
+Before implementation, each retained scenario must have a planned runnable check and oracle. Before review, keep the actual command and result in the ignored task-result record. A suite pass or test count does not replace the per-scenario evidence.
 
 For an initial non-runtime preflight that changes no behavioral boundary, use this same single challenge only when normal-use ownership or scope remains unclear.
 

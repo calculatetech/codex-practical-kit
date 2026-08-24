@@ -349,8 +349,14 @@ def plans_path(paths: InstallPaths) -> Path:
     return paths.codex_home / "PLANS.md"
 
 
+def global_plans_body(paths: InstallPaths) -> str:
+    return read_text(ROOT / ".agent" / "PLANS.md").replace(
+        "../assets/skills", paths.skills_home.as_posix()
+    )
+
+
 def install_global_plans(paths: InstallPaths) -> None:
-    write_file(plans_path(paths), read_text(ROOT / ".agent" / "PLANS.md"))
+    write_file(plans_path(paths), global_plans_body(paths))
 
 
 def uninstall_global_plans(paths: InstallPaths, manifest: dict[str, Any]) -> None:
@@ -985,7 +991,7 @@ def doctor(args: argparse.Namespace, paths: InstallPaths) -> int:
         str(agents),
     )
     plan = plans_path(paths)
-    expected_plan = read_text(ROOT / ".agent" / "PLANS.md")
+    expected_plan = global_plans_body(paths)
     plan_recorded = manifest.get("plans_file") if isinstance(manifest, dict) else None
     ok &= check(
         plan_recorded == str(plan) and read_text(plan) == expected_plan,

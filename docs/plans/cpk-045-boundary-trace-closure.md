@@ -1,24 +1,12 @@
 # Close Every Behavioral Boundary
 
-This ExecPlan is a living document until review closure. Maintain it according to `.agent/PLANS.md`.
+This ExecPlan is a living specification until review closure. Maintain it according to `.agent/PLANS.md`.
 
 ## Purpose / Big Picture
 
 Implementation can preserve the common case while it violates an explicit boundary. A positive-only test can then pass. After this change, Design Preflight must inventory each explicit behavioral boundary before implementation. A fresh verifier must inspect the implementation and paired proof before native review starts.
 
 The release version is `0.23.0`. Work occurs on branch `cpk-045-boundary-trace-closure` from commit `388b23fc165df788848d19e6ce738a973f888d2e`.
-
-## Progress
-
-- [x] (2026-08-24 16:47Z) Recovered and reconciled all Plan history records.
-- [x] (2026-08-24 17:05Z) Completed research and the two-phase Design Preflight challenge.
-- [x] (2026-08-24 16:56Z) CP1: Added the complete boundary inventory to Design Preflight and its checks.
-- [x] (2026-08-24 17:05Z) CP1: Validated and reviewed checkpoint commit `7fb115a`.
-- [x] (2026-08-24 17:14Z) CP2: Added trace closure before native review and its checks.
-- [x] (2026-08-24 17:14Z) CP2: Finalized documentation, version `0.23.0`, and the distribution manifest.
-- [ ] CP2: Validate and review the second checkpoint.
-- [ ] Run final complete-candidate review, install the toolkit, and run Doctor.
-- [ ] Close review records and the roadmap.
 
 ## Surprises & Discoveries
 
@@ -33,23 +21,20 @@ The release version is `0.23.0`. Work occurs on branch `cpk-045-boundary-trace-c
 
 - Decision: Extend Scenario Discrimination and Design Preflight. Do not add a skill or executable framework.
   Rationale: These files already own requirement-derived contrasts and the pre-review proof mapping.
-  Date/Author: 2026-08-24 / Codex and user.
 - Decision: A changed behavioral boundary always requires inventory and closure.
   Rationale: The user selected complete boundary tracing. A direct bug that changes no boundary retains the small-change exception.
-  Date/Author: 2026-08-24 / User.
 - Decision: Use one fresh read-only verifier immediately before native review.
   Rationale: The verifier independently reconstructs the source denominator and inspects actual production and test paths.
-  Date/Author: 2026-08-24 / Codex and user.
 - Decision: Do not provide the trace record to native review.
   Rationale: Native review remains an independent defect-discovery lens.
-  Date/Author: 2026-08-24 / Codex and user.
 - Decision: Replace the preflight card's numeric line cap with a compactness rule.
   Rationale: Multiple mandatory boundary and scenario rows cannot fit under the old limit. Required proof rows take priority.
-  Date/Author: 2026-08-24 / Codex.
+- Decision: Keep mutable progress and lifecycle state out of tracked files except `docs/roadmap.md`.
+  Rationale: The roadmap is the human progress view. ExecPlans are stable implementation specifications, not status ledgers.
 
 ## Outcomes & Retrospective
 
-No implementation outcome exists yet.
+The toolkit requires source-complete boundary proof before native review. ExecPlans retain stable decisions and checks without duplicating roadmap progress or operational results.
 
 ## Context and Orientation
 
@@ -68,7 +53,7 @@ Applicable immutable Plan records:
 
 ## Product Boundary
 
-[Scope boundaries](../../assets/skills/design-preflight/references/scope-boundaries.md) limits this task to accepted implementation and test proof. The authoritative source is the accepted CPK-045 Plan and the user's requirement that every explicit behavioral boundary receives trace proof.
+[Scope boundaries](../../assets/skills/design-preflight/references/scope-boundaries.md) limits this task to accepted implementation and test proof. The authoritative sources are the accepted CPK-045 Plan, the requirement that every explicit behavioral boundary receives trace proof, and the user's rule that only the roadmap stores tracked progress and lifecycle state.
 
 Design Preflight, Scenario Discrimination, and the pre-review gate are `composes` owners. Native review, review correction authority, Plan capture, publication, and the supported operating model are `opaque`. No deferred owner is promoted.
 
@@ -82,18 +67,17 @@ Existing owner: Scenario Discrimination owns the boundary trace. Design Prefligh
 
 Normal-use behavior floor: Source clauses cannot disappear because they resemble earlier clauses. Equal-result invariants remain boundaries. Every applicable entry point receives proof. Positive-only tests, component tests, unrelated fixture changes, and broader helpers cannot close the trace.
 
-Preflight: ready — extend the existing Scenario Proof record and add one fresh trace-closure phase.
-
 ## Boundary Inventory
 
 | Boundary | Source | Condition or invariant | Required sides and oracle | Entry points | Scenario Proof |
 | --- | --- | --- | --- | --- | --- |
 | B1 | Accepted CPK-045 Plan, CP1 | Every authoritative clause that defines a behavioral boundary receives a disposition. | Mapped clauses enter the trace. Non-boundary, opaque, deferred, and contract-gap clauses retain an explicit disposition. An omitted later clause blocks work. | Design Preflight before implementation and accepted boundary corrections. | S1 source list with duplicate-looking prefix and later distinct clause. |
 | B2 | Accepted CPK-045 Plan, CP1 | Each boundary covers every applicable production path. | One scenario per path, or one composed scenario that proves all paths. Equal-result invariants use the nearest wrong meaning as the contrast. | Design Preflight before initial implementation and before accepted boundary corrections. | S2 mapped and unmapped staging paths. S3 equal-result invariant. |
-| B3 | Accepted CPK-045 Plan, CP2 | After implementation and final substantive documentation, one fresh read-only verifier receives every named input and independently enumerates source boundaries before it compares `B#` records. | Raw requirements, accepted inventory, Scenario Proof, diff, production source, and named tests are present. Reordered work, a reused verifier, or a missing input blocks review. | Full, checkpoint, delta, and final review candidates with a boundary inventory. | S4 positive-only failure. S5 unrelated fixture failure. S6 broader-helper failure. S10 verifier order and inputs. |
+| B3 | Accepted CPK-045 Plan, CP2; final review corrections | After implementation and final substantive documentation, one fresh read-only verifier independently enumerates source boundaries before it sees accepted `B#` records. Trace scope matches native-review scope. | Phase 1 receives only raw requirements and the exact review boundary. Phase 2 receives the accepted inventory, Scenario Proof, diff, production source, and named tests. Checkpoints exclude later unimplemented subtasks. Full and final reviews require the complete task inventory. | Full, checkpoint, delta, and final review candidates with a boundary inventory. | S4 positive-only failure. S5 unrelated fixture failure. S6 broader-helper failure. S10 verifier order, inputs, and review boundary. |
 | B4 | Accepted CPK-045 Plan, CP2 | Closure evidence remains valid only for the exact traced candidate. | A change to requirement sources, boundary records, production paths, or named tests invalidates closure. An unrelated document change does not. | Candidate preparation immediately before native review. | S7 traced change invalidates. S8 unrelated document keeps closure. |
 | B5 | User decision in the accepted Plan | A new or changed behavioral boundary cannot use the small-change exception. | Boundary change requires inventory and closure. A direct arithmetic bug with no boundary change retains the exception. | Initial work and accepted review corrections. | S9 boundary change and direct arithmetic contrast. |
-| B6 | Accepted CPK-045 Plan, CP2 | Native review remains independent from trace closure. | Native review receives the accepted intent, source, and synthetic commit. Giving it the trace record or coordinator conclusions violates the boundary. | Every native checkpoint, delta, and final review after trace closure. | S11 independent native-review input. |
+| B6 | Accepted CPK-045 Plan, CP2 | Native review remains independent from trace closure. | Native review receives the accepted intent, source, and synthetic commit. Giving it the trace record or coordinator conclusions violates the boundary. | Every native full, checkpoint, delta, and final review after trace closure. | S11 independent native-review input. |
+| B7 | User corrections on 2026-08-24 | Only `docs/roadmap.md` stores tracked progress or lifecycle state. | ExecPlans store stable specification content. Operational progress, test results, review results, checkpoint state, and delivery state can stay in untracked or ignored working files. | New, resumed, and Spec Kit ExecPlans; Scenario Proof; checkpoints; review closure; delivery; completed history. | S12 tracked status versus stable specification. |
 
 The immutable Plan record and its byte-identical sibling copy contain one semantic clause set. Each clause has this disposition:
 
@@ -121,6 +105,8 @@ The immutable Plan record and its byte-identical sibling copy contain one semant
 | CP1: store the inventory in the card, Phase 1 result, and ExecPlan | mapped | B1. |
 | CP2: run one fresh read-only verifier after implementation and final documentation | mapped | B3. |
 | CP2: give all named inputs and enumerate independently before `B#` comparison | mapped | B3. |
+| Final review F1: freeze independent derivation before accepted inventory disclosure | mapped | B3 and S10. |
+| Final review F2: match trace scope to full, checkpoint, delta, and final review scope | mapped | B3 and S10. |
 | CP2: return the specified result shape | mapped | B3 and B4. |
 | CP2: false, unknown, missing, or unsupported evidence blocks review | mapped | B3. |
 | CP2: inspect test bodies and reject positive, component, aggregate, and writer evidence | mapped | B3. |
@@ -146,6 +132,14 @@ The immutable Plan record and its byte-identical sibling copy contain one semant
 | Assumptions: Review Closure changes invalidate only traced sources | mapped | B4. |
 | Assumptions: roadmap state and no publication | non-boundary | Coordination and delivery state. |
 | Prior Plan Reconciliation | non-boundary | Preserves earlier owners without changing them. |
+| User correction: the roadmap is the sole tracked progress exception | mapped | B7 and S12. |
+| User correction: ExecPlans contain stable specification content, not timestamps, flags, or current-state summaries | mapped | B7 and S12. |
+| User correction: test, review, checkpoint, and delivery results remain untracked | mapped | B7 and S12. |
+| User clarification: untracked or ignored working files can record progress | mapped | B7 and S12. |
+| User correction: Review Closure cannot write status into an ExecPlan | mapped | B7 and S12. |
+| User correction: resumption combines the specification with Plan history, roadmap, Git, ignored results, and conversation | mapped | B7 and S12. |
+| User correction: completed historical plans remain immutable | mapped | B7 and S12. |
+| Optional Spec Kit: ExecPlans store stable decisions and the roadmap stores lifecycle state | mapped | B7 and S12. |
 
 No clause is deferred or a contract gap.
 
@@ -153,25 +147,30 @@ No clause is deferred or a contract gap.
 
 [Scenario discrimination](../../assets/skills/design-preflight/references/scenario-discrimination.md), [Owner composition](../../assets/skills/design-preflight/references/owner-composition.md), and [Full-set results](../../assets/skills/design-preflight/references/full-set-results.md) control this proof.
 
-| Scenario | Discriminator | Contrast | Production path | Required oracle | Runnable test or command | Result |
-| --- | --- | --- | --- | --- | --- | --- |
-| S1 | Source-clause identity | Two similar clauses followed by one distinct boundary | Raw sources to inventory to disposition | Every clause has one disposition and omission blocks work | Clean-context command from S2 and `test_preflight_inventories_every_behavioral_boundary` | Pass |
-| S2 | Mapped-plan status | Same staging input with mapped and unmapped base plans | Requirement to both production entry paths | Only the required path substitutes the plan | `codex exec --ephemeral --sandbox read-only -C . -o .agent/test-results/cpk045-forward-output.json - < tests/fixtures/cpk045-boundary-forward.md` | Pass |
-| S3 | Preserved invariant | Both correct sides have the same terminal result but the nearest wrong meaning differs | Requirement to implementation and terminal owner | The invariant holds on both sides | Clean-context command from S2 and `test_preflight_inventories_every_behavioral_boundary` | Pass |
-| S4 | Executed boundary side | Positive-only check versus paired check | Test body to terminal oracle | Positive-only evidence blocks review | `test_boundary_trace_closure_blocks_native_review` | Pass |
-| S5 | Fixture isolation | Discriminator-only fixture versus discriminator plus unrelated gate | Test body to production predicates | Unrelated variation blocks review | Clean-context command from S2 and `test_boundary_trace_closure_blocks_native_review` | Pass |
-| S6 | Enforcement meaning | Exact boundary owner versus broader helper | Entry point through gates to terminal owner | Broader meaning fails sensitivity | Clean-context command from S2 and `test_boundary_trace_closure_blocks_native_review` | Pass |
-| S7 | Traced-source identity | Same candidate versus changed requirement, path, record, or named test | Final docs and source to closure evidence | A traced change invalidates closure | Clean-context command from S2 and `test_boundary_trace_closure_blocks_native_review` | Pass |
-| S8 | Change relevance | Traced change versus unrelated documentation change | Candidate diff to closure evidence | Unrelated documentation does not invalidate closure | Clean-context command from S2 and `test_boundary_trace_closure_blocks_native_review` | Pass |
-| S9 | Change type | Boundary change versus arithmetic repair with no boundary change | Design Preflight entry gate | Only the boundary change overrides the exception | Clean-context command from S2 and `test_preflight_inventories_every_behavioral_boundary` | Pass |
-| S10 | Trace preparation | Fresh verifier after final docs with every input versus reused, early, or incomplete verification | Final candidate to independent source enumeration and trace result | Only the complete ordered trace can pass | Clean-context command from S2 | Pass |
-| S11 | Evidence and review independence | Paired terminal proof and source-only native input versus component, aggregate, writer, or trace-primed evidence | Trace gate to native-review input | Weak evidence blocks closure; the trace record stays out of native review | Clean-context command from S2 and `test_boundary_trace_closure_blocks_native_review` | Pass |
+| Scenario | Discriminator | Contrast | Production path | Required oracle | Runnable test or command |
+| --- | --- | --- | --- | --- | --- |
+| S1 | Source-clause identity | Two similar clauses followed by one distinct boundary | Raw sources to inventory to disposition | Every clause has one disposition and omission blocks work | Clean-context command from S2 and `test_preflight_inventories_every_behavioral_boundary` |
+| S2 | Mapped-plan status | Same staging input with mapped and unmapped base plans | Requirement to both production entry paths | Only the required path substitutes the plan | `codex exec --ephemeral --sandbox read-only -C . -o .agent/test-results/cpk045-forward-output.json - < tests/fixtures/cpk045-boundary-forward.md` |
+| S3 | Preserved invariant | Both correct sides have the same terminal result but the nearest wrong meaning differs | Requirement to implementation and terminal owner | The invariant holds on both sides | Clean-context command from S2 and `test_preflight_inventories_every_behavioral_boundary` |
+| S4 | Executed boundary side | Positive-only check versus paired check | Test body to terminal oracle | Positive-only evidence blocks review | `test_boundary_trace_closure_blocks_native_review` |
+| S5 | Fixture isolation | Discriminator-only fixture versus discriminator plus unrelated gate | Test body to production predicates | Unrelated variation blocks review | Clean-context command from S2 and `test_boundary_trace_closure_blocks_native_review` |
+| S6 | Enforcement meaning | Exact boundary owner versus broader helper | Entry point through gates to terminal owner | Broader meaning fails sensitivity | Clean-context command from S2 and `test_boundary_trace_closure_blocks_native_review` |
+| S7 | Traced-source identity | Same candidate versus changed requirement, path, record, or named test | Final docs and source to closure evidence | A traced change invalidates closure | Clean-context command from S2 and `test_boundary_trace_closure_blocks_native_review` |
+| S8 | Change relevance | Traced change versus unrelated documentation change | Candidate diff to closure evidence | Unrelated documentation does not invalidate closure | Clean-context command from S2 and `test_boundary_trace_closure_blocks_native_review` |
+| S9 | Change type | Boundary change versus arithmetic repair with no boundary change | Design Preflight entry gate | Only the boundary change overrides the exception | Clean-context command from S2 and `test_preflight_inventories_every_behavioral_boundary` |
+| S10 | Trace preparation and scope | Two-phase derivation before comparison versus anchored input; checkpoint-local closure versus future-subtask blocking; complete final closure versus reused checkpoint closure | Exact review boundary to independent inventory, then accepted records and candidate evidence | Only ordered, review-mode-aligned closure passes | Clean-context command from S2 and `test_boundary_trace_closure_blocks_native_review` |
+| S11 | Evidence and review independence | Paired terminal proof and source-only native input versus component, aggregate, writer, or trace-primed evidence | Trace gate to native-review input | Weak evidence blocks closure; the trace record stays out of native review | Clean-context command from S2 and `test_boundary_trace_closure_blocks_native_review` |
+| S12 | Tracked content purpose | Stable specification, complete resumption sources, and untracked delivery evidence versus ExecPlan status, missing resumption evidence, or tracked delivery status | Planning, resumption, checkpoints, review closure, and delivery | Only the roadmap has tracked lifecycle state; every resumption source is read; delivery evidence stays untracked | Clean-context command from S2 and `test_tracked_task_records_freeze_before_delivery` |
 
 ## Plan of Work
 
 CP1 extends the Scenario Discrimination owner, the Design Preflight entry gate, the preflight card, and Phase 1 result. It adds the source disposition and boundary inventory without a second artifact. Focused tests verify clause completeness, duplicate-looking prefixes, equal-result invariants, all entry points, and the small-change rule. Review this checkpoint and create its local commit.
 
 CP2 adds the fresh trace-closure result to `preflight-review.md` and makes Design Preflight run it after final documentation and before Adversarial Review. Adversarial Review links to this gate before native discovery. Focused tests verify evidence quality, invalidation, and review independence. Update `kit.py` to `0.23.0`, update product documentation only when the diff makes it inaccurate, and regenerate `MANIFEST.sha256`. Review this checkpoint, then run final review from the task base.
+
+The final review correction separates independent inventory derivation from informed comparison. It also aligns trace scope with the existing full, checkpoint, delta, and final review boundaries.
+
+The accepted process correction removes operational progress and results from tracked ExecPlans, Scenario Proof, and Review Closure. It keeps `docs/roadmap.md` as the sole tracked lifecycle view and keeps detailed evidence in the ignored task result.
 
 ## Concrete Steps
 
@@ -181,7 +180,7 @@ Before each review, stage the complete checkpoint and require no unstaged tracke
 
 ## Validation and Acceptance
 
-Focused checks must prove B1 through B6 and S1 through S11. The clean-context forward check must derive both mapped and unmapped cases from the supplied broader-helper defect. It must reject the broader implementation, positive-only proof, component proof, aggregate result, and writer report. It must also prove trace ordering, named inputs, and native-review independence.
+Focused checks must prove B1 through B7 and S1 through S12. The clean-context forward check must derive both mapped and unmapped cases from the supplied broader-helper defect. It must reject the broader implementation, positive-only proof, component proof, aggregate result, writer report, anchored trace input, future-subtask checkpoint blocking, checkpoint-limited final closure, and tracked ExecPlan status. It must also prove two-phase trace ordering, review-mode scope, named inputs, native-review independence, and roadmap-only lifecycle state.
 
 The full toolkit suite, Python compilation, shell checks, PowerShell parsing, rule-owner checks, link checks, manifest validation, and `git diff --check` must pass. After final review, install the candidate with `python3 kit.py install --repo .`. Then run `python3 kit.py doctor --repo .` and require `Result: ready`.
 
@@ -195,7 +194,7 @@ Preserve `.mcp.json`, `.repowise/`, `.vscode/`, and ignored test results. Do not
 
 ## Interfaces and Dependencies
 
-The existing preflight card gains a boundary inventory. The existing Phase 1 JSON gains source dispositions and boundary records. `preflight-review.md` gains the `boundary-trace-closure` result. No executable API or dependency is added.
+The existing preflight card gains a boundary inventory and loses its operational result column. The existing Phase 1 JSON gains source dispositions and boundary records. `preflight-review.md` gains the `boundary-trace-closure` result. ExecPlans keep stable specifications while the roadmap owns tracked lifecycle state. No executable API or dependency is added.
 
 ## Prior Plan Reconciliation
 

@@ -16,7 +16,7 @@ description: >
 
 # Plan history
 
-Plan history is immutable source evidence. An ExecPlan remains the only mutable implementation plan.
+Plan history is immutable source evidence. An ExecPlan remains the only durable implementation specification.
 
 ## Capture
 
@@ -33,6 +33,8 @@ Read every applicable Plan history record before later planning.
 Then enumerate files directly. Read every file in `.agent/plan-history/`. For each identified specification, read every sibling named `<spec-stem>.plan-summary.*.md`. Also inspect the current global fallback directory when the prompt identifies a prior storage warning.
 
 Use the same discovery before implementation when the user resumes or implements a plan after context was cleared.
+
+Resume from the ExecPlan specification, applicable Plan history, roadmap state, the Git worktree and completed checkpoint history, the ignored task result when it exists, and the current conversation when available. Do not infer operational status from the ExecPlan.
 
 Do not trust a RepoWise match limit or index freshness as proof that no record exists. Do not select the first match. Deduplicate only records with the same event key and identical bytes. Retain and reconcile every distinct-content collision record. Read each unique record completely.
 
@@ -57,7 +59,7 @@ Stop planning when retained decisions conflict without a recorded supersession.
 
 Before a replan, read the current ExecPlan, every applicable Plan record, and the completed checkpoint history in Git.
 
-Keep completed subtask identifiers, outcomes, accepted contracts, and commits unchanged. Split, merge, reorder, or replace only unfinished subtasks. Never amend or rewrite a completed checkpoint commit.
+Keep accepted contracts unchanged. Use completed checkpoint history in Git as immutable operational evidence. Split, merge, reorder, or replace only unfinished subtasks. Never amend or rewrite a completed checkpoint commit.
 
 If a new requirement changes completed behavior, add a new corrective subtask. Do not rewrite the completed subtask.
 
@@ -90,3 +92,5 @@ If a specification becomes known after capture, copy the exact unlinked record b
 If implementation uses another worktree, copy each applicable untracked record to the same repository-relative path before task edits. Compare the source and destination bytes. Stop on different destination content.
 
 Commit the applicable records with the delivered task. Do not commit unrelated Plan history. Never edit or remove a Plan history record.
+
+Do not rewrite completed ExecPlans merely to remove historical progress content. Apply the current ExecPlan contract when an active or resumed plan is next edited.

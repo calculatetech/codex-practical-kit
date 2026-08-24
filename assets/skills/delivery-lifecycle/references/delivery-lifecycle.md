@@ -3,6 +3,7 @@
 <!-- cpk-rule-guard: Keep detailed results in one ignored `.agent/test-results/` file per task. -->
 <!-- cpk-rule-guard: Freeze every tracked task record before the task commit, CI, push, pull request, merge, or publication. -->
 <!-- cpk-rule-guard: Invoke Design Preflight before implementation or an accepted review correction when its trigger matches, even outside Plan Mode. -->
+<!-- cpk-rule-guard: The roadmap is the only tracked lifecycle-state record. -->
 
 # Delivery lifecycle
 
@@ -13,6 +14,8 @@ Invoke Design Preflight before implementation or an accepted review correction w
 Validate every implementation with relevant tests and linting. Add one runnable check for non-trivial logic.
 
 Keep detailed results in one ignored `.agent/test-results/` file per task. Never stage that file.
+
+Do not record task, checkpoint, validation, review, or delivery progress in tracked files. The roadmap is the only tracked lifecycle-state record. Untracked or ignored working files can record progress.
 
 If `docs/roadmap.md` exists, use Roadmap Maintainer before implementation and at each lifecycle transition.
 
@@ -28,7 +31,7 @@ Do not start review of a candidate after its commit, push, pull request, or CI a
 
 After a final clean review, apply Review Closure.
 
-A planned subtask can receive a local checkpoint commit after Adversarial Review records its clean checkpoint result. Keep the task and roadmap Active. The checkpoint does not authorize review closure, push, merge, tag, release, or publication.
+A planned subtask can receive a local checkpoint commit after Adversarial Review records its clean checkpoint result in the ignored task record. Keep the roadmap task Active. The checkpoint does not authorize review closure, push, merge, tag, release, or publication.
 
 Freeze every tracked task record before the task commit, CI, push, pull request, merge, or publication.
 

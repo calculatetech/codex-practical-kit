@@ -64,11 +64,11 @@ For each runtime outcome classified `composes`, record:
 
 Do not create a Cartesian product of inputs.
 
-Before implementation, complete the first six columns for each retained scenario. Before review, record the actual runnable test or command and its result.
+Before implementation, complete every column for each retained scenario. Keep actual test results outside tracked files.
 
-| Scenario | Discriminator | Contrast | Production path | Required oracle | Runnable test or command | Result |
-| --- | --- | --- | --- | --- | --- | --- |
-|  |  |  |  |  |  |  |
+| Scenario | Discriminator | Contrast | Production path | Required oracle | Runnable test or command |
+| --- | --- | --- | --- | --- | --- |
+|  |  |  |  |  |  |
 
 ## Checks
 

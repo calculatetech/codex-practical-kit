@@ -31,5 +31,5 @@ When Spec Kit supplies the behavior specification:
 
 - Its specification is the durable behavior source.
 - Plan Mode summaries remain as immutable repository records and specification siblings for later reconciliation.
-- The task ExecPlan records implementation decisions and progress.
+- The task ExecPlan records stable implementation decisions. Apply [Delivery lifecycle](../assets/skills/delivery-lifecycle/references/delivery-lifecycle.md) for operational progress and lifecycle state.
 - Applicable managed skills link from AGENTS.
