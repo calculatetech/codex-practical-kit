@@ -33,6 +33,7 @@ No residual risk is accepted.
 
 ## Completed
 
+- ✅ **CPK-043 — Review PRs before hosted CI.** PR publication now reviews the current head while it remains draft. It scope-gates each finding before severity, correction, or stop behavior.
 - ✅ **CPK-042 — Split large plans into reviewed checkpoints.** Large Plans now use stable semantic subtasks, reviewed local checkpoints, safe replanning, and one final coherence review.
 - ✅ **CPK-041 — Explain code consequences before decisions.** Material technical choices now show the visible result, implementation shape, source, new moving parts, and maintenance effects before the choice tool.
 - ✅ **CPK-040 — Save Plans at acceptance.** The next prompt saves the completed Plan before the managed prompt hook completes. The managed `SessionEnd` timeout now meets the Codex limit.

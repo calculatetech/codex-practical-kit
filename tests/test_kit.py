@@ -2536,9 +2536,29 @@ class IntegrationTests(unittest.TestCase):
         self.assertIn("`pwsh -File .\\doctor.ps1`", publication)
         self.assertIn("from the reviewed candidate", publication)
         self.assertIn("`Result: ready`", publication)
-        self.assertEqual(kit.KIT_VERSION, "0.21.0")
-        self.assertNotIn("Version `0.21.0`", (ROOT / "README.md").read_text())
-        self.assertNotIn("version 0.21.0", (ROOT / "CODEX-INSTALL-PROMPT.md").read_text())
+        self.assertEqual(kit.KIT_VERSION, "0.21.1")
+        self.assertNotIn("Version `0.21.1`", (ROOT / "README.md").read_text())
+        self.assertNotIn("version 0.21.1", (ROOT / "CODEX-INSTALL-PROMPT.md").read_text())
+
+    def test_pr_publication_reviews_draft_before_ci(self):
+        root = ROOT / "assets" / "skills"
+        publication = (root / "publication" / "references" / "publication.md").read_text()
+        review = (root / "adversarial-review" / "SKILL.md").read_text()
+        procedure = publication.split("## Procedure", 1)[1]
+
+        self.assertIn("cpk-rule-route-only: adversarial-review", publication)
+        self.assertIn("../../adversarial-review/SKILL.md", publication)
+        self.assertLess(procedure.index("Post `@codex review`"), procedure.index("Mark the pull request ready"))
+        self.assertLess(procedure.index("Mark the pull request ready"), procedure.index("Hosted CI can start"))
+        self.assertIn("draft pull requests cannot start hosted CI", publication)
+        self.assertIn("Do not use direct integration", publication)
+        self.assertIn("no retained applicable finding", publication)
+        self.assertIn("An excluded finding does not block readiness", publication)
+        self.assertIn("Post `@codex review` again for the new head", publication)
+        self.assertNotIn("Do not request the review manually", publication)
+        self.assertNotIn("validated P0 or P1", publication)
+        self.assertLess(review.index("## Scope gate"), review.index("## Supported-model gate"))
+        self.assertIn("A validated P0 or P1 defect in executable production code", review)
 
     def test_windows_launchers_and_runtime_are_complete_distribution_artifacts(self):
         shell_paths = {path.relative_to(ROOT) for path in ROOT.rglob("*.sh")}

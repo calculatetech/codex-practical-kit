@@ -24,7 +24,7 @@ from pathlib import Path
 from typing import Any, Iterable
 
 KIT_ID = "codex-practical-kit"
-KIT_VERSION = "0.21.0"
+KIT_VERSION = "0.21.1"
 REPOWISE_VERSION = "0.41.0"
 UV_VERSION = "0.12.4"
 UV_INSTALLER_URL = f"https://astral.sh/uv/{UV_VERSION}/install.sh"
