@@ -2493,6 +2493,12 @@ class IntegrationTests(unittest.TestCase):
         ).read_text()
 
         self.assertIn("same fresh read-only challenger", preflight)
+        self.assertIn("Bound the challenger source packet by the accepted task outcome", preflight)
+        self.assertIn("entry and terminal owners", preflight)
+        self.assertIn("direct composing owners", preflight)
+        self.assertIn("current direct checks", preflight)
+        self.assertIn("Reachability alone does not expand the packet", preflight)
+        self.assertIn("Keep the same challenger identity for both phases", preflight)
         self.assertLess(preflight.index("Phase 1: independent"), preflight.index("Phase 2: adversarial"))
         self.assertIn("Do not give it the coordinator's card, decisions, assumptions, exclusions", preflight)
         self.assertIn("give the same challenger the coordinator's complete card", preflight)
@@ -2507,6 +2513,12 @@ class IntegrationTests(unittest.TestCase):
         self.assertIn("source-backed rationale for each rejected finding", preflight)
         self.assertIn("Stop on an unresolved contract gap", preflight)
         self.assertIn('"reviewer": "preflight-adversary"', result)
+        self.assertIn('"source_scope"', result)
+        self.assertIn('"initial_sources"', result)
+        self.assertIn('"expansions"', result)
+        self.assertIn('"authoritative-product-boundary | direct-composing-owner"', result)
+        self.assertNotIn("complete authoritative source set", preflight)
+        self.assertNotIn("complete authoritative source set", result)
         for field in (
             '"kind"',
             '"source"',
@@ -2642,6 +2654,11 @@ class IntegrationTests(unittest.TestCase):
         self.assertIn("Read-only research, planning, and review agents do not count", coordination)
         self.assertIn("platform makes available", coordination)
         self.assertIn("task-specific skill can impose a narrower limit", coordination)
+        self.assertIn("Elapsed time alone cannot authorize a duplicate or restart", coordination)
+        self.assertIn("Keep and poll the same task", coordination)
+        self.assertIn("platform reports that it stopped", coordination)
+        self.assertIn("cpk-rule-route-only: supported-model", coordination)
+        self.assertIn("design-preflight/references/supported-model.md", coordination)
         self.assertNotIn("at most one subagent at a time", coordination)
 
     def test_default_mode_preflight_and_repowise_continue_through_corrections(self):
@@ -2821,7 +2838,7 @@ class IntegrationTests(unittest.TestCase):
         self.assertIn("every applicable production entry point", owner)
         self.assertIn("nearest wrong meaning as the contrast", owner)
         self.assertIn("every non-trivial implementation or refactor of behavior", skill)
-        self.assertIn("complete authoritative source set", skill)
+        self.assertIn("complete inside that boundary", skill)
         self.assertIn("## Boundary inventory", card)
         self.assertIn('"source_clauses"', result)
         self.assertIn('"disposition": "mapped | non-boundary | opaque | deferred | contract-gap"', result)

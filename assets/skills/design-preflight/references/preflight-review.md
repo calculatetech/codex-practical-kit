@@ -12,6 +12,16 @@ Return JSON only.
 ```json
 {
   "reviewer": "normal-use-scenarios",
+  "source_scope": {
+    "initial_sources": ["path:line-line"],
+    "expansions": [
+      {
+        "source": "path:line-line",
+        "basis": "authoritative-product-boundary | direct-composing-owner",
+        "evidence": "Source-backed reason this source can change the accepted outcome"
+      }
+    ]
+  },
   "product_boundary": {
     "sources": ["path:line-line"],
     "current_production_use_cases": ["Documented use case"],
@@ -96,7 +106,7 @@ Return JSON only.
 
 Apply [Scenario discrimination](scenario-discrimination.md) to every retained scenario. Apply [Owner composition](owner-composition.md) and [Full-set results](full-set-results.md) to the independent result.
 
-The coordinator must compare the source clauses with the complete authoritative source set. It must verify each boundary, discriminator, contrast, production path, oracle, and planned runnable check. Do not create a Cartesian product.
+The coordinator must compare the source clauses with the complete source packet inside the accepted task boundary. It must verify every `source_scope` expansion against authoritative product-boundary evidence or a direct composing-owner relationship. It must verify each boundary, discriminator, contrast, production path, oracle, and planned runnable check. Do not create a Cartesian product.
 
 Use the canonical classifications to fill `scenarios`, `contract_gaps`, and `exclusions`. Empty arrays are valid.
 

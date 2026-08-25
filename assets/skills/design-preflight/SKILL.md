@@ -12,6 +12,7 @@ license: MIT
 <!-- cpk-rule-owner: design-preflight -->
 <!-- cpk-rule-guard: Use the same fresh read-only challenger for an unanchored derivation and an informed adversarial challenge. -->
 <!-- cpk-rule-guard: Skip the challenger when a correction is a strict simplification that adds no broader behavior. -->
+<!-- cpk-rule-guard: Bound the challenger source packet by the accepted task outcome. -->
 
 # Design preflight
 
@@ -88,7 +89,11 @@ When the strict-simplification exemption above does not apply, an accepted corre
 
 ### Phase 1: independent derivation
 
-Give the challenger raw requirements, the complete authoritative source set, the supported model, exact source, owners, selectors, filters, state writers, current tests, and applicable focused rule links. Require it to enumerate source clauses before it derives scenarios.
+Build one source packet before the challenger starts. Bound the challenger source packet by the accepted task outcome. Include the accepted outcome, raw requirements, explicit product specifications, entry and terminal owners, direct composing owners, selectors, gates, state writers, current direct checks, and applicable focused rule links.
+
+The packet is complete inside that boundary. Expand it only when authoritative product-boundary evidence or a direct composing-owner relationship proves that another source can change the accepted outcome. Reachability alone does not expand the packet.
+
+Give the challenger the source packet, supported model, and exact source. Require it to enumerate source clauses before it derives scenarios. Require its `source_scope` result to name the initial sources and every evidence-backed expansion.
 
 Keep Phase 1 unanchored. Do not give it the coordinator's card, decisions, assumptions, exclusions, Scenario Proof, implementation, known edge cases, prior diagnostics, reviewer corrections, severity, research result, or preferred outcome.
 
@@ -102,7 +107,7 @@ After Phase 1, give the same challenger the coordinator's complete card and Scen
 
 Require the Phase 2 JSON in `references/preflight-review.md`. The challenger must look for missing scenarios, unsupported assumptions, invalid exclusions, weak proof cases, and contract gaps. It must challenge the coordinator's actual claims, not repeat Phase 1.
 
-Compare both results with the coordinator's derivation once. Merge each supported finding into the card and ExecPlan. Record a source-backed rationale for each rejected finding. Stop on an unresolved contract gap. Do not start a review loop. Empty finding arrays are valid.
+Compare both results with the coordinator's derivation once. Keep the same challenger identity for both phases. Merge each supported finding into the card and ExecPlan. Record a source-backed rationale for each rejected finding. Stop on an unresolved contract gap. Do not start a review loop. Empty finding arrays are valid.
 
 Use the canonical classifications. Merge `applicable` scenarios. Record `contract-gap` scenarios. Omit `excluded` scenarios.
 
