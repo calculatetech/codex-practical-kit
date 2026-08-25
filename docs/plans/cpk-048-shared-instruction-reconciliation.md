@@ -24,6 +24,8 @@ The task adds no migrator, Doctor check, skill, runtime behavior, dependency, or
 - Remove only generic toolkit lifecycle rules from project `AGENTS.md` files.
 - Archive untracked and non-Git Plan copies before removal.
 - Ignore the five dirty Meridian worktrees that the user identified as historical artifacts.
+- Leave `billing-reconciler` unchanged because the user has active work on another device.
+- Keep FacetOS's local Plan contract until its active Task 002.04 has a separate migration.
 - Create local documentation commits in eligible Git repositories. Do not push them.
 - Keep toolkit version `0.23.2` because its tag has not reached GitHub.
 
@@ -49,13 +51,15 @@ Before edits, this command must show the toolkit file and 25 copies. Exclude the
 - `meridian-task-063f-rebuild`
 - `meridian-task-084a2`
 
+The user later excluded `billing-reconciler`. FacetOS also remains excluded because its active plan uses the local contract. Migrating that active plan is separate work.
+
 Refresh each distinct Git remote once with `git fetch --prune`. Operate only when `git status --short` shows no unexpected tracked change. Fast-forward a clean selected base branch with `git merge --ff-only @{upstream}`. Then require `git merge-base --is-ancestor @{upstream} HEAD` to succeed. Use the `cpk-048-instruction-reconciliation` branch in independent repositories. Use the existing branch in each eligible Meridian worktree.
 
 Archive each untracked or non-Git Plan copy under `/home/mbeutler/.local/share/codex-practical-kit/audits/cpk-048/`. Preserve its path relative to `/home/mbeutler/Projects`. Record its SHA-256 value before removal. Run `sha256sum` on the source and archive. Both values must match.
 
-Remove 20 eligible generic Plan copies. Move real project rules to the nearest `AGENTS.md`, then remove stale generic lifecycle text. Run the inventory command again. It must show only the toolkit file and the five excluded worktree files.
+Remove 18 eligible generic Plan copies. Move real project rules to the nearest `AGENTS.md`, then remove stale generic lifecycle text. Update current workflow documents that route agents to the removed copy. Do not rewrite completed plans. Run the inventory command again. It must show the toolkit file and seven excluded project files.
 
-In each Git candidate, stage only `AGENTS.md` and `.agent/PLANS.md`. Run `git diff --cached --check`; it must produce no output. Create a synthetic commit from the staged tree, then run `codex review --commit <synthetic-commit>`. If the review has no applicable finding, create one local documentation commit. Preserve unrelated untracked files. Do not push external repositories.
+In each Git candidate, stage only the removed Plan, focused `AGENTS.md` rules, and current workflow documents that route to the removed Plan. Run `git diff --cached --check`; it must produce no output. Create a synthetic commit from the staged tree, then run `codex review --commit <synthetic-commit>`. If the review has no applicable finding, create one local documentation commit. Preserve unrelated untracked files. Do not push external repositories.
 
 From `/home/mbeutler/Projects/codex-practical-kit`, run:
 
@@ -69,10 +73,10 @@ The test command must report success. The other commands must produce no error. 
 ## Validation
 
 - Confirm that the toolkit still has one canonical `.agent/PLANS.md`.
-- Confirm that 20 eligible copied Plan files are removed and five dirty Meridian worktrees remain unchanged.
+- Confirm that 18 eligible copied Plan files are removed. Confirm that Billing, FacetOS, and five dirty Meridian worktrees remain unchanged.
 - Confirm that archived files have matching SHA-256 values.
 - Confirm that eligible `AGENTS.md` files contain no stale local Plan route or copied toolkit lifecycle rule.
-- Confirm that external commits change only `AGENTS.md` and `.agent/PLANS.md`.
+- Confirm that external commits change only focused instructions and current workflow documents.
 - Run the complete toolkit test, syntax, link, manifest, and diff checks.
 - Install the reviewed toolkit and require Doctor to report `Result: ready`.
 
