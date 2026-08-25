@@ -13,6 +13,7 @@ description: >
 <!-- cpk-rule-guard: Stop planning when retained decisions conflict without a recorded supersession. -->
 <!-- cpk-rule-guard: Save a completed Plan before the next submitted prompt continues. -->
 <!-- cpk-rule-guard: Every repository Plan capture has a record in `.agent/plan-history/`. -->
+<!-- cpk-rule-guard: Relocate applicable untracked Plan records to the task worktree before task edits. -->
 
 # Plan history
 
@@ -87,10 +88,26 @@ Do not omit the marker. Do not use an absolute path or a path outside the reposi
 
 Link every applicable record from the task ExecPlan. Treat each linked decision as an implementation constraint.
 
+Relocate applicable untracked Plan records to the task worktree before task edits.
+
 If a specification becomes known after capture, copy the exact unlinked record beside it. Use the specification stem and retain the timestamp and event key. Keep the unlinked record unchanged.
 
-If implementation uses another worktree, copy each applicable untracked record to the same repository-relative path before task edits. Compare the source and destination bytes. Stop on different destination content.
+If implementation uses another worktree, enumerate every other worktree in the same Git repository before task edits. Exclude the task worktree. Find every applicable untracked central record and specification-sibling record in the source worktrees.
 
-Commit the applicable records with the delivered task. Do not commit unrelated Plan history. Never edit or remove a Plan history record.
+Relocate each applicable untracked record to the same repository-relative path in the task worktree:
+
+1. Inspect the task-worktree destination before writing. Do not overwrite an existing destination.
+2. If no destination exists, copy the source without changing its bytes, filename, timestamp, or event key.
+3. Compare the source and destination bytes.
+4. If the bytes differ or the destination copy fails, retain the source and destination. Stop.
+5. If the bytes are identical, remove the redundant untracked source copy.
+
+This relocation preserves Plan history because the byte-identical task-worktree record remains. The sequence is repeatable. A stopped attempt can leave an identical duplicate for the next attempt.
+
+Never remove a tracked, unique, unrelated, or different-content record. Retain every distinct-content collision record.
+
+Keep the central record and each specification-sibling record in the task worktree. These records have different discovery roles and are not redundant copies of one path.
+
+Commit the applicable records with the delivered task. Do not commit unrelated Plan history. Never edit a Plan history record or remove its last copy.
 
 Do not rewrite completed ExecPlans merely to remove historical progress content. Apply the current ExecPlan contract when an active or resumed plan is next edited.

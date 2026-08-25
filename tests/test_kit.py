@@ -2240,7 +2240,7 @@ class IntegrationTests(unittest.TestCase):
         self.assertIn("completed checkpoint history in Git", history)
         self.assertIn("current conversation when available", history)
         self.assertIn("Do not rewrite completed ExecPlans", history)
-        self.assertIn("Never edit or remove a Plan history record", history)
+        self.assertIn("Never edit a Plan history record or remove its last copy", history)
         self.assertNotIn("publication status", closure)
         self.assertIn("cpk-rule-route-only: delivery-lifecycle", publication)
 
@@ -3199,7 +3199,30 @@ class IntegrationTests(unittest.TestCase):
         self.assertIn("<!-- cpk-plan-spec: none -->", skill)
         self.assertIn("implements a plan after context was cleared", skill)
         self.assertIn("specification becomes known after capture", skill)
-        self.assertIn("Never edit or remove a Plan history record", skill)
+        self.assertIn(
+            "enumerate every other worktree in the same Git repository before task edits",
+            skill,
+        )
+        self.assertIn("Exclude the task worktree", skill)
+        self.assertIn(
+            "Relocate each applicable untracked record to the same repository-relative path",
+            skill,
+        )
+        self.assertIn("Inspect the task-worktree destination before writing", skill)
+        self.assertIn("Do not overwrite an existing destination", skill)
+        self.assertLess(
+            skill.index("Compare the source and destination bytes"),
+            skill.index("remove the redundant untracked source copy"),
+        )
+        self.assertIn("If the bytes differ or the destination copy fails", skill)
+        self.assertIn("Never remove a tracked, unique, unrelated, or different-content record", skill)
+        self.assertIn("Retain every distinct-content collision record", skill)
+        self.assertIn("These records have different discovery roles", skill)
+        self.assertIn("Never edit a Plan history record or remove its last copy", skill)
+        self.assertNotIn(
+            "copy each applicable untracked record to the same repository-relative path before task edits",
+            skill,
+        )
         self.assertIn("`plan-history`", agents)
         self.assertIn("Immutable Plan Mode summaries are source records", plans)
         self.assertIn("cpk-rule-route-only: plan-history", isolation)

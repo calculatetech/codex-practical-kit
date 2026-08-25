@@ -13,7 +13,7 @@ Status legend:
 
 ## Active
 
-No task is active.
+- 🎯 **CPK-047 — Repair Plan History worktree handoff, bound preflight, and reconcile PR publication.** Relocate pending Plan records before worktree state checks, constrain challengers to evidence-backed task scope, and require distinct local and PR reviews through local-main integration.
 
 ## Planned next
 
