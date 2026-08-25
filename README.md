@@ -49,6 +49,22 @@ The installer writes a managed block in `~/.codex/AGENTS.md`. It renders the abs
 
 The installer also writes `$CODEX_HOME/PLANS.md` and managed Codex hooks. Session Start announces the AGENTS router.
 
+## Global and repository instructions
+
+The installer manages `~/.codex/AGENTS.md` and `$CODEX_HOME/PLANS.md`. These files apply to every repository unless a nearer repository file overrides them.
+
+A repository `AGENTS.md` can add or replace instructions for its directory tree. A repository `.agent/PLANS.md` replaces the global ExecPlan contract for that repository.
+
+The installer does not update repository-owned instruction files. `setup-repo` only removes its obsolete managed RepoWise block from `AGENTS.md`.
+
+Do not copy the global files into a repository.
+
+A copied file stops receiving toolkit updates. It can conflict with newer rules.
+
+If a repository needs an override, keep only the project-specific rule in the nearest `AGENTS.md`. Remove a generic `.agent/PLANS.md` copy to use the current global contract.
+
+Keep a repository `.agent/PLANS.md` only when the project needs a different ExecPlan contract. You must maintain that file manually.
+
 Prompt submission selects normal mode before Plan-mode prompts. Managed hooks save a completed Plan before the next prompt continues and at session lifecycle boundaries.
 
 The edit hooks update `<primary-checkout>/.codex/roadmap-view.md` after an agent changes `docs/roadmap.md`. Keep this generated file open to follow worktree progress. Edit only `docs/roadmap.md`.

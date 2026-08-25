@@ -13,7 +13,7 @@ Status legend:
 
 ## Active
 
-No task is active.
+- 🎯 **CPK-048 — Reconcile shared agent and Plan instructions.** Document global instruction precedence, remove eligible copied Plan contracts, and preserve focused project overrides.
 
 ## Planned next
 
