@@ -3124,7 +3124,7 @@ class IntegrationTests(unittest.TestCase):
         self.assertIn("`pwsh -File .\\doctor.ps1`", publication)
         self.assertIn("from the reviewed candidate", publication)
         self.assertIn("`Result: ready`", publication)
-        self.assertEqual(kit.KIT_VERSION, "0.23.1")
+        self.assertEqual(kit.KIT_VERSION, "0.23.2")
         self.assertNotIn("Version `0.22.0`", (ROOT / "README.md").read_text())
         self.assertNotIn("version 0.22.0", (ROOT / "CODEX-INSTALL-PROMPT.md").read_text())
 
@@ -3163,7 +3163,7 @@ class IntegrationTests(unittest.TestCase):
         )
         self.assertIn("git merge --ff-only origin/main", publication)
         self.assertIn("local `main` equals `origin/main`", publication)
-        self.assertIn("recorded GitHub merge commit is the local-main head", publication)
+        self.assertIn("recorded GitHub merge commit is an ancestor of local `main`", publication)
         self.assertIn("Do not stash, reset, rebase, or remove unrelated files", publication)
         self.assertNotIn("Do not request the review manually", publication)
         self.assertNotIn("validated P0 or P1", publication)

@@ -94,7 +94,7 @@ If no worktree contains local `main`, use the clean publishing worktree. Switch 
 
 Stop on tracked changes, local-main divergence, a checkout conflict, an actual untracked-path overwrite conflict, or a failed fast-forward. Do not stash, reset, rebase, or remove unrelated files.
 
-Publication completes only after local `main` equals `origin/main` and contains the merged result. Prove that the recorded GitHub merge commit is the local-main head and that the published result is present. Then monitor required post-merge CI for that head.
+Publication completes only after local `main` equals `origin/main` and contains the merged result. Prove that the recorded GitHub merge commit is an ancestor of local `main`. Prove that the published result is present. Then monitor required post-merge CI for that head.
 
 Publication ends after verified integration.
 
