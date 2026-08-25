@@ -13,7 +13,7 @@ Status legend:
 
 ## Active
 
-- 🎯 **CPK-046 — Recover RepoWise linked-worktree support and block unauthorized cross-repository fixes.** Use RepoWise’s native worktree behavior, preserve shared-hook safety, keep tooling failures from expanding repository scope, and reserve semantic trace closure for executable production behavior.
+No task is active.
 
 ## Planned next
 
@@ -33,6 +33,7 @@ No residual risk is accepted.
 
 ## Completed
 
+- ✅ **CPK-046 — Recover RepoWise linked-worktree support and block unauthorized cross-repository fixes.** Use RepoWise’s native worktree behavior, preserve shared-hook safety, keep tooling failures from expanding repository scope, and reserve semantic trace closure for executable production behavior.
 - ✅ **CPK-045 — Close every behavioral boundary.** Design Preflight inventories every explicit behavioral boundary. A fresh two-phase trace verifies implementation paths and tests before native review. The roadmap remains the sole tracked lifecycle view.
 - ✅ **CPK-044 — Separate review findings from correction authority.** Native Codex review discovers defects. A source-independent gate excludes irrelevant observations and permits only direct repairs without human direction. Severe diagnostics lead with plain outcomes and required action.
 - ✅ **CPK-043 — Review PRs before hosted CI.** PR publication now reviews the current head while it remains draft. It scope-gates each finding before severity, correction, or stop behavior.
