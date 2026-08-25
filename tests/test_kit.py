@@ -3140,9 +3140,31 @@ class IntegrationTests(unittest.TestCase):
         self.assertLess(procedure.index("Mark the pull request ready"), procedure.index("Hosted CI can start"))
         self.assertIn("draft pull requests cannot start hosted CI", publication)
         self.assertIn("Do not use direct integration", publication)
+        self.assertIn("cpk-rule-route-only: plan-history", publication)
+        self.assertLess(
+            procedure.index("Apply Plan History handoff before publication classifies worktree state"),
+            procedure.index("preserve unrelated untracked files"),
+        )
+        self.assertIn("Their presence alone does not stop publication", publication)
+        self.assertIn("Git reports that the operation would overwrite it", publication)
+        self.assertIn("Local native review and GitHub pull-request review are separate cumulative gates", publication)
+        self.assertIn("A clean local review does not satisfy the GitHub review gate", publication)
+        self.assertIn("frozen local task head", publication)
+        self.assertIn("remote task branch to equal", publication)
+        self.assertIn("pull-request head to equal", publication)
+        self.assertIn("for that exact pull-request head", publication)
         self.assertIn("no retained applicable finding", publication)
         self.assertIn("An excluded finding does not block readiness", publication)
         self.assertIn("Post `@codex review` again for the new head", publication)
+        self.assertIn("Apply Plan History handoff from the publishing worktree", publication)
+        self.assertLess(
+            procedure.rindex("Apply Plan History handoff from the publishing worktree"),
+            procedure.rindex("Find the worktree that contains local `main`"),
+        )
+        self.assertIn("git merge --ff-only origin/main", publication)
+        self.assertIn("local `main` equals `origin/main`", publication)
+        self.assertIn("recorded GitHub merge commit is the local-main head", publication)
+        self.assertIn("Do not stash, reset, rebase, or remove unrelated files", publication)
         self.assertNotIn("Do not request the review manually", publication)
         self.assertNotIn("validated P0 or P1", publication)
         self.assertLess(review.index("## Scope gate"), review.index("## Supported-model gate"))
