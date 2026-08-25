@@ -13,7 +13,7 @@ Status legend:
 
 ## Active
 
-No task is active.
+- 🎯 **CPK-046 — Recover RepoWise linked-worktree support and block unauthorized cross-repository fixes.** Use RepoWise’s native worktree behavior, preserve shared-hook safety, keep tooling failures from expanding repository scope, and reserve semantic trace closure for executable production behavior.
 
 ## Planned next
 
@@ -36,7 +36,7 @@ No residual risk is accepted.
 - ✅ **CPK-045 — Close every behavioral boundary.** Design Preflight inventories every explicit behavioral boundary. A fresh two-phase trace verifies implementation paths and tests before native review. The roadmap remains the sole tracked lifecycle view.
 - ✅ **CPK-044 — Separate review findings from correction authority.** Native Codex review discovers defects. A source-independent gate excludes irrelevant observations and permits only direct repairs without human direction. Severe diagnostics lead with plain outcomes and required action.
 - ✅ **CPK-043 — Review PRs before hosted CI.** PR publication now reviews the current head while it remains draft. It scope-gates each finding before severity, correction, or stop behavior.
-- ✅ **CPK-042 — Split large plans into reviewed checkpoints.** Large Plans now use stable semantic subtasks, reviewed local checkpoints, safe replanning, and one final coherence review.
+- ✅ **CPK-042 — Split large plans into reviewed checkpoints.** Large Plans now use stable semantic subtasks, reviewed local checkpoints, safe replanning, and one final native review.
 - ✅ **CPK-041 — Explain code consequences before decisions.** Material technical choices now show the visible result, implementation shape, source, new moving parts, and maintenance effects before the choice tool.
 - ✅ **CPK-040 — Save Plans at acceptance.** The next prompt saves the completed Plan before the managed prompt hook completes. The managed `SessionEnd` timeout now meets the Codex limit.
 - ✅ **CPK-039 — Add native Windows compatibility.** Add PowerShell 7 entry points and make the required RepoWise runtime work without a POSIX shell. Native Windows validation passed at `d5957f81b61893934a046446d8fdf0f8cf62c7c8`.
@@ -52,7 +52,7 @@ No residual risk is accepted.
 - ✅ **CPK-029 — Activate normal mode when Plan mode starts.** The managed prompt hook selects Ponytail normal mode before each Plan-mode prompt. Other modes keep their selected implementation mode.
 - ✅ **CPK-028 — Scope minimalism by lifecycle phase.** Planning, research, test-scope definition, and read-only review use normal mode. Implementation uses Ponytail after scenario obligations are fixed, and each retained runtime scenario maps to one production path, oracle, runnable check, and result.
 - ✅ **CPK-027 — Move rules into lifecycle skills.** AGENTS now routes tasks to lifecycle skills. Each shared rule remains in one focused owner, and upgrades remove the obsolete general package.
-- ✅ **CPK-026 — Add content-addressed review checkpoints.** Later correctness passes review only fix deltas and direct impact. One final coherence pass checks the complete task after fixes.
+- ✅ **CPK-026 — Add content-addressed review checkpoints.** Later correctness passes review only fix deltas and direct impact. One final native review checks the complete task after fixes.
 - ✅ **CPK-025 — Verify the live toolkit before publication.** Toolkit publication now requires live installation and a ready Doctor result from the reviewed candidate.
 - ✅ **CPK-024 — Bind reviews to documented product scope.** One scope owner now limits planning and review to documented product use cases and task-relevant owners.
 - ✅ **CPK-023 — Enforce single rule ownership.** Focused rule files are authoritative. AGENTS routes by task, and validation rejects duplicate owners and invalid routes.

@@ -13,7 +13,7 @@ license: MIT
 <!-- cpk-rule-guard: A verified `get_symbol` body is source confirmation; do not read it again. -->
 <!-- cpk-rule-guard: After `no-llm-provider`, do not call `get_answer` again in the same Codex session. -->
 <!-- cpk-rule-guard: After `no-llm-provider`, continue each new lookup through indexed RepoWise tools. -->
-<!-- cpk-rule-guard: If RepoWise fails, stop and restore the required code graph. -->
+<!-- cpk-rule-guard: If RepoWise fails, stop and report the missing code graph. -->
 <!-- cpk-rule-guard: Use RepoWise for each new repository lookup throughout a task. -->
 
 # Repository knowledge
@@ -46,4 +46,9 @@ Automatic startup and watch updates keep normal work current. If RepoWise still 
 
 Record the indexed revision and freshness in a review packet. A stale index cannot prove absence.
 
-If RepoWise fails, stop and restore the required code graph.
+If RepoWise fails, stop and report the missing code graph.
+
+## Write authority
+
+<!-- cpk-rule-route-only: delivery-lifecycle -->
+[Delivery lifecycle](../delivery-lifecycle/references/delivery-lifecycle.md)

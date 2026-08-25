@@ -2230,6 +2230,83 @@ class IntegrationTests(unittest.TestCase):
             self.assertIn(field, result)
         self.assertIn("Empty `findings` is valid", result)
 
+    def test_strict_simplifications_skip_the_preflight_challenger(self):
+        preflight = (
+            ROOT / "assets" / "skills" / "design-preflight" / "SKILL.md"
+        ).read_text()
+        exemption = (
+            "Skip the challenger when a correction is a strict simplification "
+            "that adds no broader behavior."
+        )
+        criteria = (
+            "The correction must reject or delete the starting design, use an "
+            "existing owner or upstream or native capability, and add no interface, "
+            "persistent state, dependency, fallback, or supported behavior. One "
+            "direct runnable check must prove the retained result."
+        )
+        general_rule = (
+            "When the strict-simplification exemption above does not apply, an accepted "
+            "correction that passes the entry gate requires one fresh read-only planning "
+            "challenger even when the correction is not runtime behavior."
+        )
+        self.assertEqual(preflight.count(exemption), 2)
+        self.assertEqual(preflight.count(criteria), 1)
+        self.assertEqual(preflight.count(general_rule), 1)
+        self.assertEqual(
+            preflight.count(
+                "The strict-simplification exemption above takes precedence over every "
+                "challenger requirement below."
+            ),
+            1,
+        )
+        self.assertEqual(
+            [line for line in preflight.splitlines() if line.startswith("Skip the challenger")],
+            [f"{exemption} {criteria}"],
+        )
+        for broader_change in (
+            "interface",
+            "persistent state",
+            "dependency",
+            "fallback",
+            "supported behavior",
+        ):
+            self.assertIn(broader_change, criteria)
+
+    def test_tool_failure_does_not_expand_repository_write_scope(self):
+        delivery = (
+            ROOT
+            / "assets"
+            / "skills"
+            / "delivery-lifecycle"
+            / "references"
+            / "delivery-lifecycle.md"
+        ).read_text()
+        knowledge = (
+            ROOT / "assets" / "skills" / "repository-knowledge" / "SKILL.md"
+        ).read_text()
+        authority = (
+            "A tooling failure outside task scope permits read-only diagnosis, "
+            "not repository writes without explicit user authority."
+        )
+        scope = (
+            "Task scope includes the current repository and each repository that "
+            "the user explicitly names."
+        )
+        self.assertEqual(delivery.count(authority), 2)
+        self.assertEqual(delivery.count(scope), 1)
+        self.assertEqual(
+            delivery.count(
+                "Report a portable diagnostic and stop when the in-scope task cannot continue."
+            ),
+            1,
+        )
+        self.assertNotIn(authority, knowledge)
+        self.assertEqual(
+            knowledge.count("If RepoWise fails, stop and report the missing code graph."),
+            2,
+        )
+        self.assertEqual(knowledge.count("cpk-rule-route-only: delivery-lifecycle"), 1)
+
     def test_neuroarxiv_is_pinned_and_required_only_for_qualifying_research(self):
         lock = json.loads((ROOT / "upstream.lock.json").read_text())
         neuro = lock["skills"]["neuroarxiv"]
@@ -2301,7 +2378,7 @@ class IntegrationTests(unittest.TestCase):
         self.assertIn("Apply the same entry gate to an accepted correction", preflight)
         self.assertIn("The small-change exception still applies", preflight)
         self.assertIn(
-            "For an accepted correction that passes the entry gate, spawn one fresh",
+            "When the strict-simplification exemption above does not apply, an accepted correction",
             preflight,
         )
         self.assertIn("Reapply Delivery Lifecycle before an accepted correction", review)
@@ -2425,7 +2502,7 @@ class IntegrationTests(unittest.TestCase):
         ).read_text()
 
         self.assertIn("<!-- cpk-rule-owner: scenario-discrimination -->", owner)
-        self.assertEqual(owner.count("<!-- cpk-rule-guard:"), 9)
+        self.assertEqual(owner.count("<!-- cpk-rule-guard:"), 10)
         self.assertIn("scenario-discrimination.md", preflight)
         self.assertIn("scenario-discrimination.md", card)
         self.assertIn("scenario-discrimination.md", result)
@@ -2487,6 +2564,25 @@ class IntegrationTests(unittest.TestCase):
         self.assertIn("change to a traced source invalidates", owner)
         self.assertIn("unrelated documentation change does not invalidate", owner)
         self.assertIn("Do not give the trace record to native review", owner)
+        self.assertIn(
+            "Run trace closure only for executable production-code behavior with a real runnable entry point.",
+            owner,
+        )
+        self.assertIn(
+            "Do not run trace closure for skills, rules, documentation, tests, or static configuration.",
+            owner,
+        )
+        self.assertIn("Use their deterministic checks and native review.", owner)
+        self.assertIn(
+            "For an eligible executable production-code candidate with a boundary inventory, "
+            "run trace closure immediately before each native review.",
+            owner,
+        )
+        self.assertNotIn(
+            "Run trace closure immediately before each native review of a candidate that has "
+            "a boundary inventory.",
+            owner,
+        )
         self.assertIn('"reviewer": "boundary-trace-closure"', result)
         self.assertIn('"reviewer": "boundary-trace-inventory"', result)
         self.assertIn('"independent_inventory_frozen_before_comparison"', result)
@@ -2543,6 +2639,16 @@ class IntegrationTests(unittest.TestCase):
         self.assertIn("two_phase_trace_ordered", forward)
         self.assertIn("checkpoint_future_work_excluded", forward)
         self.assertIn("final_complete_inventory_required", forward)
+
+    def test_native_review_does_not_recurse(self):
+        review = (
+            ROOT / "assets" / "skills" / "adversarial-review" / "SKILL.md"
+        ).read_text()
+
+        self.assertIn(
+            "A session started by `codex review` performs the review directly", review
+        )
+        self.assertIn("never invokes `codex review`", review)
 
     def test_product_scope_boundaries_gate_preflight_and_review(self):
         rules_root = ROOT / "assets" / "skills" / "design-preflight" / "references"

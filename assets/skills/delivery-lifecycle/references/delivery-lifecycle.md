@@ -4,10 +4,13 @@
 <!-- cpk-rule-guard: Freeze every tracked task record before the task commit, CI, push, pull request, merge, or publication. -->
 <!-- cpk-rule-guard: Invoke Design Preflight before implementation or an accepted review correction when its trigger matches, even outside Plan Mode. -->
 <!-- cpk-rule-guard: The roadmap is the only tracked lifecycle-state record. -->
+<!-- cpk-rule-guard: A tooling failure outside task scope permits read-only diagnosis, not repository writes without explicit user authority. -->
 
 # Delivery lifecycle
 
 Do not perform unrelated refactors, dependency updates, formatting, or fixes.
+
+Task scope includes the current repository and each repository that the user explicitly names. A tooling failure outside task scope permits read-only diagnosis, not repository writes without explicit user authority. Report a portable diagnostic and stop when the in-scope task cannot continue.
 
 Invoke Design Preflight before implementation or an accepted review correction when its trigger matches, even outside Plan Mode.
 

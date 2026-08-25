@@ -8,6 +8,7 @@
 <!-- cpk-rule-guard: A fresh trace-closure verifier independently reconstructs the source boundary inventory before native review. -->
 <!-- cpk-rule-guard: Any false, unknown, missing, or unsupported trace-closure result blocks native review. -->
 <!-- cpk-rule-guard: A change to a traced source invalidates trace closure. -->
+<!-- cpk-rule-guard: Run trace closure only for executable production-code behavior with a real runnable entry point. -->
 
 # Scenario discrimination
 
@@ -37,6 +38,8 @@ Before implementation, record the discriminator, contrast, production path, requ
 
 ## Trace closure
 
+Run trace closure only for executable production-code behavior with a real runnable entry point. Do not run trace closure for skills, rules, documentation, tests, or static configuration. Use their deterministic checks and native review.
+
 After implementation and final substantive documentation, invoke one fresh read-only trace-closure verifier. Use the same verifier for two ordered phases.
 
 A fresh trace-closure verifier independently reconstructs the source boundary inventory before native review.
@@ -51,7 +54,7 @@ For each boundary and applicable entry point, require the gates, enforcement poi
 
 Any false, unknown, missing, or unsupported trace-closure result blocks native review. Trace closure contains only values inside the selected review boundary. A positive-only check, component check, aggregate suite result, or writer report cannot close a boundary.
 
-Run trace closure immediately before each native review of a candidate that has a boundary inventory. A change to a traced source invalidates trace closure. Traced sources are requirement sources, boundary records, production paths, and named tests. An unrelated documentation change does not invalidate it.
+For an eligible executable production-code candidate with a boundary inventory, run trace closure immediately before each native review. A change to a traced source invalidates trace closure. Traced sources are requirement sources, boundary records, production paths, and named tests. An unrelated documentation change does not invalidate it.
 
 Do not give the trace record to native review. Native discovery remains independent.
 

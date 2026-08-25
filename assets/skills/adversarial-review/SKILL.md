@@ -15,6 +15,7 @@ license: MIT
 <!-- cpk-rule-guard: After a reviewed candidate finds defects, later correctness passes review only the staged-tree delta and its direct impact. -->
 <!-- cpk-rule-guard: Run one final review of the complete candidate after correction deltas are clean. -->
 <!-- cpk-rule-guard: A checkpoint review covers one planned subtask since the previous accepted checkpoint and does not trigger review closure. -->
+<!-- cpk-rule-guard: A session started by `codex review` performs the review directly and never invokes `codex review`. -->
 
 # Adversarial review
 
@@ -47,6 +48,8 @@ Apply [Review closure](references/review-closure.md) only after the checkpoint s
 ## Native discovery
 
 Use native `codex review` for local defect discovery. Do not spawn a generic review subagent and do not delegate the native review.
+
+A session started by `codex review` performs the review directly and never invokes `codex review`. It is the native reviewer.
 
 Before staging a later candidate, inspect every tracked worktree change. Each change must fix a validated finding or its direct impact. Any other tracked change invalidates the checkpoint and requires a new full review.
 
