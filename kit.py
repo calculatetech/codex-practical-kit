@@ -24,8 +24,8 @@ from pathlib import Path
 from typing import Any, Iterable
 
 KIT_ID = "codex-practical-kit"
-KIT_VERSION = "0.23.0"
-REPOWISE_VERSION = "0.41.0"
+KIT_VERSION = "0.23.1"
+REPOWISE_VERSION = "0.45.0"
 UV_VERSION = "0.12.4"
 UV_INSTALLER_URL = f"https://astral.sh/uv/{UV_VERSION}/install.sh"
 UV_INSTALLER_SHA256 = "f1ee4a249799525a330df57643335120150c9102db7483b1d37546cc43af3a16"
@@ -696,10 +696,7 @@ def ensure_repowise(paths: InstallPaths, uv: str) -> str:
         recorded = manifest.get("repowise") if isinstance(manifest, dict) else None
         expected = user_bin(paths) / runtime_executable("repowise")
         force = bool(
-            result
-            and result.returncode != 0
-            and is_windows()
-            and isinstance(recorded, str)
+            isinstance(recorded, str)
             and os.path.normcase(os.path.abspath(repowise))
             == os.path.normcase(os.path.abspath(recorded))
             == os.path.normcase(os.path.abspath(expected))
@@ -827,7 +824,9 @@ def repowise_command(
 ) -> subprocess.CompletedProcess[str]:
     if repowise is None:
         _, repowise = ensure_repowise_runtime(paths)
-    return run([repowise, *args], cwd=root, timeout=timeout)
+    env = os.environ.copy()
+    env["REPOWISE_SKIP_EDITOR_SETUP"] = "1"
+    return run([repowise, *args], cwd=root, env=env, timeout=timeout)
 
 
 def setup_repo(args: argparse.Namespace, paths: InstallPaths) -> None:
@@ -840,7 +839,8 @@ def setup_repo(args: argparse.Namespace, paths: InstallPaths) -> None:
     _, repowise = ensure_repowise_runtime(paths)
     bootstrap = install_runtime(paths)
 
-    if not (root / ".repowise").exists():
+    initialized = not (root / ".repowise").exists()
+    if initialized:
         repowise_command(
             root,
             *repowise_init_args(args.prose),
@@ -856,7 +856,7 @@ def setup_repo(args: argparse.Namespace, paths: InstallPaths) -> None:
         paths=paths,
         repowise=repowise,
     )
-    if (
+    if not initialized and (
         run(["git", "rev-parse", "--verify", "HEAD"], cwd=root, check=False).returncode
         == 0
     ):
@@ -893,6 +893,16 @@ def setup_repo(args: argparse.Namespace, paths: InstallPaths) -> None:
 
 def remove_repo(args: argparse.Namespace, paths: InstallPaths) -> None:
     root = resolve_git_root(Path(args.repo).expanduser().resolve())
+    if (root / ".git").is_file():
+        git_dir = Path(run(["git", "rev-parse", "--absolute-git-dir"], cwd=root).stdout.strip())
+        common_dir = Path(run(["git", "rev-parse", "--git-common-dir"], cwd=root).stdout.strip())
+        if not common_dir.is_absolute():
+            common_dir = root / common_dir
+        if git_dir.resolve() != common_dir.resolve():
+            raise KitError(
+                "Cannot remove RepoWise from a linked worktree because its Git hook is shared. "
+                "Run remove-repo from the primary checkout."
+            )
     config = root / ".codex" / "config.toml"
     agents = root / "AGENTS.md"
     config_before = read_text(config)
@@ -1062,11 +1072,21 @@ def doctor(args: argparse.Namespace, paths: InstallPaths) -> int:
                 "repository RepoWise opt-out",
                 "disabled" if disabled else "enabled",
             )
-            hook = read_text(root / ".git" / "hooks" / "post-commit")
+            hook_result = run(
+                ["git", "rev-parse", "--git-path", "hooks"],
+                cwd=root,
+                check=False,
+                timeout=20,
+            )
+            hook_dir = Path(hook_result.stdout.strip())
+            if not hook_dir.is_absolute():
+                hook_dir = root / hook_dir
+            hook_path = hook_dir / "post-commit"
+            hook = read_text(hook_path) if hook_result.returncode == 0 else ""
             ok &= check(
                 "# repowise-hook-start" in hook and "# repowise-hook-end" in hook,
                 "RepoWise post-commit hook",
-                str(root / ".git" / "hooks" / "post-commit"),
+                str(hook_path),
             )
     print("\nResult:", "ready" if ok else "needs attention")
     return 0 if ok else 1

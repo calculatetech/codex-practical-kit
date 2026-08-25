@@ -1,5 +1,5 @@
 {
-  "generated_on": "2026-08-19",
+  "generated_on": "2026-08-24",
   "optional_tools": {
     "compound-engineering": {
       "commit": "05f3b798b0e5fb76c6bb1830bee7cbc84ff6c4c4",
@@ -27,9 +27,9 @@
   "runtime_tools": {
     "repowise": {
       "install_mode": "uv tool install; not bundled",
-      "license": "AGPL-3.0-only",
+      "license": "AGPL-3.0-or-later",
       "repository": "https://github.com/repowise-dev/repowise",
-      "version": "0.41.0"
+      "version": "0.45.0"
     },
     "uv": {
       "install_mode": "verified upstream installer when missing",

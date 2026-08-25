@@ -42,7 +42,13 @@ def git_root(cwd: Path) -> Path | None:
 
 
 def run_setup(command: list[str], cwd: Path) -> None:
-    subprocess.run(command, cwd=cwd, stdout=sys.stderr, check=True)
+    subprocess.run(command, cwd=cwd, env=repowise_env(), stdout=sys.stderr, check=True)
+
+
+def repowise_env() -> dict[str, str]:
+    env = os.environ.copy()
+    env["REPOWISE_SKIP_EDITOR_SETUP"] = "1"
+    return env
 
 
 def has_head(root: Path) -> bool:
@@ -72,8 +78,21 @@ def watch_command(repowise: str, platform: str | None = None) -> list[str]:
     words = shlex.split(first_line[2:])
     if not words:
         raise RuntimeError(f"RepoWise launcher has an empty shebang: {launcher}")
-    interpreter = words[-1] if Path(words[0]).name == "env" else words[0]
-    return [interpreter, "-c", WATCH_PATCH]
+    command = words[1:] if Path(words[0]).name == "env" else words
+    if command[:1] in (["-S"], ["--split-string"]):
+        command = command[1:]
+    elif command and command[0].startswith("-S"):
+        command = [*shlex.split(command[0][2:]), *command[1:]]
+    elif command and command[0].startswith("--split-string="):
+        command = [*shlex.split(command[0].split("=", 1)[1]), *command[1:]]
+    interpreter, *interpreter_args = command
+    if not Path(interpreter).name.startswith("python"):
+        tool_python = launcher.parent / "python"
+        if not tool_python.is_file():
+            return [repowise, "watch"]
+        interpreter = str(tool_python)
+        interpreter_args = []
+    return [interpreter, *interpreter_args, "-c", WATCH_PATCH]
 
 
 def stop_watcher(
@@ -99,16 +118,19 @@ def bootstrap(repowise: str, cwd: Path) -> int:
     root = git_root(cwd)
     if root is None:
         if any(cwd.iterdir()):
-            return subprocess.run([repowise, "mcp"], cwd=cwd, check=False).returncode
+            return subprocess.run(
+                [repowise, "mcp"], cwd=cwd, env=repowise_env(), check=False
+            ).returncode
         run_setup(["git", "init", "--quiet"], cwd)
         root = git_root(cwd)
         if root is None:
             raise RuntimeError("Git did not create a repository")
 
-    if not (root / ".repowise").is_dir():
+    initialized = not (root / ".repowise").is_dir()
+    if initialized:
         run_setup([repowise, *INIT_ARGS, str(root)], root)
     run_setup([repowise, "hook", "install", str(root), "--no-workspace"], root)
-    if has_head(root):
+    if has_head(root) and not initialized:
         run_setup(
             [
                 repowise,
@@ -131,6 +153,7 @@ def bootstrap(repowise: str, cwd: Path) -> int:
         watcher = subprocess.Popen(
             command,
             cwd=root,
+            env=repowise_env(),
             stdout=log,
             stderr=subprocess.STDOUT,
         )
@@ -140,7 +163,12 @@ def bootstrap(repowise: str, cwd: Path) -> int:
             watcher.wait()
             return status or 1
         try:
-            return subprocess.run([repowise, "mcp", str(root)], cwd=root, check=False).returncode
+            return subprocess.run(
+                [repowise, "mcp", str(root)],
+                cwd=root,
+                env=repowise_env(),
+                check=False,
+            ).returncode
         finally:
             if watcher.poll() is None:
                 stop_watcher(watcher)

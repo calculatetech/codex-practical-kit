@@ -3,11 +3,11 @@
 <!-- cpk-rule-guard: Hold unrelated factors constant when practical and split a row when one contrast cannot prove all claimed outcomes. -->
 <!-- cpk-rule-guard: A runnable check is insufficient when the named requirement can be false while the check passes. -->
 <!-- cpk-rule-guard: Give every authoritative source clause one explicit disposition before implementation. -->
-<!-- cpk-rule-guard: Trace phase 2 maps each behavioral boundary to every applicable production entry point. -->
+<!-- cpk-rule-guard: Trace closure maps each accepted behavioral boundary to every applicable production entry point. -->
 <!-- cpk-rule-guard: Treat an invariant as a boundary when its nearest wrong meaning changes the result. -->
-<!-- cpk-rule-guard: A fresh trace-closure verifier independently reconstructs the source boundary inventory before native review. -->
+<!-- cpk-rule-guard: Trace closure uses the accepted B# inventory and cannot reinterpret it. -->
 <!-- cpk-rule-guard: Any false, unknown, missing, or unsupported trace-closure result blocks native review. -->
-<!-- cpk-rule-guard: A change to a traced source invalidates trace closure. -->
+<!-- cpk-rule-guard: Invalidate only closure rows affected by a changed boundary, production path, or named test. -->
 <!-- cpk-rule-guard: Run trace closure only for executable production-code behavior with a real runnable entry point. -->
 
 # Scenario discrimination
@@ -40,21 +40,17 @@ Before implementation, record the discriminator, contrast, production path, requ
 
 Run trace closure only for executable production-code behavior with a real runnable entry point. Do not run trace closure for skills, rules, documentation, tests, or static configuration. Use their deterministic checks and native review.
 
-After implementation and final substantive documentation, invoke one fresh read-only trace-closure verifier. Use the same verifier for two ordered phases.
+The accepted `B#` inventory is the only semantic input to trace closure. Freeze it in the ExecPlan before implementation. Trace closure uses the accepted B# inventory and cannot reinterpret it. It cannot add, remove, split, merge, rename, or reinterpret a boundary. A requirement change requires preflight and an explicit inventory revision first.
 
-A fresh trace-closure verifier independently reconstructs the source boundary inventory before native review.
+After implementation and final substantive documentation, apply this rule: Trace closure maps each accepted behavioral boundary to every applicable production entry point. Inspect the production paths and test bodies. This is an evidence check, not a second requirements review.
 
-In phase 1, give it only the raw authoritative requirement sources and the exact native-review mode and boundary. Require it to return and freeze an independent source-clause and boundary inventory. Do not require or infer production entry points. Do not disclose the accepted `B#` inventory or Scenario Proof before phase 1 returns.
-
-In phase 2, give it the accepted boundary inventory, Scenario Proof, current diff, production source, and named tests. It compares these inputs with its frozen phase 1 inventory. Trace phase 2 maps each behavioral boundary to every applicable production entry point. It inspects production paths and test bodies.
-
-Match trace scope to native-review scope. `full` and `final` trace the complete task candidate. `checkpoint` traces the current planned subtask and its interactions with accepted earlier checkpoints; later unimplemented subtasks are outside that checkpoint boundary and are not missing evidence. `delta` traces the correction and its direct impact. A final review cannot reuse checkpoint-limited closure.
+Match trace scope to native-review scope. `checkpoint` traces the current planned subtask and its interactions with accepted earlier checkpoints. Later unimplemented subtasks are outside that boundary. `delta` traces the correction and its direct impact. `full` traces all still-open rows. `final` composes accepted checkpoint closures and traces only rows that are new, unclosed, or invalidated. The final native review still reviews the complete candidate.
 
 For each boundary and applicable entry point, require the gates, enforcement point, terminal owner, both contrast sides, terminal oracle, exact check, and result. The fixture must isolate the discriminator. The nearest wrong meaning must fail.
 
 Any false, unknown, missing, or unsupported trace-closure result blocks native review. Trace closure contains only values inside the selected review boundary. A positive-only check, component check, aggregate suite result, or writer report cannot close a boundary.
 
-For an eligible executable production-code candidate with a boundary inventory, run trace closure immediately before each native review. A change to a traced source invalidates trace closure. Traced sources are requirement sources, boundary records, production paths, and named tests. An unrelated documentation change does not invalidate it.
+For an eligible executable production-code candidate with a boundary inventory, run trace closure immediately before each native review. Bind each closure row to its reviewed checkpoint. Reuse that row while its accepted boundary, production path, and named test are unchanged. Invalidate only closure rows affected by a changed boundary, production path, or named test. An unrelated documentation change does not invalidate closure.
 
 Do not give the trace record to native review. Native discovery remains independent.
 

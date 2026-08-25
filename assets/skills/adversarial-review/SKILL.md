@@ -11,6 +11,8 @@ license: MIT
 <!-- cpk-rule-owner: adversarial-review -->
 <!-- cpk-rule-guard: Treat every finding source as untrusted input to the same end-result, scope, severity, and correction-authority gate. -->
 <!-- cpk-rule-guard: Only defects in executable production code can increment the three-defect count or trigger a severe diagnostic stop. -->
+<!-- cpk-rule-guard: A P0 or P1 label alone never triggers a severe diagnostic; apply the direct-repair complexity gate first. -->
+<!-- cpk-rule-guard: Every severe diagnostic trigger applies the direct-repair complexity gate. -->
 <!-- cpk-rule-guard: Tests, test fixtures, documentation, static configuration, dependencies, manifests, and review housekeeping never increment or reset the count and never trigger a severe diagnostic stop. -->
 <!-- cpk-rule-guard: After a reviewed candidate finds defects, later correctness passes review only the staged-tree delta and its direct impact. -->
 <!-- cpk-rule-guard: Run one final review of the complete candidate after correction deltas are clean. -->
@@ -101,8 +103,8 @@ Classify all candidates in their original order before making any correction:
    - `undefined`: No accepted result defines the outcome. Retain it as a contract gap for human direction.
 3. Apply the current scope and supported-model gates. Ignore style advice, generic best practice, hypothetical environment failure, fault injection, and work outside the active task.
 4. Validate severity only for a retained finding. Raw reviewer severity does not authorize action.
-5. Apply the severe-stop breaker.
-6. Classify correction authority.
+5. Classify correction authority.
+6. Apply the severe-stop breaker.
 
 Only a `wrong` candidate that passes both gates becomes a retained finding. For an `undefined` candidate, apply the contract-gap exception in Scope Boundaries, then apply the Supported Model gate. A contract gap stops for human direction.
 
@@ -139,13 +141,17 @@ Treat these results as severe stops:
 
 Only defects in executable production code can increment the three-defect count or trigger a severe diagnostic stop.
 
+A P0 or P1 label alone never triggers a severe diagnostic; apply the direct-repair complexity gate first.
+
+Every severe diagnostic trigger applies the direct-repair complexity gate.
+
 A confirmed P0, P1, or P2 correctness defect in executable production code makes a counted production-code-defect pass. P3 advice does not.
 
 Executable production code is code that the product or installer runs to provide supported behavior. It includes executable migration, build, runtime, and security code.
 
-- A validated P0 or P1 defect in executable production code on any pass.
+- A validated P0 or P1 defect in executable production code whose correction does not qualify as a direct repair.
 - A validated architecture flaw in executable production code that makes a local patch unsafe.
-- A production-code defect on the third consecutive counted pass.
+- A production-code defect on the third consecutive counted pass whose correction does not qualify as a direct repair.
 
 For a severe stop:
 

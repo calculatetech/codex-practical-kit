@@ -40,4 +40,4 @@ Use the task base as the parent. The staged tree is the complete current candida
 
 ## Adjudication
 
-After native discovery, the coordinator proves each finding's execution path and accepted end result. Then it applies product scope, the supported model, severity, the severe-stop breaker, and correction authority. A native severity or fix suggestion does not authorize a correction.
+After native discovery, the coordinator proves each finding's execution path and accepted end result. Then it applies the [Adversarial Review finding-validation procedure](../SKILL.md#validate-findings). A native severity or fix suggestion does not authorize a correction.

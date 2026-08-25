@@ -1207,12 +1207,36 @@ class RepoWiseRuntimeTests(unittest.TestCase):
             launcher = Path(temp) / "repowise"
             launcher.write_text("#!/usr/bin/python3\n")
             posix = bootstrap.watch_command(str(launcher), "linux")
-            windows = bootstrap.watch_command(r"C:\Tools\repowise.exe", "win32")
+            uv_tool = Path(temp) / "tool" / "bin"
+            uv_tool.mkdir(parents=True)
+            (uv_tool / "repowise").write_text("#!/bin/sh\n")
+            (uv_tool / "python").write_text("")
+            uv_posix = bootstrap.watch_command(str(uv_tool / "repowise"), "linux")
+            external = Path(temp) / "external" / "bin"
+            external.mkdir(parents=True)
+            (external / "repowise").write_text("#!/usr/bin/env -Spython3 -I\n")
+            (external / "python").write_text("")
+            external_posix = bootstrap.watch_command(str(external / "repowise"), "linux")
+            (external / "repowise").write_text(
+                "#!/usr/bin/env --split-string='python3 -I'\n"
+            )
+            long_env_posix = bootstrap.watch_command(str(external / "repowise"), "linux")
+            shell_wrapper = Path(temp) / "shell-repowise"
+            shell_wrapper.write_text("#!/bin/sh\n")
+            shell_posix = bootstrap.watch_command(str(shell_wrapper), "linux")
+            windows_launcher = str(Path(temp) / ".local" / "bin" / "repowise.exe")
+            windows = bootstrap.watch_command(windows_launcher, "win32")
+            external_windows = bootstrap.watch_command(r"C:\Tools\repowise.exe", "win32")
 
         self.assertEqual(posix[:2], ["/usr/bin/python3", "-c"])
+        self.assertEqual(uv_posix[:2], [str(uv_tool / "python"), "-c"])
+        self.assertEqual(external_posix[:3], ["python3", "-I", "-c"])
+        self.assertEqual(long_env_posix[:3], ["python3", "-I", "-c"])
+        self.assertEqual(shell_posix, [str(shell_wrapper), "watch"])
         for event in ("opened", "closed", "closed_no_write"):
             self.assertIn(event, posix[2])
-        self.assertEqual(windows, [r"C:\Tools\repowise.exe", "watch"])
+        self.assertEqual(windows, [windows_launcher, "watch"])
+        self.assertEqual(external_windows, [r"C:\Tools\repowise.exe", "watch"])
 
     def test_windows_runtime_discovery_uses_executable_suffix(self):
         with tempfile.TemporaryDirectory() as temp, mock.patch.object(
@@ -1348,7 +1372,7 @@ class RepoWiseRuntimeTests(unittest.TestCase):
             self.assertEqual(
                 commands,
                 [
-                    ["/usr/bin/uv", "tool", "install", "repowise==0.41.0"],
+                    ["/usr/bin/uv", "tool", "install", "repowise==0.45.0"],
                     ["/usr/bin/uv", "tool", "update-shell"],
                 ],
             )
@@ -1422,7 +1446,7 @@ class RepoWiseRuntimeTests(unittest.TestCase):
             self.assertEqual(repowise.read_bytes(), b"repaired")
             self.assertEqual(manifest["repowise"], str(repowise))
             self.assertIn(
-                [r"C:\Tools\uv.exe", "tool", "install", "--force", "repowise==0.41.0"],
+                [r"C:\Tools\uv.exe", "tool", "install", "--force", "repowise==0.45.0"],
                 commands,
             )
 
@@ -1454,7 +1478,7 @@ class RepoWiseRuntimeTests(unittest.TestCase):
                         [str(selected), "--version"], check=False, timeout=20
                     )
 
-    def test_broken_posix_repowise_is_not_repaired(self):
+    def test_manifest_owned_broken_posix_repowise_is_repaired(self):
         with tempfile.TemporaryDirectory() as temp:
             paths = self.paths(Path(temp))
             repowise = paths.home / ".local" / "bin" / "repowise"
@@ -1464,18 +1488,26 @@ class RepoWiseRuntimeTests(unittest.TestCase):
             (paths.install_root / "install-manifest.json").write_text(
                 json.dumps({"repowise": str(repowise)}), encoding="utf-8"
             )
+            commands = []
+
+            def fake_run(command, **_kwargs):
+                commands.append(command)
+                if command == [str(repowise), "--version"]:
+                    return subprocess.CompletedProcess(command, 1, "", "missing Python")
+                return subprocess.CompletedProcess(command, 0, "", "")
+
             with mock.patch.object(
-                kit, "is_windows", return_value=False
-            ), mock.patch.object(
                 kit, "find_runtime_command", return_value=str(repowise)
             ), mock.patch.object(
-                kit,
-                "run",
-                return_value=subprocess.CompletedProcess([], 1, "", "missing Python"),
-            ) as run, self.assertRaises(kit.KitError):
-                kit.ensure_repowise(paths, "/usr/bin/uv")
+                kit, "run", side_effect=fake_run
+            ):
+                result = kit.ensure_repowise(paths, "/usr/bin/uv")
+            self.assertEqual(result, str(repowise))
             self.assertEqual(repowise.read_bytes(), b"unchanged")
-            run.assert_called_once_with([str(repowise), "--version"], check=False, timeout=20)
+            self.assertIn(
+                ["/usr/bin/uv", "tool", "install", "--force", "repowise==0.45.0"],
+                commands,
+            )
 
     def test_matching_repowise_version_is_reused(self):
         with tempfile.TemporaryDirectory() as temp:
@@ -1486,13 +1518,40 @@ class RepoWiseRuntimeTests(unittest.TestCase):
             ), mock.patch.object(
                 kit,
                 "run",
-                return_value=subprocess.CompletedProcess([], 0, "RepoWise 0.41.0", ""),
+                return_value=subprocess.CompletedProcess([], 0, "RepoWise 0.45.0", ""),
             ) as run:
                 result = kit.ensure_repowise(paths, r"C:\Tools\uv.exe")
             self.assertEqual(result, str(repowise))
             run.assert_called_once_with([str(repowise), "--version"], check=False, timeout=20)
 
-    def test_different_repowise_version_stops_install(self):
+    def test_manifest_owned_outdated_repowise_is_upgraded(self):
+        with tempfile.TemporaryDirectory() as temp:
+            paths = self.paths(Path(temp))
+            repowise = paths.home / ".local" / "bin" / "repowise"
+            repowise.parent.mkdir(parents=True)
+            repowise.write_text("old", encoding="utf-8")
+            paths.install_root.mkdir(parents=True)
+            (paths.install_root / "install-manifest.json").write_text(
+                json.dumps({"repowise": str(repowise)}), encoding="utf-8"
+            )
+            commands = []
+
+            def fake_run(command, **_kwargs):
+                commands.append(command)
+                version = "RepoWise 0.41.0" if command == [str(repowise), "--version"] else ""
+                return subprocess.CompletedProcess(command, 0, version, "")
+
+            with mock.patch.object(
+                kit, "find_runtime_command", return_value=str(repowise)
+            ), mock.patch.object(kit, "run", side_effect=fake_run):
+                self.assertEqual(kit.ensure_repowise(paths, "/usr/bin/uv"), str(repowise))
+
+            self.assertIn(
+                ["/usr/bin/uv", "tool", "install", "--force", "repowise==0.45.0"],
+                commands,
+            )
+
+    def test_unowned_different_repowise_version_stops_install(self):
         with tempfile.TemporaryDirectory() as temp:
             paths = self.paths(Path(temp))
             repowise = paths.home / ".local" / "bin" / "repowise.exe"
@@ -1500,7 +1559,8 @@ class RepoWiseRuntimeTests(unittest.TestCase):
             repowise.write_bytes(b"unchanged")
             paths.install_root.mkdir(parents=True)
             (paths.install_root / "install-manifest.json").write_text(
-                json.dumps({"repowise": str(repowise)}), encoding="utf-8"
+                json.dumps({"repowise": str(paths.home / "other" / "repowise.exe")}),
+                encoding="utf-8",
             )
             with mock.patch.object(kit, "is_windows", return_value=True), mock.patch.object(
                 kit, "find_runtime_command", return_value=str(repowise)
@@ -1512,6 +1572,14 @@ class RepoWiseRuntimeTests(unittest.TestCase):
                 kit.ensure_repowise(paths, "/usr/bin/uv")
             self.assertEqual(repowise.read_bytes(), b"unchanged")
             run.assert_called_once_with([str(repowise), "--version"], check=False, timeout=20)
+
+    def test_repowise_command_disables_editor_setup(self):
+        with tempfile.TemporaryDirectory() as temp, mock.patch.object(kit, "run") as run:
+            root = Path(temp)
+            paths = self.paths(root)
+            kit.repowise_command(root, "status", paths=paths, repowise="repowise")
+
+            self.assertEqual(run.call_args.kwargs["env"]["REPOWISE_SKIP_EDITOR_SETUP"], "1")
 
     class Watcher:
         def __init__(self, status=None):
@@ -1627,7 +1695,7 @@ class RepoWiseRuntimeTests(unittest.TestCase):
             def setup(command, _cwd):
                 calls.append(command)
                 if command[1] == "init":
-                    (root / ".repowise").mkdir()
+                    (root / ".repowise").mkdir(exist_ok=True)
 
             def popen(command, **_kwargs):
                 calls.append(command)
@@ -1653,10 +1721,54 @@ class RepoWiseRuntimeTests(unittest.TestCase):
 
             self.assertEqual(sum(command[1] == "init" for command in calls if len(command) > 1), 1)
             self.assertEqual(sum(command[1:3] == ["hook", "install"] for command in calls), 2)
-            self.assertEqual(sum(command[1] == "update" for command in calls if len(command) > 1), 2)
+            self.assertEqual(sum(command[1] == "update" for command in calls if len(command) > 1), 1)
             self.assertEqual(sum(command[0] == "watcher" for command in calls), 2)
             self.assertEqual(sum(command[1] == "mcp" for command in calls if len(command) > 1), 2)
             self.assertTrue(all(item.terminated and item.waited for item in watchers))
+
+    def test_bootstrap_uses_the_linked_worktree_root(self):
+        with tempfile.TemporaryDirectory() as temp:
+            base = Path(temp)
+            primary = base / "primary"
+            linked = base / "linked"
+            primary.mkdir()
+            git = GitFixture(primary)
+            git.commit("tracked.txt", "base\n")
+            subprocess.run(
+                ["git", "worktree", "add", "-q", "-b", "linked", str(linked)],
+                cwd=primary,
+                check=True,
+            )
+            calls = []
+
+            def setup(command, cwd):
+                calls.append((command, cwd))
+                if command[1] == "init":
+                    (linked / ".repowise").mkdir()
+
+            watcher = self.Watcher()
+            with mock.patch.object(bootstrap, "git_root", return_value=linked), mock.patch.object(
+                bootstrap, "run_setup", side_effect=setup
+            ), mock.patch.object(
+                bootstrap, "watch_command", return_value=["watcher"]
+            ), mock.patch.object(
+                bootstrap.subprocess, "Popen", return_value=watcher
+            ), mock.patch.object(
+                bootstrap.subprocess,
+                "run",
+                return_value=subprocess.CompletedProcess([], 0),
+            ) as foreground, mock.patch.object(bootstrap.time, "sleep"):
+                self.assertEqual(bootstrap.bootstrap("repowise", linked), 0)
+
+            self.assertTrue((linked / ".repowise").is_dir())
+            self.assertFalse((primary / ".repowise").exists())
+            self.assertTrue(any(command[-1] == str(linked) for command, _cwd in calls))
+            foreground.assert_any_call(
+                ["repowise", "mcp", str(linked)],
+                cwd=linked,
+                env=mock.ANY,
+                check=False,
+            )
 
     def test_bootstrap_initializes_only_empty_non_git_directory(self):
         with tempfile.TemporaryDirectory() as temp:
@@ -1697,6 +1809,7 @@ class RepoWiseRuntimeTests(unittest.TestCase):
             popen.assert_called_once_with(
                 ["watcher", "--index-only", "--no-workspace", str(empty)],
                 cwd=empty,
+                env=mock.ANY,
                 stdout=mock.ANY,
                 stderr=subprocess.STDOUT,
             )
@@ -1718,7 +1831,7 @@ class RepoWiseRuntimeTests(unittest.TestCase):
             setup_mock.assert_not_called()
             popen.assert_not_called()
             foreground.assert_called_once_with(
-                ["repowise", "mcp"], cwd=nonempty, check=False
+                ["repowise", "mcp"], cwd=nonempty, env=mock.ANY, check=False
             )
 
     def test_bootstrap_stops_when_watcher_fails_to_start(self):
@@ -1763,6 +1876,8 @@ class RepoWiseRuntimeTests(unittest.TestCase):
             mcp_kwargs = next(kwargs for command, kwargs in calls if command[1] == "mcp")
             self.assertIs(hook_kwargs["stdout"], sys.stderr)
             self.assertNotIn("stdout", mcp_kwargs)
+            self.assertEqual(hook_kwargs["env"]["REPOWISE_SKIP_EDITOR_SETUP"], "1")
+            self.assertEqual(mcp_kwargs["env"]["REPOWISE_SKIP_EDITOR_SETUP"], "1")
 
 
 class IntegrationTests(unittest.TestCase):
@@ -1792,6 +1907,190 @@ class IntegrationTests(unittest.TestCase):
 
             self.assertTrue(any(call[0] == "init" for call in calls))
             self.assertFalse(any(call[0] == "update" for call in calls))
+
+    def test_existing_index_uses_incremental_update(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            git = GitFixture(root)
+            git.commit("tracked.txt", "base\n")
+            (root / ".repowise").mkdir()
+            calls = []
+            paths = kit.InstallPaths(root, root / "codex", root / "skills", root / "kit")
+
+            with mock.patch.object(
+                kit, "repowise_command", side_effect=lambda _root, *args, **_kwargs: calls.append(args)
+            ), mock.patch.object(
+                kit,
+                "ensure_repowise_runtime",
+                return_value=("/usr/bin/uv", "/usr/bin/repowise"),
+            ):
+                kit.setup_repo(Namespace(repo=str(root), prose=False), paths)
+                kit.update_repowise(Namespace(repo=str(root)), paths)
+
+            updates = [call for call in calls if call and call[0] == "update"]
+            self.assertEqual(len(updates), 2)
+            self.assertFalse(any(call and call[0] == "init" for call in calls))
+
+    def test_linked_worktree_setup_and_doctor_use_the_real_hook_path(self):
+        with tempfile.TemporaryDirectory() as temp:
+            base = Path(temp)
+            primary = base / "primary"
+            linked = base / "linked"
+            primary.mkdir()
+            git = GitFixture(primary)
+            git.commit("tracked.txt", "base\n")
+            subprocess.run(
+                ["git", "worktree", "add", "-q", "-b", "linked", str(linked)],
+                cwd=primary,
+                check=True,
+            )
+            hook_dir = Path(
+                subprocess.run(
+                    ["git", "rev-parse", "--git-path", "hooks"],
+                    cwd=linked,
+                    text=True,
+                    capture_output=True,
+                    check=True,
+                ).stdout.strip()
+            )
+            if not hook_dir.is_absolute():
+                hook_dir = linked / hook_dir
+            hook = hook_dir / "post-commit"
+            paths = kit.InstallPaths(base, base / "codex", base / "skills", base / "kit")
+            calls = []
+
+            def fake_repowise(repo: Path, *args: str, **_kwargs):
+                calls.append((repo, args))
+                if args[0] == "init":
+                    (repo / ".repowise").mkdir()
+                if args[:2] == ("hook", "install"):
+                    hook_dir.mkdir(parents=True, exist_ok=True)
+                    hook.write_text(
+                        "# repowise-hook-start\n# repowise-hook-end\n", encoding="utf-8"
+                    )
+                return subprocess.CompletedProcess([], 0, "", "")
+
+            with mock.patch.object(kit, "repowise_command", side_effect=fake_repowise), mock.patch.object(
+                kit, "ensure_repowise_runtime", return_value=("/usr/bin/uv", "/usr/bin/repowise")
+            ):
+                kit.setup_repo(Namespace(repo=str(linked), prose=False), paths)
+
+            self.assertTrue((linked / ".repowise").is_dir())
+            self.assertFalse((primary / ".repowise").exists())
+            self.assertTrue(all(repo == linked for repo, _args in calls))
+            self.assertTrue(hook.is_file())
+
+            observed = {}
+            real_run = kit.run
+
+            def doctor_run(command, **kwargs):
+                if command[0] == "git":
+                    return real_run(command, **kwargs)
+                return subprocess.CompletedProcess(command, 0, "Logged in", "")
+
+            def observe(condition, label, detail=""):
+                observed[label] = (condition, detail)
+                return True
+
+            with mock.patch.object(kit, "check", side_effect=observe), mock.patch.object(
+                kit, "find_runtime_command", return_value="/usr/bin/repowise"
+            ), mock.patch.object(
+                kit,
+                "command_version",
+                side_effect=lambda command: (
+                    "RepoWise 0.45.0" if "repowise" in command[0] else "codex-cli 0.149"
+                ),
+            ), mock.patch.object(kit, "run", side_effect=doctor_run):
+                self.assertEqual(kit.doctor(Namespace(repo=str(linked)), paths), 0)
+
+            self.assertTrue(observed["RepoWise post-commit hook"][0])
+            self.assertEqual(observed["RepoWise post-commit hook"][1], str(hook))
+
+    def test_linked_worktree_remove_stops_before_mutation(self):
+        with tempfile.TemporaryDirectory() as temp:
+            base = Path(temp)
+            primary = base / "primary"
+            linked = base / "linked"
+            primary.mkdir()
+            git = GitFixture(primary)
+            git.commit("tracked.txt", "base\n")
+            subprocess.run(
+                ["git", "worktree", "add", "-q", "-b", "linked", str(linked)],
+                cwd=primary,
+                check=True,
+            )
+            config = linked / ".codex" / "config.toml"
+            config.parent.mkdir()
+            config.write_text("sentinel\n", encoding="utf-8")
+            index = linked / ".repowise"
+            index.mkdir()
+            (index / "sentinel").write_text("index\n", encoding="utf-8")
+            hook_dir = Path(
+                subprocess.run(
+                    ["git", "rev-parse", "--git-path", "hooks"],
+                    cwd=linked,
+                    text=True,
+                    capture_output=True,
+                    check=True,
+                ).stdout.strip()
+            )
+            if not hook_dir.is_absolute():
+                hook_dir = linked / hook_dir
+            hook_dir.mkdir(parents=True, exist_ok=True)
+            hook = hook_dir / "post-commit"
+            hook.write_text("shared\n", encoding="utf-8")
+            paths = kit.InstallPaths(base, base / "codex", base / "skills", base / "kit")
+
+            with mock.patch.object(kit, "ensure_repowise_runtime") as runtime, mock.patch.object(
+                kit, "repowise_command"
+            ) as command, self.assertRaisesRegex(kit.KitError, "linked worktree"):
+                kit.remove_repo(Namespace(repo=str(linked), delete_index=True), paths)
+
+            runtime.assert_not_called()
+            command.assert_not_called()
+            self.assertEqual(config.read_text(), "sentinel\n")
+            self.assertEqual((index / "sentinel").read_text(), "index\n")
+            self.assertEqual(hook.read_text(), "shared\n")
+
+    def test_submodule_remove_is_not_treated_as_a_linked_worktree(self):
+        with tempfile.TemporaryDirectory() as temp:
+            base = Path(temp)
+            source = base / "source"
+            source.mkdir()
+            GitFixture(source).commit("tracked.txt", "base\n")
+            primary = base / "primary"
+            primary.mkdir()
+            GitFixture(primary).commit("tracked.txt", "base\n")
+            subprocess.run(
+                [
+                    "git",
+                    "-c",
+                    "protocol.file.allow=always",
+                    "submodule",
+                    "add",
+                    "-q",
+                    str(source),
+                    "sub",
+                ],
+                cwd=primary,
+                check=True,
+            )
+            submodule = primary / "sub"
+            config = submodule / ".codex" / "config.toml"
+            config.parent.mkdir()
+            config.write_text("", encoding="utf-8")
+            (submodule / ".repowise").mkdir()
+            paths = kit.InstallPaths(base, base / "codex", base / "skills", base / "kit")
+
+            with mock.patch.object(
+                kit,
+                "ensure_repowise_runtime",
+                return_value=("/usr/bin/uv", "/usr/bin/repowise"),
+            ), mock.patch.object(kit, "repowise_command") as command:
+                kit.remove_repo(Namespace(repo=str(submodule), delete_index=True), paths)
+
+            command.assert_called_once()
+            self.assertFalse((submodule / ".repowise").exists())
 
     def test_setup_preserves_roadmap_and_unrelated_blocks(self):
         with tempfile.TemporaryDirectory() as temp:
@@ -1827,16 +2126,7 @@ class IntegrationTests(unittest.TestCase):
             )
             self.assertTrue(kit.repowise_bootstrap_path(paths).is_file())
             self.assertTrue(any(call[:2] == ("hook", "install") for call in calls))
-            self.assertIn(
-                (
-                    "update",
-                    "--index-only",
-                    "--no-agents",
-                    "--no-workspace",
-                    str(root),
-                ),
-                calls,
-            )
+            self.assertFalse(any(call and call[0] == "update" for call in calls))
             self.assertEqual((root / "docs" / "roadmap.md").read_text(), "sentinel\n")
             self.assertEqual((root / "AGENTS.md").read_text(), "# Project rules\n")
             with mock.patch.object(kit, "repowise_command", fake_repowise), mock.patch.object(
@@ -2547,21 +2837,20 @@ class IntegrationTests(unittest.TestCase):
         preflight = (preflight_root / "SKILL.md").read_text()
         review = (skills / "adversarial-review" / "SKILL.md").read_text()
 
-        self.assertIn("independently reconstructs the source boundary inventory", owner)
-        self.assertIn("Do not disclose the accepted `B#` inventory or Scenario Proof before phase 1 returns", owner)
-        self.assertIn("Do not require or infer production entry points", owner)
+        self.assertIn("accepted `B#` inventory is the only semantic input", owner)
+        self.assertIn("cannot add, remove, split, merge, rename, or reinterpret a boundary", owner)
         self.assertIn(
-            "Trace phase 2 maps each behavioral boundary to every applicable production entry point",
+            "Trace closure maps each accepted behavioral boundary to every applicable production entry point",
             owner,
         )
-        self.assertIn("later unimplemented subtasks are outside that checkpoint boundary", owner)
-        self.assertIn("A final review cannot reuse checkpoint-limited closure", owner)
-        self.assertIn("inspects production paths and test bodies", owner)
+        self.assertIn("Later unimplemented subtasks are outside that boundary", owner)
+        self.assertIn("final` composes accepted checkpoint closures", owner)
+        self.assertIn("Inspect the production paths and test bodies", owner)
         self.assertIn("fixture must isolate the discriminator", owner)
         self.assertIn("nearest wrong meaning must fail", owner)
         self.assertIn("positive-only check", owner)
         self.assertIn("Any false, unknown, missing, or unsupported", owner)
-        self.assertIn("change to a traced source invalidates", owner)
+        self.assertIn("Invalidate only closure rows affected", owner)
         self.assertIn("unrelated documentation change does not invalidate", owner)
         self.assertIn("Do not give the trace record to native review", owner)
         self.assertIn(
@@ -2584,15 +2873,11 @@ class IntegrationTests(unittest.TestCase):
             owner,
         )
         self.assertIn('"reviewer": "boundary-trace-closure"', result)
-        self.assertIn('"reviewer": "boundary-trace-inventory"', result)
-        self.assertIn('"independent_inventory_frozen_before_comparison"', result)
+        self.assertNotIn('"reviewer": "boundary-trace-inventory"', result)
+        self.assertIn('"accepted_boundary_ids"', result)
+        self.assertIn('"reused_checkpoint_closures"', result)
         self.assertIn('"review_mode": "full | checkpoint | delta | final"', result)
-        trace_phase_1 = result.split("## Trace closure phase 1 result", 1)[1].split(
-            "## Trace closure phase 2 result", 1
-        )[0]
-        self.assertNotIn('"production_entry_points"', trace_phase_1)
         for field in (
-            '"source_inventory_complete"',
             '"entry_point"',
             '"gates"',
             '"enforcement_point"',
@@ -2636,7 +2921,6 @@ class IntegrationTests(unittest.TestCase):
         self.assertIn("spec_kit_progress_rejected", forward)
         self.assertIn("untracked_progress_allowed", forward)
         self.assertIn("anchored_trace_rejected", forward)
-        self.assertIn("two_phase_trace_ordered", forward)
         self.assertIn("checkpoint_future_work_excluded", forward)
         self.assertIn("final_complete_inventory_required", forward)
 
@@ -2823,7 +3107,7 @@ class IntegrationTests(unittest.TestCase):
         self.assertIn("`pwsh -File .\\doctor.ps1`", publication)
         self.assertIn("from the reviewed candidate", publication)
         self.assertIn("`Result: ready`", publication)
-        self.assertEqual(kit.KIT_VERSION, "0.23.0")
+        self.assertEqual(kit.KIT_VERSION, "0.23.1")
         self.assertNotIn("Version `0.22.0`", (ROOT / "README.md").read_text())
         self.assertNotIn("version 0.22.0", (ROOT / "CODEX-INSTALL-PROMPT.md").read_text())
 
@@ -2845,7 +3129,7 @@ class IntegrationTests(unittest.TestCase):
         self.assertNotIn("Do not request the review manually", publication)
         self.assertNotIn("validated P0 or P1", publication)
         self.assertLess(review.index("## Scope gate"), review.index("## Supported-model gate"))
-        self.assertIn("A validated P0 or P1 defect in executable production code", review)
+        self.assertIn("A P0 or P1 label alone never triggers a severe diagnostic", review)
 
     def test_windows_launchers_and_runtime_are_complete_distribution_artifacts(self):
         shell_paths = {path.relative_to(ROOT) for path in ROOT.rglob("*.sh")}
@@ -2938,7 +3222,7 @@ class IntegrationTests(unittest.TestCase):
         self.assertIn("required = true", config)
         self.assertIn("startup_timeout_sec = 1800", config)
         runtime = (ROOT / "assets" / "runtime" / "repowise_bootstrap.py").read_text()
-        self.assertIn('"update",', runtime)
+        self.assertIn("[repowise, *INIT_ARGS, str(root)]", runtime)
         self.assertIn('"watch"]', runtime)
         self.assertIn('"--index-only",', runtime)
         self.assertIn('"--no-workspace",', runtime)
@@ -3012,8 +3296,24 @@ class IntegrationTests(unittest.TestCase):
         self.assertIn("Put the final `Review:` and `Docs:` status lines after the diagnostic.", review)
         self.assertIn("Only defects in executable production code can increment", review)
         self.assertIn("Tests, test fixtures, documentation, static configuration", review)
-        self.assertIn("A validated P0 or P1 defect in executable production code on any pass.", review)
-        self.assertIn("A production-code defect on the third consecutive counted pass.", review)
+        self.assertIn(
+            "A validated P0 or P1 defect in executable production code whose correction "
+            "does not qualify as a direct repair.",
+            review,
+        )
+        self.assertNotIn(
+            "A validated P0 or P1 defect in executable production code on any pass.", review
+        )
+        self.assertLess(
+            review.index("5. Classify correction authority."),
+            review.index("6. Apply the severe-stop breaker."),
+        )
+        self.assertIn("Every severe diagnostic trigger applies the direct-repair complexity gate.", review)
+        self.assertIn(
+            "A production-code defect on the third consecutive counted pass whose correction "
+            "does not qualify as a direct repair.",
+            review,
+        )
         self.assertIn("P3 advice does not", review)
         self.assertNotIn("executable source, tests", review)
 

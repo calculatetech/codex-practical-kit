@@ -135,49 +135,19 @@ After the coordinator supplies the complete card and its decisions, return JSON 
 
 Empty `findings` is valid. Every finding must cite source and name the coordinator claim that it challenges.
 
-## Trace closure phase 1 result
+## Trace closure result
 
-After receiving only the raw authoritative requirement sources and exact native-review boundary, return JSON only. Freeze this result before phase 2 inputs are disclosed.
-
-```json
-{
-  "reviewer": "boundary-trace-inventory",
-  "review_mode": "full | checkpoint | delta | final",
-  "review_boundary": "Complete task | stable subtask and earlier-checkpoint interactions | correction and direct impact",
-  "source_inventory_complete": true,
-  "missing_or_unsupported": [],
-  "source_clauses": [
-    {
-      "source": "path:line-line",
-      "clause": "Authoritative clause",
-      "disposition": "mapped | non-boundary | opaque | deferred | contract-gap",
-      "boundary_id": "B1 | null"
-    }
-  ],
-  "boundaries": [
-    {
-      "boundary_id": "B1",
-      "condition_or_invariant": "Explicit behavioral boundary",
-      "contrast_sides": ["Required side", "Nearest contrasting side"],
-      "required_oracles": ["Observable terminal result"]
-    }
-  ],
-  "decision": "pass"
-}
-```
-
-## Trace closure phase 2 result
-
-After phase 1 returns, supply the accepted boundary inventory, Scenario Proof, current diff, production source, and named tests. Return JSON only.
+Use the accepted `B#` inventory, Scenario Proof, current diff, production source, named tests, and reusable checkpoint closures. Do not derive requirements again. Return JSON only.
 
 ```json
 {
   "reviewer": "boundary-trace-closure",
   "review_mode": "full | checkpoint | delta | final",
-  "review_boundary": "Same exact boundary as phase 1",
-  "independent_inventory_frozen_before_comparison": true,
-  "source_inventory_complete": true,
-  "missing_or_unsupported": [],
+  "review_boundary": "Complete task | stable subtask and earlier-checkpoint interactions | correction and direct impact",
+  "accepted_boundary_ids": ["B1"],
+  "closed_boundary_ids": ["B1"],
+  "unclosed_or_invalidated": [],
+  "reused_checkpoint_closures": [{"checkpoint": "commit-or-tree", "boundary_ids": ["B1"]}],
   "boundaries": [
     {
       "boundary_id": "B1",
@@ -199,7 +169,7 @@ After phase 1 returns, supply the accepted boundary inventory, Scenario Proof, c
 }
 ```
 
-Apply [Scenario discrimination](scenario-discrimination.md). Any false, unknown, missing, or unsupported value makes `decision` equal `fail`.
+Apply [Scenario discrimination](scenario-discrimination.md). Any false, unknown, missing, unsupported, or unclosed value makes `decision` equal `fail`.
 
 ## Supported-model classification
 

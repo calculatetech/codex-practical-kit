@@ -89,6 +89,8 @@ The core install provides pinned `uv` and RepoWise when they are absent. It conf
 
 In a Git repository, the first MCP start creates the index and installs RepoWise's `post-commit` hook. Each MCP session catches up the index and watches working-tree edits without model calls. A completely empty folder becomes a Git repository. A non-empty, non-Git folder remains unchanged.
 
+In a linked worktree, RepoWise keeps a separate index and uses Git's shared hook path. No extra setup is necessary.
+
 On macOS or Linux, run eager setup when you need the index before the next Codex session:
 
 ```bash
@@ -131,6 +133,8 @@ Core uninstall leaves `uv` and RepoWise installed. Other repositories and tools 
 Uninstall also leaves all Plan history records in their project or fallback locations.
 
 Core uninstall leaves generated roadmap views because it does not track repository locations. Remove owned view files before core uninstall.
+
+Run `remove-repo` from a normal checkout. The command stops without changes in a linked worktree because its Git hook is shared.
 
 On macOS or Linux, run:
 

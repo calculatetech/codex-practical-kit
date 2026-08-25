@@ -27,8 +27,8 @@
 ### RepoWise
 
 - Source: https://github.com/repowise-dev/repowise
-- Pinned runtime version: `0.41.0`
-- License: AGPL-3.0-only
+- Pinned runtime version: `0.45.0`
+- License: AGPL-3.0-or-later
 - Integration: persistent uv tool, MCP server, and marker-delimited Git hook
 - RepoWise is not copied into or linked with this kit.
 
