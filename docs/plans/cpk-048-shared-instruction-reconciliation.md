@@ -96,6 +96,10 @@ Reason: The final CPK-047 publication and integration rules remain authoritative
 
 Record: `.agent/plan-history/plan-summary.20260825T183857932150Z.47ec1ac118b8c6c23f961b4099708aacc7031581a744bc389e6795e1c2007796.md`
 
-Status: carried
+Status: superseded
 
-Reason: This record is the accepted CPK-048 implementation contract.
+Reason: The user excluded Billing. FacetOS's active plan requires a separate migration.
+
+Replacement: CP2 removes 18 copies and preserves Billing and FacetOS.
+
+Scope: unfinished subtasks CP2
