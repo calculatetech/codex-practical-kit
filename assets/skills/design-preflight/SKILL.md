@@ -77,6 +77,11 @@ Write one preflight card from `references/preflight-card.md`. It must contain:
 
 Every non-trivial runtime preflight requires one task ExecPlan. Merge the accepted card into it before implementation. For other ExecPlan work, do the same. Do not preserve a second planning artifact.
 
+## Challenger lifecycle
+
+<!-- cpk-rule-route-only: coordination -->
+[Coordination](../delivery-lifecycle/references/coordination.md)
+
 ## Two-phase challenge
 
 Skip the challenger when a correction is a strict simplification that adds no broader behavior. The correction must reject or delete the starting design, use an existing owner or upstream or native capability, and add no interface, persistent state, dependency, fallback, or supported behavior. One direct runnable check must prove the retained result.

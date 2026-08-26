@@ -1,7 +1,7 @@
 <!-- cpk-rule-owner: coordination -->
 <!-- cpk-rule-guard: Only the active coordinator can delegate, manage task state, commit, publish, or orchestrate review. -->
 <!-- cpk-rule-guard: The coordinator can run at most one write-capable implementation subagent at a time. -->
-<!-- cpk-rule-guard: Elapsed time alone cannot authorize a duplicate or restart of an active delegated task. -->
+<!-- cpk-rule-guard: Do not interrupt or replace a healthy active delegated task because it is slow. -->
 <!-- cpk-rule-guard: When told to stop, start no new edit, test, review, subagent, commit, or CI action. -->
 
 # Coordination
@@ -14,7 +14,9 @@ The coordinator can run at most one write-capable implementation subagent at a t
 
 The coordinator closes each subagent after it reports `complete` or `blocked`.
 
-Elapsed time alone cannot authorize a duplicate or restart of an active delegated task. Keep and poll the same task until it completes, reports blocked, or the platform reports that it stopped.
+Elapsed time alone cannot authorize a duplicate or restart of an active delegated task. Keep and poll the same task until it completes, reports blocked, or the platform reports that it stopped without coordinator action.
+
+Do not interrupt or replace a healthy active delegated task because it is slow. Interrupt it only when the user cancels it or a proven tool or platform failure makes it unusable. After an interruption or failure, do not start a replacement. Stop and report the result.
 
 A subagent performs only its assigned task. It reports `complete` or `blocked`.
 

@@ -2656,10 +2656,19 @@ class IntegrationTests(unittest.TestCase):
         self.assertIn("task-specific skill can impose a narrower limit", coordination)
         self.assertIn("Elapsed time alone cannot authorize a duplicate or restart", coordination)
         self.assertIn("Keep and poll the same task", coordination)
-        self.assertIn("platform reports that it stopped", coordination)
+        self.assertIn("stopped without coordinator action", coordination)
+        self.assertIn("Do not interrupt or replace a healthy active delegated task because it is slow", coordination)
+        self.assertIn("After an interruption or failure, do not start a replacement", coordination)
+        self.assertIn("Stop and report the result", coordination)
         self.assertIn("cpk-rule-route-only: supported-model", coordination)
         self.assertIn("design-preflight/references/supported-model.md", coordination)
         self.assertNotIn("at most one subagent at a time", coordination)
+
+        preflight = (
+            ROOT / "assets" / "skills" / "design-preflight" / "SKILL.md"
+        ).read_text()
+        self.assertIn("cpk-rule-route-only: coordination", preflight)
+        self.assertIn("delivery-lifecycle/references/coordination.md", preflight)
 
     def test_default_mode_preflight_and_repowise_continue_through_corrections(self):
         root = ROOT / "assets" / "skills"
@@ -3124,7 +3133,7 @@ class IntegrationTests(unittest.TestCase):
         self.assertIn("`pwsh -File .\\doctor.ps1`", publication)
         self.assertIn("from the reviewed candidate", publication)
         self.assertIn("`Result: ready`", publication)
-        self.assertEqual(kit.KIT_VERSION, "0.23.2")
+        self.assertEqual(kit.KIT_VERSION, "0.23.3")
         self.assertNotIn("Version `0.22.0`", (ROOT / "README.md").read_text())
         self.assertNotIn("version 0.22.0", (ROOT / "CODEX-INSTALL-PROMPT.md").read_text())
 

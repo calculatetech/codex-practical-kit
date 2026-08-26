@@ -33,6 +33,7 @@ No residual risk is accepted.
 
 ## Completed
 
+- ✅ **CPK-049 — Prevent impatience-driven preflight restarts.** Keep one healthy challenger for both preflight phases. Do not interrupt or replace it because it is slow.
 - ✅ **CPK-048 — Reconcile shared agent and Plan instructions.** Document global instruction precedence, remove eligible copied Plan contracts, and preserve focused project overrides.
 - ✅ **CPK-047 — Repair Plan History worktree handoff, bound preflight, and reconcile PR publication.** Relocate pending Plan records before worktree state checks, constrain challengers to evidence-backed task scope, and require distinct local and PR reviews through local-main integration.
 - ✅ **CPK-046 — Recover RepoWise linked-worktree support and block unauthorized cross-repository fixes.** Use RepoWise’s native worktree behavior, preserve shared-hook safety, keep tooling failures from expanding repository scope, and reserve semantic trace closure for executable production behavior.
