@@ -19,7 +19,7 @@ e4912f4f8d644555dcd57d5e336a249cf8a9d7f6222b78096d6b403f45a8a215  ./PLAYGROUND.m
 9cc7a6721b4d7789b89182dcb996ef67a3fad6c92f5e0dea6c90d9840fc77324  ./THIRD_PARTY.md
 19106ce843b36934c1d0a343c343194820a6ab7aaaf5397a7b7023847f55b5fb  ./assets/AGENTS.block.md
 1f4567ef3f142c92d70688eca55c49ad1d5e1aaac0049b1773333ec9ee4accd7  ./assets/hooks/session_start.py
-cfc43f78d3eaa3568c37d99579a871c48b673bce14e3dd397977d8468e4aca69  ./assets/runtime/repowise_bootstrap.py
+3027ffa3ef382dcd0c96f6280ba861bb4a9410011e1176d71d7aa7911805821f  ./assets/runtime/repowise_bootstrap.py
 a81dcc4be9847f9a2d0f26eb03e774c6d2e4fd3c95deec5363a3422647f028f8  ./assets/skills/adversarial-review/SKILL.md
 2efee440c5086ec671355a2f88c19aebdf83fd6fc273355f54e1895198d32374  ./assets/skills/adversarial-review/references/finding-format.md
 6b4f1df93ab8b89b1e1602f59a3322b454406043a10807ebda736f2927faee91  ./assets/skills/adversarial-review/references/review-closure.md
@@ -59,7 +59,7 @@ a8a3764af5e50240c687019e5bf56d927728a0e802ab4ce2168d3816e2b69cbd  ./assets/skill
 78823831a732ebf870c45b9acc92abddfdddbdbb47db6db81a38ada0497de00f  ./docs/OPERATING-MANUAL.md
 97dd789229fa55905bd20290c2767ef7bd274cc81965a6f4eb1136dda9ed0adb  ./docs/OPTIONAL-REVIEW-TOOLS.md
 9bee78762d4d1f446cfb816878e36671cdd823ab62521d32833cc915a572796e  ./docs/REMOVE-CBM.md
-4fe39ade32ae1ed7c46bb8520f7017c1f2ece1f4017743aeeb7bea9703826ee5  ./docs/REPOWISE.md
+208aeeb48807fd9a4d44ea7a5960e88f4a41d77ba2ac6351ad410b80f319233a  ./docs/REPOWISE.md
 e27b3d72ff47ebf7230a96b3a5f2d6ea3f410e22ef382f8e7d9cd27c7bb59892  ./docs/REVIEW.md
 e86355a4eae8ec5cd42e7674461ebaf1acc4f14f20fa9600da2bb5248efb8e43  ./docs/SPEC-KIT.md
 f7298a2735489830b11a83c5a852984916147e8c3408214cc722d58a4f7a139f  ./docs/WHY-THIS-SHAPE.md
@@ -121,12 +121,13 @@ dfdc8ca0a2906974fe5418d8e542ae827dd09e47d055b8d8d6c011c02ceccd80  ./docs/plans/c
 d76c07f1b68fe063291a96a710bcf7e668be29163ef3c6780fae228c65415f86  ./docs/plans/cpk-047-bounded-preflight-publication.plan-summary.20260825T173129857080Z.a3ee26a1802fb85c5a0a100ccb3c33c1a6fff358bd20b65636adc61f8d0de377.md
 01612feaf7ab462e7f5a336883ca90eba363eadd9807e15f20a5dd39af565123  ./docs/plans/cpk-048-shared-instruction-reconciliation.md
 6aea2dce66e9ed0b8a1762806ce073c300486a209ff285bd06a931f49ab0c571  ./docs/plans/cpk-048-shared-instruction-reconciliation.plan-summary.20260825T183857932150Z.47ec1ac118b8c6c23f961b4099708aacc7031581a744bc389e6795e1c2007796.md
-ad54ae172c98dcb5400b78c42098b0cdead3470ef8eafa019a93eec8d840564e  ./docs/roadmap.md
+e951720afce8cc56d2ed3850cb59edb72634ad930bf7918bd84de6887bb9f702  ./docs/plans/cpk-050-repowise-partial-init.md
+60ffd964da1c797c22083ac17862817655bbbc94900c294de8463f6d0119b1eb  ./docs/roadmap.md
 6f8f14ca5fd8ad935eee66256b3f7c49d5c40957eedff938ba21365e30869719  ./doctor.ps1
 ab56a88d9188979f06ea142d1f58ea0d6ad9088e83a965bd324209d83da513ad  ./doctor.sh
 8087bdb3ee654c0baac278a8e3bf85e33e314f8acfd486e7ebf675126a697058  ./install.ps1
 3466d2e34145cfdaa83d793960794b2aefc96f3d9c48d22fd2af930ec819e9c4  ./install.sh
-3a49d72d1de1554feb4c0220796f951d1bbef7c104c414dcb986aa25035609c7  ./kit.py
+5fb99df6d483ece3bea11f76fac9e87bab8f7e1fa1e0bbdcadc8aac88ac96bce  ./kit.py
 331f17ca1486b5779d9b57a3a73834328eb3089ce612e636e6a8e5085899d61e  ./run-tests.ps1
 e6df9f1da02280a66161583529b06a34f0103041e9587afad0fac6074eecc15b  ./run-tests.sh
 85a2ba72e2b0cd1ab6c25a51f39059502415c3ac62a6bffa613d7e31b6422cd4  ./setup-repo.ps1
@@ -134,7 +135,7 @@ bdae5fdc5840e46ec70d4a0a9581974be65576bdf8a721262a9fa3792c455237  ./setup-repo.s
 e1e231aac51822f7e1bb3aa61aba138cf8c5df9cefd3079b0c1b5a98eea03bd9  ./tests/fixtures/codex-0.149-plan-acceptance.jsonl
 c4b1c513542091587df2df9d925eecf71e8d499f14bc7f5d3e455a0643a1a655  ./tests/fixtures/cpk045-boundary-forward.md
 289367b7090a0d71936b41f08c4a354bc2758013dceb709819de36a1b73d9aa6  ./tests/live_plan_history.py
-c6daf00ee2523217e1d2162cee40253313ab1d53647677daebe413c4932dba28  ./tests/test_kit.py
+5cca02935c1adc9cc5b29ed1f4b70e97a9fbc35caac736502f5459d2a340a32c  ./tests/test_kit.py
 d16f7eadc8c668e82a1d0d2554ed04def15cb0a4b2ce13ac1ce1339bc0e62161  ./uninstall.ps1
 f12cff94ef7f9b0ca489cbe43e1de737011476966e04c1578f4977177b0da217  ./uninstall.sh
 830d665ca3b06250a09d0ee4e91c3fd9782b36dd1f9b862e0c85be8e652ed162  ./upstream.lock.json

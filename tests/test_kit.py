@@ -1696,6 +1696,9 @@ class RepoWiseRuntimeTests(unittest.TestCase):
                 calls.append(command)
                 if command[1] == "init":
                     (root / ".repowise").mkdir(exist_ok=True)
+                    (root / ".repowise" / "state.json").write_text(
+                        json.dumps({"last_sync_commit": "abc123"}), encoding="utf-8"
+                    )
 
             def popen(command, **_kwargs):
                 calls.append(command)
@@ -1723,6 +1726,89 @@ class RepoWiseRuntimeTests(unittest.TestCase):
             self.assertEqual(sum(command[1:3] == ["hook", "install"] for command in calls), 2)
             self.assertEqual(sum(command[1] == "update" for command in calls if len(command) > 1), 1)
             self.assertEqual(sum(command[0] == "watcher" for command in calls), 2)
+            self.assertEqual(sum(command[1] == "mcp" for command in calls if len(command) > 1), 2)
+            self.assertTrue(all(item.terminated and item.waited for item in watchers))
+
+    def test_bootstrap_recovers_index_without_sync_commit(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            (root / ".repowise").mkdir()
+            state_path = root / ".repowise" / "state.json"
+            state_path.write_text(json.dumps({"last_sync_commit": None}), encoding="utf-8")
+            calls = []
+            watcher = self.Watcher()
+
+            def setup(command, _cwd):
+                calls.append(command)
+                if command[1] == "init":
+                    state_path.write_text(
+                        json.dumps({"last_sync_commit": "abc123"}), encoding="utf-8"
+                    )
+
+            with mock.patch.object(bootstrap, "git_root", return_value=root), mock.patch.object(
+                bootstrap, "has_head", return_value=True
+            ), mock.patch.object(bootstrap, "run_setup", side_effect=setup), mock.patch.object(
+                bootstrap, "watch_command", return_value=["watcher"]
+            ), mock.patch.object(
+                bootstrap.subprocess, "Popen", return_value=watcher
+            ), mock.patch.object(
+                bootstrap.subprocess,
+                "run",
+                side_effect=lambda command, **_kwargs: calls.append(command)
+                or subprocess.CompletedProcess(command, 0),
+            ), mock.patch.object(bootstrap.time, "sleep"), mock.patch.object(
+                bootstrap.sys, "platform", "linux"
+            ):
+                self.assertEqual(bootstrap.bootstrap("repowise", root), 0)
+
+            setup_commands = [command for command in calls if command[0] == "repowise"]
+            self.assertEqual(sum(command[1] == "init" for command in setup_commands), 1)
+            self.assertEqual(sum(command[1] == "update" for command in setup_commands), 1)
+            self.assertLess(
+                next(i for i, command in enumerate(calls) if command[1] == "init"),
+                next(i for i, command in enumerate(calls) if command[1] == "update"),
+            )
+            self.assertTrue(any(command[1:3] == ["hook", "install"] for command in calls))
+            self.assertIn(["repowise", "mcp", str(root)], calls)
+            self.assertTrue(watcher.terminated and watcher.waited)
+
+    def test_bootstrap_does_not_reinitialize_before_first_commit(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            (root / ".repowise").mkdir()
+            (root / ".repowise" / "state.json").write_text(
+                json.dumps({"last_sync_commit": None}), encoding="utf-8"
+            )
+            calls = []
+            watchers = []
+
+            def setup(command, _cwd):
+                calls.append(command)
+
+            def popen(command, **_kwargs):
+                calls.append(command)
+                watcher = self.Watcher()
+                watchers.append(watcher)
+                return watcher
+
+            with mock.patch.object(bootstrap, "git_root", return_value=root), mock.patch.object(
+                bootstrap, "has_head", return_value=False
+            ), mock.patch.object(bootstrap, "run_setup", side_effect=setup), mock.patch.object(
+                bootstrap, "watch_command", return_value=["watcher"]
+            ), mock.patch.object(bootstrap.subprocess, "Popen", side_effect=popen), mock.patch.object(
+                bootstrap.subprocess,
+                "run",
+                side_effect=lambda command, **_kwargs: calls.append(command)
+                or subprocess.CompletedProcess(command, 0),
+            ), mock.patch.object(bootstrap.time, "sleep"), mock.patch.object(
+                bootstrap.sys, "platform", "linux"
+            ):
+                self.assertEqual(bootstrap.bootstrap("repowise", root), 0)
+                self.assertEqual(bootstrap.bootstrap("repowise", root), 0)
+
+            self.assertFalse(any(command[1] == "init" for command in calls if len(command) > 1))
+            self.assertFalse(any(command[1] == "update" for command in calls if len(command) > 1))
+            self.assertEqual(sum(command[1:3] == ["hook", "install"] for command in calls), 2)
             self.assertEqual(sum(command[1] == "mcp" for command in calls if len(command) > 1), 2)
             self.assertTrue(all(item.terminated and item.waited for item in watchers))
 
@@ -3133,7 +3219,7 @@ class IntegrationTests(unittest.TestCase):
         self.assertIn("`pwsh -File .\\doctor.ps1`", publication)
         self.assertIn("from the reviewed candidate", publication)
         self.assertIn("`Result: ready`", publication)
-        self.assertEqual(kit.KIT_VERSION, "0.23.3")
+        self.assertEqual(kit.KIT_VERSION, "0.23.4")
         self.assertNotIn("Version `0.22.0`", (ROOT / "README.md").read_text())
         self.assertNotIn("version 0.22.0", (ROOT / "CODEX-INSTALL-PROMPT.md").read_text())
 

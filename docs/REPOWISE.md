@@ -60,6 +60,8 @@ The installer adds a user-level RepoWise MCP server. If Codex starts in a comple
 
 The first start in a Git repository initializes a no-prose index when `.repowise` is absent. Each start then installs RepoWise's marker-delimited `post-commit` hook and catches up the index.
 
+With an existing `HEAD`, the bootstrap also initializes an index that has no completed sync commit. It then runs the normal catch-up update. Before the first commit, a null sync commit does not cause repeated initialization.
+
 RepoWise 0.45.0 supports linked Git worktrees. Each worktree keeps its own index. Git supplies the shared hook path. The kit does not add a primary-checkout resolver.
 
 While MCP runs, an index-only watcher collects working-tree edits and uses the RepoWise debounce period. It does not make model calls. The POSIX launcher ignores file-open and file-close events because these events are not edits. The Windows event source reports change events and does not need this filter.

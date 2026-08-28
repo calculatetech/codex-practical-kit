@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import json
 import os
 import shlex
 import subprocess
@@ -62,6 +63,26 @@ def has_head(root: Path) -> bool:
         ).returncode
         == 0
     )
+
+
+def has_sync_commit(root: Path) -> bool:
+    state_path = root / ".repowise" / "state.json"
+    try:
+        state = json.loads(state_path.read_text(encoding="utf-8"))
+    except FileNotFoundError:
+        return False
+    except json.JSONDecodeError as exc:
+        raise RuntimeError(f"Invalid RepoWise state at {state_path}: {exc}") from exc
+    if not isinstance(state, dict):
+        raise RuntimeError(f"Invalid RepoWise state at {state_path}: expected an object")
+    commit = state.get("last_sync_commit")
+    if commit is None:
+        return False
+    if not isinstance(commit, str):
+        raise RuntimeError(
+            f"Invalid RepoWise state at {state_path}: last_sync_commit must be a string"
+        )
+    return bool(commit.strip())
 
 
 def watch_command(repowise: str, platform: str | None = None) -> list[str]:
@@ -126,11 +147,13 @@ def bootstrap(repowise: str, cwd: Path) -> int:
         if root is None:
             raise RuntimeError("Git did not create a repository")
 
-    initialized = not (root / ".repowise").is_dir()
-    if initialized:
+    index_exists = (root / ".repowise").is_dir()
+    head_exists = has_head(root)
+    needs_init = not index_exists or (head_exists and not has_sync_commit(root))
+    if needs_init:
         run_setup([repowise, *INIT_ARGS, str(root)], root)
     run_setup([repowise, "hook", "install", str(root), "--no-workspace"], root)
-    if has_head(root) and not initialized:
+    if head_exists and index_exists:
         run_setup(
             [
                 repowise,
