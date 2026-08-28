@@ -1497,6 +1497,8 @@ class RepoWiseRuntimeTests(unittest.TestCase):
                 return subprocess.CompletedProcess(command, 0, "", "")
 
             with mock.patch.object(
+                kit, "is_windows", return_value=False
+            ), mock.patch.object(
                 kit, "find_runtime_command", return_value=str(repowise)
             ), mock.patch.object(
                 kit, "run", side_effect=fake_run
@@ -1542,6 +1544,8 @@ class RepoWiseRuntimeTests(unittest.TestCase):
                 return subprocess.CompletedProcess(command, 0, version, "")
 
             with mock.patch.object(
+                kit, "is_windows", return_value=False
+            ), mock.patch.object(
                 kit, "find_runtime_command", return_value=str(repowise)
             ), mock.patch.object(kit, "run", side_effect=fake_run):
                 self.assertEqual(kit.ensure_repowise(paths, "/usr/bin/uv"), str(repowise))

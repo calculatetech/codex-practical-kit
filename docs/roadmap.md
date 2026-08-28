@@ -33,6 +33,7 @@ No residual risk is accepted.
 
 ## Completed
 
+- ✅ **CPK-051 — Make POSIX RepoWise repair tests platform-independent.** Force the POSIX platform in both extensionless-path tests so they pass on Windows and POSIX hosts.
 - ✅ **CPK-050 — Recover incomplete RepoWise initialization.** Detect an existing index that has no completed sync commit. Rebuild it once, catch it up, and start the required RepoWise graph without terminating Codex. Released as version `0.23.4`.
 - ✅ **CPK-049 — Prevent impatience-driven preflight restarts.** Keep one healthy challenger for both preflight phases. Do not interrupt or replace it because it is slow.
 - ✅ **CPK-048 — Reconcile shared agent and Plan instructions.** Document global instruction precedence, remove eligible copied Plan contracts, and preserve focused project overrides.
