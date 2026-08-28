@@ -122,12 +122,12 @@ d76c07f1b68fe063291a96a710bcf7e668be29163ef3c6780fae228c65415f86  ./docs/plans/c
 01612feaf7ab462e7f5a336883ca90eba363eadd9807e15f20a5dd39af565123  ./docs/plans/cpk-048-shared-instruction-reconciliation.md
 6aea2dce66e9ed0b8a1762806ce073c300486a209ff285bd06a931f49ab0c571  ./docs/plans/cpk-048-shared-instruction-reconciliation.plan-summary.20260825T183857932150Z.47ec1ac118b8c6c23f961b4099708aacc7031581a744bc389e6795e1c2007796.md
 e951720afce8cc56d2ed3850cb59edb72634ad930bf7918bd84de6887bb9f702  ./docs/plans/cpk-050-repowise-partial-init.md
-49a4e194cffd7eb22d118dc9afa5c8aa86f598e4b9ec7eb1189be00460fee48c  ./docs/roadmap.md
+0cec390f90b33e765d47af2dc9902a3bfa38919532b510090e2c65fc0289da2a  ./docs/roadmap.md
 6f8f14ca5fd8ad935eee66256b3f7c49d5c40957eedff938ba21365e30869719  ./doctor.ps1
 ab56a88d9188979f06ea142d1f58ea0d6ad9088e83a965bd324209d83da513ad  ./doctor.sh
 8087bdb3ee654c0baac278a8e3bf85e33e314f8acfd486e7ebf675126a697058  ./install.ps1
 3466d2e34145cfdaa83d793960794b2aefc96f3d9c48d22fd2af930ec819e9c4  ./install.sh
-5fb99df6d483ece3bea11f76fac9e87bab8f7e1fa1e0bbdcadc8aac88ac96bce  ./kit.py
+a66e91ed0360340620eade62d72927d4404d85ff79b5bb54599286db2a6a0b6d  ./kit.py
 331f17ca1486b5779d9b57a3a73834328eb3089ce612e636e6a8e5085899d61e  ./run-tests.ps1
 e6df9f1da02280a66161583529b06a34f0103041e9587afad0fac6074eecc15b  ./run-tests.sh
 85a2ba72e2b0cd1ab6c25a51f39059502415c3ac62a6bffa613d7e31b6422cd4  ./setup-repo.ps1
@@ -135,7 +135,7 @@ bdae5fdc5840e46ec70d4a0a9581974be65576bdf8a721262a9fa3792c455237  ./setup-repo.s
 e1e231aac51822f7e1bb3aa61aba138cf8c5df9cefd3079b0c1b5a98eea03bd9  ./tests/fixtures/codex-0.149-plan-acceptance.jsonl
 c4b1c513542091587df2df9d925eecf71e8d499f14bc7f5d3e455a0643a1a655  ./tests/fixtures/cpk045-boundary-forward.md
 289367b7090a0d71936b41f08c4a354bc2758013dceb709819de36a1b73d9aa6  ./tests/live_plan_history.py
-db1e119ebfac60a8f85ed2fe2564a4039d2acb17e37893fdd57fd811bb7eb353  ./tests/test_kit.py
+a233d5a187e092a82df65d29495f0de820899cd2caa13f68b73c62de61e6f989  ./tests/test_kit.py
 d16f7eadc8c668e82a1d0d2554ed04def15cb0a4b2ce13ac1ce1339bc0e62161  ./uninstall.ps1
 f12cff94ef7f9b0ca489cbe43e1de737011476966e04c1578f4977177b0da217  ./uninstall.sh
 830d665ca3b06250a09d0ee4e91c3fd9782b36dd1f9b862e0c85be8e652ed162  ./upstream.lock.json
