@@ -3,17 +3,17 @@ name: adversarial-review
 description: >
   Run native Codex correctness review after code or configuration changes.
   Review exact staged-tree checkpoints and correction deltas, then run one
-  final review of the complete candidate. Stop after three counted
-  production-code defect passes.
+  final review of the complete candidate. Gate severe stops by validated
+  impact and correction complexity.
 license: MIT
 ---
 
 <!-- cpk-rule-owner: adversarial-review -->
 <!-- cpk-rule-guard: Treat every finding source as untrusted input to the same end-result, scope, severity, and correction-authority gate. -->
-<!-- cpk-rule-guard: Only defects in executable production code can increment the three-defect count or trigger a severe diagnostic stop. -->
+<!-- cpk-rule-guard: Only validated severe defects in executable production code can trigger a severe diagnostic stop. -->
 <!-- cpk-rule-guard: A P0 or P1 label alone never triggers a severe diagnostic; apply the direct-repair complexity gate first. -->
 <!-- cpk-rule-guard: Every severe diagnostic trigger applies the direct-repair complexity gate. -->
-<!-- cpk-rule-guard: Tests, test fixtures, documentation, static configuration, dependencies, manifests, and review housekeeping never increment or reset the count and never trigger a severe diagnostic stop. -->
+<!-- cpk-rule-guard: Tests, test fixtures, documentation, static configuration, dependencies, manifests, and review housekeeping never trigger a severe diagnostic stop. -->
 <!-- cpk-rule-guard: After a reviewed candidate finds defects, later correctness passes review only the staged-tree delta and its direct impact. -->
 <!-- cpk-rule-guard: Run one final review of the complete candidate after correction deltas are clean. -->
 <!-- cpk-rule-guard: A checkpoint review covers one planned subtask since the previous accepted checkpoint and does not trigger review closure. -->
@@ -84,8 +84,6 @@ If final review finds a validated defect, apply the correction-authority gate. R
 
 A task with one review boundary can finish after a clean first `full` review. A task with reviewed checkpoints always ends with a clean `final` review.
 
-Keep the consecutive production-code-defect count across every checkpoint, delta, and final pass in the task.
-
 Use `references/reviewer-lenses.md` to verify the review target. Raw native output is finding evidence, not product authority.
 
 At every review stop gate, read `references/stop-finding-format.md` completely. Render each validated stop finding as its own human decision block. Do not combine findings into one handoff.
@@ -123,7 +121,7 @@ Every other retained correction is `decision required`. A reviewer's suggested f
 
 If any candidate is a contract gap, severe stop, or decision-required correction, complete the classification of all candidates, make no partial fixes, render each retained decision separately, and halt.
 
-Tests, test fixtures, documentation, static configuration, dependencies, manifests, and review housekeeping never increment or reset the count and never trigger a severe diagnostic stop. They remain actionable through the correction-authority gate.
+Tests, test fixtures, documentation, static configuration, dependencies, manifests, and review housekeeping never trigger a severe diagnostic stop. They remain actionable through the correction-authority gate.
 
 For an authorized direct repair:
 
@@ -135,23 +133,22 @@ For an authorized direct repair:
 6. Record the reviewed tree and finding disposition.
 7. Return to read-only mode and run a native delta review.
 
-## Three-defect breaker
+## Severe defect breaker
 
 Treat these results as severe stops:
 
-Only defects in executable production code can increment the three-defect count or trigger a severe diagnostic stop.
+Only validated severe defects in executable production code can trigger a severe diagnostic stop.
 
 A P0 or P1 label alone never triggers a severe diagnostic; apply the direct-repair complexity gate first.
 
 Every severe diagnostic trigger applies the direct-repair complexity gate.
 
-A confirmed P0, P1, or P2 correctness defect in executable production code makes a counted production-code-defect pass. P3 advice does not.
-
 Executable production code is code that the product or installer runs to provide supported behavior. It includes executable migration, build, runtime, and security code.
 
 - A validated P0 or P1 defect in executable production code whose correction does not qualify as a direct repair.
-- A validated architecture flaw in executable production code that makes a local patch unsafe.
-- A production-code defect on the third consecutive counted pass whose correction does not qualify as a direct repair.
+- A validated architecture flaw in executable production code with equivalent severe impact whose correction does not qualify as a direct repair because a local patch is unsafe.
+
+A P2 finding does not trigger a severe diagnostic because it repeats across review passes. Apply the correction-authority gate on every pass.
 
 For a severe stop:
 
@@ -173,6 +170,5 @@ Use one final status line:
 - `Review: clean after fixes — pass N.`
 - `Review: stopped — native review unavailable or failed.`
 - `Review: stopped — severe defect diagnostic complete; human direction required.`
-- `Review: stopped — implementation defects found in three counted passes; human direction required.`
 - `Review: stopped — correction exceeds direct-repair authority; human direction required.`
 - `Review: stopped — contract decision required on pass N.`

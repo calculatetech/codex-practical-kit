@@ -2908,7 +2908,7 @@ class IntegrationTests(unittest.TestCase):
         ).read_text()
 
         self.assertIn("<!-- cpk-rule-owner: scenario-discrimination -->", owner)
-        self.assertEqual(owner.count("<!-- cpk-rule-guard:"), 10)
+        self.assertEqual(owner.count("<!-- cpk-rule-guard:"), 11)
         self.assertIn("scenario-discrimination.md", preflight)
         self.assertIn("scenario-discrimination.md", card)
         self.assertIn("scenario-discrimination.md", result)
@@ -2956,11 +2956,26 @@ class IntegrationTests(unittest.TestCase):
         self.assertIn("accepted `B#` inventory is the only semantic input", owner)
         self.assertIn("cannot add, remove, split, merge, rename, or reinterpret a boundary", owner)
         self.assertIn(
+            "One fresh clean-context read-only subagent executes every eligible trace closure, "
+            "including a reuse-only closure",
+            owner,
+        )
+        self.assertIn("Set `fork_turns` to `none`", owner)
+        self.assertIn("The coordinator cannot execute or attest trace closure", owner)
+        self.assertIn("must not edit, delegate, run Design Preflight", owner)
+        self.assertIn("Scenario Proof, and exact review boundary", owner)
+        self.assertIn("current diff, production sources", owner)
+        self.assertIn("named test bodies, and test results", owner)
+        self.assertIn("reports every missing test obligation before native review", owner)
+        self.assertIn(
             "Trace closure maps each accepted behavioral boundary to every applicable production entry point",
             owner,
         )
         self.assertIn("Later unimplemented subtasks are outside that boundary", owner)
-        self.assertIn("final` composes accepted checkpoint closures", owner)
+        self.assertIn(
+            "For `final`, the fresh subagent validates and composes accepted checkpoint closures",
+            owner,
+        )
         self.assertIn("Inspect the production paths and test bodies", owner)
         self.assertIn("fixture must isolate the discriminator", owner)
         self.assertIn("nearest wrong meaning must fail", owner)
@@ -2990,9 +3005,16 @@ class IntegrationTests(unittest.TestCase):
         )
         self.assertIn('"reviewer": "boundary-trace-closure"', result)
         self.assertNotIn('"reviewer": "boundary-trace-inventory"', result)
+        self.assertIn('"role": "fresh-clean-context-subagent"', result)
+        self.assertIn('"read_only": true', result)
+        self.assertIn('"inherited_task_conversation": false', result)
+        self.assertIn('"canonical_rules_received"', result)
         self.assertIn('"accepted_boundary_ids"', result)
         self.assertIn('"reused_checkpoint_closures"', result)
+        self.assertIn('"missing_tests"', result)
         self.assertIn('"review_mode": "full | checkpoint | delta | final"', result)
+        self.assertIn("rejects a result from any other execution source", result)
+        self.assertIn("A nonempty `missing_tests` value", result)
         for field in (
             '"entry_point"',
             '"gates"',
@@ -3018,8 +3040,10 @@ class IntegrationTests(unittest.TestCase):
             "writer-report",
         ):
             self.assertIn(evidence, forward)
-        self.assertIn("Independently derive every behavioral boundary", forward)
-        self.assertIn("raw requirements, accepted inventory, Scenario Proof", forward)
+        self.assertIn("Use the accepted `B#` inventory as the only semantic input", forward)
+        self.assertIn("Do not add, remove, split, merge, rename, or reinterpret", forward)
+        self.assertIn("One fresh read-only subagent has no inherited task conversation", forward)
+        self.assertIn("canonical Scenario Discrimination, Owner Composition, and Full-set Results", forward)
         self.assertIn("not the trace record or coordinator conclusions", forward)
         self.assertIn("duplicate_prefix_omission_blocked", forward)
         self.assertIn("equal_result_invariant_preserved", forward)
@@ -3036,7 +3060,11 @@ class IntegrationTests(unittest.TestCase):
         self.assertIn("tracked_delivery_status_rejected", forward)
         self.assertIn("spec_kit_progress_rejected", forward)
         self.assertIn("untracked_progress_allowed", forward)
-        self.assertIn("anchored_trace_rejected", forward)
+        self.assertIn("coordinator_trace_rejected", forward)
+        self.assertIn("fresh_trace_executor_required", forward)
+        self.assertIn("canonical_coverage_rules_received", forward)
+        self.assertIn("missing_tests_reported", forward)
+        self.assertIn("reuse_only_fresh_executor_required", forward)
         self.assertIn("checkpoint_future_work_excluded", forward)
         self.assertIn("final_complete_inventory_required", forward)
 
@@ -3098,7 +3126,7 @@ class IntegrationTests(unittest.TestCase):
         self.assertIn("`checkpoint`: Review one planned subtask", review)
         self.assertIn("Do not reopen unchanged completed work", review)
         self.assertIn("always ends with a clean `final` review", review)
-        self.assertIn("production-code-defect count across every checkpoint", review)
+        self.assertNotIn("production-code-defect count across every checkpoint", review)
         self.assertIn("clean correction delta permits its planned local commit", review)
         self.assertIn("Keep the roadmap task Active", review)
         self.assertNotIn("Keep the task and roadmap Active", review)
@@ -3223,7 +3251,7 @@ class IntegrationTests(unittest.TestCase):
         self.assertIn("`pwsh -File .\\doctor.ps1`", publication)
         self.assertIn("from the reviewed candidate", publication)
         self.assertIn("`Result: ready`", publication)
-        self.assertEqual(kit.KIT_VERSION, "0.23.5")
+        self.assertEqual(kit.KIT_VERSION, "0.23.6")
         self.assertNotIn("Version `0.22.0`", (ROOT / "README.md").read_text())
         self.assertNotIn("version 0.22.0", (ROOT / "CODEX-INSTALL-PROMPT.md").read_text())
 
@@ -3455,7 +3483,11 @@ class IntegrationTests(unittest.TestCase):
         self.assertIn("Compose one final response only after the diagnostic is complete.", review)
         self.assertIn("Then present the complete diagnostic, including its portable summary.", review)
         self.assertIn("Put the final `Review:` and `Docs:` status lines after the diagnostic.", review)
-        self.assertIn("Only defects in executable production code can increment", review)
+        self.assertIn(
+            "Only validated severe defects in executable production code can trigger a severe "
+            "diagnostic stop.",
+            review,
+        )
         self.assertIn("Tests, test fixtures, documentation, static configuration", review)
         self.assertIn(
             "A validated P0 or P1 defect in executable production code whose correction "
@@ -3471,11 +3503,16 @@ class IntegrationTests(unittest.TestCase):
         )
         self.assertIn("Every severe diagnostic trigger applies the direct-repair complexity gate.", review)
         self.assertIn(
-            "A production-code defect on the third consecutive counted pass whose correction "
-            "does not qualify as a direct repair.",
+            "A P2 finding does not trigger a severe diagnostic because it repeats across review "
+            "passes.",
             review,
         )
-        self.assertIn("P3 advice does not", review)
+        self.assertIn("Apply the correction-authority gate on every pass.", review)
+        self.assertNotIn("three-defect", review.lower())
+        self.assertNotIn("third consecutive counted pass", review)
+        self.assertNotIn("implementation defects found in three counted passes", review)
+        self.assertIn("Review: clean — pass N.", review)
+        self.assertIn("Review: stopped — contract decision required on pass N.", review)
         self.assertNotIn("executable source, tests", review)
 
         labels = [

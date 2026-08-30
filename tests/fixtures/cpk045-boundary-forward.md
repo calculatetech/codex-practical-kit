@@ -7,11 +7,11 @@ You are a fresh read-only toolkit verifier. Do not edit files. Read these curren
 
 Evaluate the rules through this normal-use defect:
 
-> Subscription staging may substitute a fallback plan only when the base plan is unmapped. A shared reconciliation helper has a broader contract and also substitutes an already-mapped base plan.
+> Subscription staging can substitute a fallback plan only when the base plan is unmapped. A shared reconciliation helper has a broader contract and also substitutes an already-mapped base plan.
 
-Independently derive every behavioral boundary before using any existing `B#` record. Hold other inputs constant. Derive the mapped and unmapped cases, their applicable entry paths, and the terminal staging result. Decide whether the broader helper preserves the requirement.
+Use the accepted `B#` inventory as the only semantic input. Do not add, remove, split, merge, rename, or reinterpret a boundary. Inspect the mapped and unmapped cases, their applicable entry paths, named tests, and terminal staging result. Decide whether the broader helper preserves each accepted boundary.
 
-Apply that derivation to both toolkit entry paths: initial implementation preflight and preflight for an accepted review correction. Decide whether one composed scenario can prove both paths. Also evaluate this invariant: two supported import entry points must preserve the same normalized account identity. Both correct terminal values are equal, but the nearest wrong implementation skips normalization on one path. Decide whether this remains a behavioral boundary and what paired terminal proof it needs.
+Apply the accepted inventory to both toolkit entry paths: initial implementation preflight and preflight for an accepted review correction. Decide whether one composed scenario can prove both paths. Also evaluate this accepted invariant: two supported import entry points must preserve the same normalized account identity. Both correct terminal values are equal, but the nearest wrong implementation skips normalization on one path. Decide what paired terminal proof it needs.
 
 Test source completeness with these authoritative clauses in order:
 
@@ -19,7 +19,7 @@ Test source completeness with these authoritative clauses in order:
 - Only unmapped base products can be substituted during staging.
 - Every supported staging entry point must preserve an already-mapped plan.
 
-An accepted inventory contains only the first two clauses because they look alike. Independently inventory all three clauses and decide whether work can continue.
+A proposed preflight inventory contains only the first two clauses because they look alike. Decide whether preflight can accept it. Trace closure must not repair the accepted inventory after implementation.
 
 Then evaluate these proposed closure records separately:
 
@@ -48,38 +48,49 @@ Then evaluate these proposed closure records separately:
 23. The optional Spec Kit guide says that the task ExecPlan records implementation progress.
 24. The optional Spec Kit guide says that the task ExecPlan records stable decisions and the roadmap is the only tracked lifecycle-state record.
 25. An untracked working file records current task progress for local use.
-26. The verifier sees the accepted `B#` inventory and Scenario Proof before it returns its independent inventory.
-27. The verifier receives only raw authoritative requirements and the exact review boundary, freezes its independent inventory, and then receives the accepted inventory, Scenario Proof, diff, production source, and named tests for comparison.
+26. The coordinator inspects all required evidence and writes the trace-closure result without a fresh subagent.
+27. One fresh read-only subagent has no inherited task conversation. It receives the canonical Scenario Discrimination, Owner Composition, and Full-set Results rules. It also receives the accepted inventory, Scenario Proof, exact review boundary, current diff, production sources, named test bodies, and results. It receives reusable rows or an explicit empty set.
 28. A checkpoint traces its planned subtask and interactions with accepted earlier checkpoints. A later unimplemented subtask is outside the checkpoint boundary and is not missing evidence.
 29. A checkpoint is blocked only because a later planned subtask is not implemented.
 30. A final review reuses checkpoint-limited trace closure and omits another task boundary.
 31. A final review traces the complete task inventory.
+32. A final review has only unchanged reusable rows. A fresh clean-context subagent validates and composes them before native review.
+33. A final review has only unchanged reusable rows. The coordinator composes them without a fresh subagent.
 
 Return JSON only. Include:
 
-- `source_inventory` with every derived boundary and both contrast sides;
-- one verdict for each numbered record;
-- `weak_evidence_rejected` for positive-only, component-only, aggregate-only, and writer-report evidence;
-- `duplicate_prefix_omission_blocked`;
-- `initial_and_correction_paths_proved`;
-- `equal_result_invariant_preserved`;
-- `unrelated_gate_fixture_rejected`;
-- `traced_changes_invalidate` and `unrelated_document_preserves_closure`;
-- `boundary_change_requires_preflight` and `direct_arithmetic_can_use_exception`;
-- `all_native_review_modes_gated`;
-- `tracked_execplan_status_rejected`;
-- `roadmap_only_lifecycle_state`;
-- `review_closure_execplan_update_rejected`;
-- `resumption_sources_complete`;
-- `completed_history_rewrite_rejected`;
-- `incomplete_resumption_rejected`;
-- `tracked_delivery_status_rejected`;
-- `spec_kit_progress_rejected`;
-- `untracked_progress_allowed`;
-- `anchored_trace_rejected`;
-- `two_phase_trace_ordered`;
-- `checkpoint_future_work_excluded`;
-- `final_complete_inventory_required`;
-- `ordered_trace_inputs_complete`;
-- `native_review_independent`;
-- `overall` equal to `pass` only if the rules derive all source clauses and both staging cases; preserve the equal-result invariant; cover initial and correction paths; reject the broader helper and records 1-4, 6, 8-10, 12, 15, 17, 19-21, 23, 26, 29, and 30; accept records 5, 7, 11, 13, 14, 16, 18, 22, 24, 25, 27, 28, and 31; gate every native review mode; derive before disclosing accepted trace records; scope checkpoints to current and earlier accepted work; require complete final closure; keep tracked lifecycle state only in the roadmap; and allow progress in untracked or ignored working files.
+- `accepted_inventory_checked` with every accepted boundary and both contrast sides.
+- One verdict for each numbered record.
+- `weak_evidence_rejected` for positive-only, component-only, aggregate-only, and writer-report evidence.
+- `duplicate_prefix_omission_blocked`.
+- `initial_and_correction_paths_proved`.
+- `equal_result_invariant_preserved`.
+- `unrelated_gate_fixture_rejected`.
+- `traced_changes_invalidate` and `unrelated_document_preserves_closure`.
+- `boundary_change_requires_preflight` and `direct_arithmetic_can_use_exception`.
+- `all_native_review_modes_gated`.
+- `tracked_execplan_status_rejected`.
+- `roadmap_only_lifecycle_state`.
+- `review_closure_execplan_update_rejected`.
+- `resumption_sources_complete`.
+- `completed_history_rewrite_rejected`.
+- `incomplete_resumption_rejected`.
+- `tracked_delivery_status_rejected`.
+- `spec_kit_progress_rejected`.
+- `untracked_progress_allowed`.
+- `coordinator_trace_rejected`.
+- `fresh_trace_executor_required`.
+- `canonical_coverage_rules_received`.
+- `missing_tests_reported`.
+- `reuse_only_fresh_executor_required`.
+- `checkpoint_future_work_excluded`.
+- `final_complete_inventory_required`.
+- `ordered_trace_inputs_complete`.
+- `native_review_independent`.
+- `overall` equal to `pass` only when all requirements below are true.
+
+Preflight rejects the incomplete proposed inventory. Trace closure checks every accepted staging case without reinterpreting it. It preserves the equal-result invariant and covers both implementation paths. It rejects the broader helper.
+
+Reject records 1-4, 6, 8-10, 12, 15, 17, 19-21, 23, 26, 29, 30, and 33. Accept records 5, 7, 11, 13, 14, 16, 18, 22, 24, 25, 27, 28, 31, and 32.
+
+Report missing tests. Gate every native review mode. Limit checkpoints to current and earlier accepted work. Require complete final closure. Keep tracked lifecycle state only in the roadmap. Permit progress in untracked or ignored working files.

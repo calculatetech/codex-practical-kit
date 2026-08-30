@@ -147,16 +147,23 @@ Empty `findings` is valid. Every finding must cite source and name the coordinat
 
 ## Trace closure result
 
-Use the accepted `B#` inventory, Scenario Proof, current diff, production source, named tests, and reusable checkpoint closures. Do not derive requirements again. Return JSON only.
+The coordinator gives one fresh clean-context read-only subagent the canonical Scenario Discrimination, Owner Composition, and Full-set Results rules. It gives the subagent the accepted `B#` inventory, Scenario Proof, and exact review boundary. It also gives the current diff, production sources, named test bodies, and test results. It gives reusable checkpoint closures or an explicit empty set. Do not derive requirements again. Return JSON only.
 
 ```json
 {
   "reviewer": "boundary-trace-closure",
+  "executor": {
+    "role": "fresh-clean-context-subagent",
+    "read_only": true,
+    "inherited_task_conversation": false
+  },
+  "canonical_rules_received": ["scenario-discrimination", "owner-composition", "full-set-results"],
   "review_mode": "full | checkpoint | delta | final",
   "review_boundary": "Complete task | stable subtask and earlier-checkpoint interactions | correction and direct impact",
   "accepted_boundary_ids": ["B1"],
   "closed_boundary_ids": ["B1"],
   "unclosed_or_invalidated": [],
+  "missing_tests": [],
   "reused_checkpoint_closures": [{"checkpoint": "commit-or-tree", "boundary_ids": ["B1"]}],
   "boundaries": [
     {
@@ -180,6 +187,8 @@ Use the accepted `B#` inventory, Scenario Proof, current diff, production source
 ```
 
 Apply [Scenario discrimination](scenario-discrimination.md). Any false, unknown, missing, unsupported, or unclosed value makes `decision` equal `fail`.
+
+The coordinator rejects a result from any other execution source. A nonempty `missing_tests` value makes `decision` equal `fail` and blocks native review.
 
 ## Supported-model classification
 
