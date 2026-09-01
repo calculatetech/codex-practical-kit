@@ -170,6 +170,7 @@ The coordinator gives one fresh clean-context read-only subagent the canonical S
       "boundary_id": "B1",
       "path_id": "P1",
       "entry_point": "path:line",
+      "production_hops": ["path:line"],
       "gates": ["path:line"],
       "enforcement_point": "path:line",
       "terminal_owner": "path:line",
@@ -177,6 +178,9 @@ The coordinator gives one fresh clean-context read-only subagent the canonical S
       "fixture_matches_discriminator": true,
       "nearest_wrong_meaning_would_fail": true,
       "both_sides_executed": true,
+      "one_check_traverses_complete_path": true,
+      "external_boundary_seams": [],
+      "replaced_in_scope_hops": [],
       "terminal_oracle_reached": true,
       "check": "exact command",
       "result": "pass"
@@ -186,7 +190,7 @@ The coordinator gives one fresh clean-context read-only subagent the canonical S
 }
 ```
 
-Apply [Scenario discrimination](scenario-discrimination.md). Any false, unknown, missing, unsupported, or unclosed value makes `decision` equal `fail`.
+Apply [Scenario discrimination](scenario-discrimination.md) and [Owner composition](owner-composition.md). Any false, unknown, missing, unsupported, or unclosed value makes `decision` equal `fail`.
 
 The coordinator rejects a result from any other execution source. A nonempty `missing_tests` value makes `decision` equal `fail` and blocks native review.
 

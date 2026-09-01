@@ -2,6 +2,8 @@
 <!-- cpk-rule-guard: Each nonterminal retained-work state names its entry owner, retained state, supported reopening sources, and terminal owner. -->
 <!-- cpk-rule-guard: Each applicable shared-owner event states whether it preserves, advances, or clears the active gate. -->
 <!-- cpk-rule-guard: Component checks do not satisfy a composed scenario. -->
+<!-- cpk-rule-guard: One named check invokes the real production entry point. Each proof case follows one causal path through every in-scope hop to the terminal oracle. -->
+<!-- cpk-rule-guard: A proof seam can replace only an opaque external system. It cannot replace an in-scope production hop. -->
 <!-- cpk-rule-guard: A scenario set is open while a supported event can still act on retained state. -->
 <!-- cpk-rule-guard: For an unordered stream, include the smallest counterexample ordering that can change the terminal result. -->
 <!-- cpk-rule-guard: When one signal has multiple causes, exercise each cause under predicates that select different outcomes. -->
@@ -13,6 +15,14 @@ Apply this rule to non-trivial runtime behavior. Combine only states and events 
 Each nonterminal retained-work state names its entry owner, retained state, supported reopening sources, and terminal owner.
 
 Add one composed runnable check that reaches each supported reopening without an unrelated event. Include deadline-driven reopening when the required result depends on a deadline.
+
+One named check invokes the real production entry point. Each proof case follows one causal path through every in-scope hop to the terminal oracle.
+
+A named check can be parameterized. Independent component calls in one check do not form a causal production path.
+
+A proof seam can replace only an opaque external system. It cannot replace an in-scope production hop.
+
+The path can use deterministic callbacks or async continuations when the check drives them. Concurrent thread ordering requires an explicit product requirement.
 
 A scenario set is open while a supported event can still act on retained state. Continue the event sequence until the terminal owner produces the required oracle. Include a later command, wake, retry, or completion when it can change retained work.
 

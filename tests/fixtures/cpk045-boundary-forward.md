@@ -56,6 +56,11 @@ Then evaluate these proposed closure records separately:
 31. A final review traces the complete task inventory.
 32. A final review has only unchanged reusable rows. A fresh clean-context subagent validates and composes them before native review.
 33. A final review has only unchanged reusable rows. The coordinator composes them without a fresh subagent.
+34. Separate component checks execute the production entry, selector, writer, and terminal owner. No one check follows the complete causal path.
+35. One named check invokes the production entry. After that call stops, the check calls the selector, writer, and terminal owner independently.
+36. One named check invokes the real production entry and follows every in-scope production hop. It uses a deterministic provider fake only after the external boundary and observes the terminal result.
+37. One named check invokes the real production entry but replaces the in-scope writer with a success lambda. The terminal result passes without executing that production hop.
+38. One named check invokes the real production entry and drives a deterministic callback or async continuation. The continuation follows every in-scope production hop and reaches the terminal result.
 
 Return JSON only. Include:
 
@@ -85,6 +90,17 @@ Return JSON only. Include:
 - `reuse_only_fresh_executor_required`.
 - `checkpoint_future_work_excluded`.
 - `final_complete_inventory_required`.
+- `separate_component_coverage_rejected`.
+- `bundled_component_calls_rejected`.
+- `continuous_production_path_required`.
+- `external_boundary_fake_allowed`.
+- `in_scope_seam_rejected`.
+- `deterministic_async_path_allowed`.
+- `production_hops_complete`.
+- `one_check_traverses_complete_path`.
+- `external_boundary_seams`.
+- `replaced_in_scope_hops_empty`.
+- `exact_missing_path_check_reported`.
 - `ordered_trace_inputs_complete`.
 - `native_review_independent`.
 - `overall` equal to `pass` only when all requirements below are true.
@@ -93,4 +109,8 @@ Preflight rejects the incomplete proposed inventory. Trace closure checks every 
 
 Reject records 1-4, 6, 8-10, 12, 15, 17, 19-21, 23, 26, 29, 30, and 33. Accept records 5, 7, 11, 13, 14, 16, 18, 22, 24, 25, 27, 28, 31, and 32.
 
+Reject records 34, 35, and 37. Accept records 36 and 38.
+
 Report missing tests. Gate every native review mode. Limit checkpoints to current and earlier accepted work. Require complete final closure. Keep tracked lifecycle state only in the roadmap. Permit progress in untracked or ignored working files.
+
+For each accepted production path, list every in-scope hop in `production_hops`. Bind those hops to one exact named check. Do not combine separate checks or disconnected component calls. Permit a seam only after an opaque external boundary. Report the exact missing production-path check when closure fails.

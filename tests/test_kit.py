@@ -2569,7 +2569,7 @@ class IntegrationTests(unittest.TestCase):
         self.assertIn("Do not give it the coordinator's card", skill)
         self.assertIn('"reviewer": "normal-use-scenarios"', result)
         self.assertIn('"contract_gaps"', result)
-        self.assertEqual(owner.count("<!-- cpk-rule-guard:"), 6)
+        self.assertEqual(owner.count("<!-- cpk-rule-guard:"), 8)
         self.assertIn("full-set-results.md", owner)
         for route in (skill, card, result, lens):
             self.assertIn("owner-composition.md", route)
@@ -2869,6 +2869,15 @@ class IntegrationTests(unittest.TestCase):
         self.assertIn("scenario set is open while a supported event", owner)
         self.assertIn("until the terminal owner produces the required oracle", owner)
         self.assertIn("Component checks do not satisfy", owner)
+        self.assertIn("One named check invokes the real production entry point", owner)
+        self.assertIn("Each proof case follows one causal path", owner)
+        self.assertIn("Independent component calls in one check do not form", owner)
+        self.assertIn("A proof seam can replace only an opaque external system", owner)
+        self.assertIn("deterministic callbacks or async continuations", owner)
+        self.assertIn(
+            "Every production-path fact in a trace row comes from that row's one exact named check",
+            discrimination,
+        )
         self.assertIn("Before implementation", preflight)
         self.assertIn("Before review", preflight)
         self.assertIn("suite pass or test count does not replace", preflight)
@@ -2908,7 +2917,7 @@ class IntegrationTests(unittest.TestCase):
         ).read_text()
 
         self.assertIn("<!-- cpk-rule-owner: scenario-discrimination -->", owner)
-        self.assertEqual(owner.count("<!-- cpk-rule-guard:"), 11)
+        self.assertEqual(owner.count("<!-- cpk-rule-guard:"), 12)
         self.assertIn("scenario-discrimination.md", preflight)
         self.assertIn("scenario-discrimination.md", card)
         self.assertIn("scenario-discrimination.md", result)
@@ -2977,6 +2986,12 @@ class IntegrationTests(unittest.TestCase):
             owner,
         )
         self.assertIn("Inspect the production paths and test bodies", owner)
+        self.assertIn("Apply [Owner composition](owner-composition.md)", owner)
+        self.assertIn(
+            "Every production-path fact in a trace row comes from that row's one exact named check",
+            owner,
+        )
+        self.assertIn("adds an exact obligation to `missing_tests`", owner)
         self.assertIn("fixture must isolate the discriminator", owner)
         self.assertIn("nearest wrong meaning must fail", owner)
         self.assertIn("positive-only check", owner)
@@ -3017,6 +3032,7 @@ class IntegrationTests(unittest.TestCase):
         self.assertIn("A nonempty `missing_tests` value", result)
         for field in (
             '"entry_point"',
+            '"production_hops"',
             '"gates"',
             '"enforcement_point"',
             '"terminal_owner"',
@@ -3024,6 +3040,9 @@ class IntegrationTests(unittest.TestCase):
             '"fixture_matches_discriminator"',
             '"nearest_wrong_meaning_would_fail"',
             '"both_sides_executed"',
+            '"one_check_traverses_complete_path"',
+            '"external_boundary_seams"',
+            '"replaced_in_scope_hops"',
             '"terminal_oracle_reached"',
         ):
             self.assertIn(field, result)
@@ -3067,6 +3086,13 @@ class IntegrationTests(unittest.TestCase):
         self.assertIn("reuse_only_fresh_executor_required", forward)
         self.assertIn("checkpoint_future_work_excluded", forward)
         self.assertIn("final_complete_inventory_required", forward)
+        self.assertIn("separate_component_coverage_rejected", forward)
+        self.assertIn("bundled_component_calls_rejected", forward)
+        self.assertIn("continuous_production_path_required", forward)
+        self.assertIn("external_boundary_fake_allowed", forward)
+        self.assertIn("in_scope_seam_rejected", forward)
+        self.assertIn("deterministic_async_path_allowed", forward)
+        self.assertIn("exact_missing_path_check_reported", forward)
 
     def test_native_review_does_not_recurse(self):
         review = (
@@ -3251,7 +3277,7 @@ class IntegrationTests(unittest.TestCase):
         self.assertIn("`pwsh -File .\\doctor.ps1`", publication)
         self.assertIn("from the reviewed candidate", publication)
         self.assertIn("`Result: ready`", publication)
-        self.assertEqual(kit.KIT_VERSION, "0.23.6")
+        self.assertEqual(kit.KIT_VERSION, "0.23.7")
         self.assertNotIn("Version `0.22.0`", (ROOT / "README.md").read_text())
         self.assertNotIn("version 0.22.0", (ROOT / "CODEX-INSTALL-PROMPT.md").read_text())
 
