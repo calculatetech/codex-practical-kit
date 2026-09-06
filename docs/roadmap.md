@@ -13,7 +13,7 @@ Status legend:
 
 ## Active
 
-- 🎯 **CPK-056 — Improve interviews and assess rule adherence.** Bound material questions by their prerequisites, clarify correction and proof rules, and compare agent behavior through independent assessment cases. [ExecPlan](plans/cpk-056-interviews-and-assessment.md)
+No task is active.
 
 ## Planned next
 
@@ -33,6 +33,7 @@ No residual risk is accepted.
 
 ## Completed
 
+- ✅ **CPK-056 — Improve interviews and assess rule adherence.** Bound material questions by their prerequisites, clarify correction and proof rules, and compare agent behavior through independent assessment cases. [ExecPlan](plans/cpk-056-interviews-and-assessment.md)
 - ✅ **CPK-055 — Install the official Ponytail plugin.** Preserve upstream skills, hooks, modes, and user settings through native Codex installation. Remove toolkit mode overrides and document complete component removal.
 - ✅ **CPK-054 — Keep Plan summaries out of documentation folders.** Save repository summaries only in `.agent/plan-history/`, preserve specification associations, and relocate this repository's legacy copies without changing their contents.
 - ✅ **CPK-053 — Require continuous production-path proof.** Require one named runnable check to traverse every in-scope production hop from the real entry point to the terminal oracle. Version `0.23.7`.
