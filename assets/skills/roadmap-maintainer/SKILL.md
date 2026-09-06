@@ -93,6 +93,19 @@ Apply [Review closure](../adversarial-review/references/review-closure.md) after
 
 Publication does not change roadmap state.
 
+## Refresh the linked view
+
+For initialization and every roadmap update, use the `apply_patch` tool to change `docs/roadmap.md` in the active task worktree. Shell writes do not trigger the managed roadmap hooks.
+
+The managed `PreToolUse` and `PostToolUse` hooks refresh `.codex/roadmap-view.md` only when the patch changes the roadmap content. The view lives in the primary checkout, including when the source roadmap is in a linked worktree.
+
+1. Resolve the shared Git directory with `git rev-parse --path-format=absolute --git-common-dir` from the task worktree.
+2. Read `.codex/roadmap-view.md` beside that directory in the primary checkout.
+3. Verify that its generated header is followed by the current task worktree's complete `docs/roadmap.md` content.
+4. If the view is missing or stale, report the refresh failure and any hook warning.
+
+Do not claim that the linked view is current until verification succeeds. Do not repair it by hand or change roadmap content solely to trigger a refresh. A no-op patch does not refresh the view.
+
 ## Template
 
 Use `assets/roadmap-template.md`. Keep its section order and status meanings. A repository can add short usage rules, but it must preserve one Active section, the Declined section, and permanent task identifiers.

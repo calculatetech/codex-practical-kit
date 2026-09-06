@@ -261,16 +261,23 @@ def event_key(event: dict[str, object]) -> str:
 
 
 def write_record(
-    directory: Path, prefix: str, timestamp: str, key: str, content: bytes
+    directory: Path, prefix: str, timestamp: str, key: str, content: bytes,
+    search_directories: list[Path],
 ) -> bool:
     directory.mkdir(parents=True, exist_ok=True)
     escaped_prefix = glob.escape(prefix)
-    existing = sorted(directory.glob(f"{escaped_prefix}.*.{key}.md"))
+    existing = sorted(
+        path for location in search_directories
+        for path in location.glob(f"{escaped_prefix}.*.{key}.md")
+    )
     if any(path.read_bytes() == content for path in existing):
         return False
     if existing:
         digest = hashlib.sha256(content).hexdigest()
-        collisions = sorted(directory.glob(f"{escaped_prefix}.*.{key}.{digest}.md"))
+        collisions = sorted(
+            path for location in search_directories
+            for path in location.glob(f"{escaped_prefix}.*.{key}.{digest}.md")
+        )
         if any(path.read_bytes() == content for path in collisions):
             return False
         name = f"{prefix}.{timestamp}.{key}.{digest}.md"
@@ -315,28 +322,28 @@ def save_plan(event: dict[str, object]) -> list[str]:
     cwd = Path(str(event.get("cwd") or Path.cwd())).resolve()
     root = repository_root(cwd)
     markers = [value.strip() for value in PLAN_MARKER.findall(message)]
-    targets, failures = plan_targets(root, markers)
+    _, failures = plan_targets(root, markers)
     timestamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%fZ")
     key = event_key(event)
     content = message.encode("utf-8")
-    collisions = False
-
     if root is not None:
         history = root / ".agent" / "plan-history"
+        worktrees = subprocess.run(
+            ["git", "worktree", "list", "--porcelain", "-z"],
+            cwd=root, text=True, encoding="utf-8", stdout=subprocess.PIPE, check=True,
+        ).stdout
+        search_directories = [
+            Path(field.removeprefix("worktree ")) / ".agent" / "plan-history"
+            for field in worktrees.split("\0") if field.startswith("worktree ")
+        ]
     else:
         codex_home = Path(os.environ.get("CODEX_HOME", Path.home() / ".codex"))
         cwd_key = hashlib.sha256(str(cwd).encode()).hexdigest()
         history = codex_home / "plan-history" / cwd_key
-    collisions |= write_record(history, "plan-summary", timestamp, key, content)
-
-    for target in targets:
-        collisions |= write_record(
-            target.parent,
-            f"{target.stem}.plan-summary",
-            timestamp,
-            key,
-            content,
-        )
+        search_directories = [history]
+    collisions = write_record(
+        history, "plan-summary", timestamp, key, content, search_directories,
+    )
 
     warnings = []
     if failures:

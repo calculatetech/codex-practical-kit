@@ -23,7 +23,9 @@ Plan history is immutable source evidence. An ExecPlan remains the only durable 
 
 Save a completed Plan before the next submitted prompt continues. Session start and session end also recover the newest completed Plan.
 
-Every repository Plan capture has a record in `.agent/plan-history/`. Valid specification markers also create exact sibling records.
+Every repository Plan capture has a record in `.agent/plan-history/`. This is the only location for new repository summaries. Keep these records versioned in Git.
+
+Specification markers in the saved response retain its associations. Do not create copies beside specifications. An identical event already retained in another active worktree does not need another generated record.
 
 ## Before planning
 
@@ -31,7 +33,7 @@ Apply [Repository knowledge](../repository-knowledge/SKILL.md) first. Use RepoWi
 
 Read every applicable Plan history record before later planning.
 
-Then enumerate files directly. Read every file in `.agent/plan-history/`. For each identified specification, read every sibling named `<spec-stem>.plan-summary.*.md`. Also inspect the current global fallback directory when the prompt identifies a prior storage warning.
+Then enumerate files directly. In a Git repository, use `git worktree list --porcelain -z` to find every worktree. Read every file in `.agent/plan-history/` in each worktree. For each identified specification, also read legacy siblings named `<spec-stem>.plan-summary.*.md` in those worktrees. Also inspect the current global fallback directory when the prompt identifies a prior storage warning.
 
 Use the same discovery before implementation when the user resumes or implements a plan after context was cleared.
 
@@ -90,9 +92,9 @@ Link every applicable record from the task ExecPlan. Treat each linked decision 
 
 Relocate applicable untracked Plan records to the task worktree before task edits.
 
-If a specification becomes known after capture, copy the exact unlinked record beside it. Use the specification stem and retain the timestamp and event key. Keep the unlinked record unchanged.
+If a specification becomes known after capture, link the existing central record from the specification or task ExecPlan. Keep the record unchanged.
 
-If implementation uses another worktree, enumerate every other worktree in the same Git repository before task edits. Exclude the task worktree. Find every applicable untracked central record and specification-sibling record in the source worktrees.
+If implementation uses another worktree, enumerate every other worktree in the same Git repository before task edits. Exclude the task worktree. Find every applicable untracked central record in the source worktrees. Consolidate applicable legacy sibling records with the procedure below before handoff.
 
 Relocate each applicable untracked record to the same repository-relative path in the task worktree:
 
@@ -104,10 +106,24 @@ Relocate each applicable untracked record to the same repository-relative path i
 
 This relocation preserves Plan history because the byte-identical task-worktree record remains. The sequence is repeatable. A stopped attempt can leave an identical duplicate for the next attempt.
 
-Never remove a tracked, unique, unrelated, or different-content record. Retain every distinct-content collision record.
+During worktree handoff, never remove a tracked, unique, unrelated, or different-content record. Retain every distinct-content collision record.
 
-Keep the central record and each specification-sibling record in the task worktree. These records have different discovery roles and are not redundant copies of one path.
+Keep the central record in the task worktree. Do not copy it back to `main`. Git integration carries the committed record to other branches and devices. Ordinary tracked copies in checkouts are not redundant generated files.
 
 Commit the applicable records with the delivered task. Do not commit unrelated Plan history. Never edit a Plan history record or remove its last copy.
 
 Do not rewrite completed ExecPlans merely to remove historical progress content. Apply the current ExecPlan contract when an active or resumed plan is next edited.
+
+## Consolidate legacy copies
+
+Consolidate applicable untracked legacy records before handoff. For tracked legacy files, use this procedure only during authorized cleanup. Keep the central destination in the same repository. Do not clean other repositories without user direction.
+
+1. Replace the `<spec-stem>.plan-summary.` filename prefix with `plan-summary.`. Retain the timestamp, event key, and collision suffix.
+2. If a central record has the same event key and identical bytes, reuse it.
+3. Otherwise, copy the record to its central destination without overwriting an existing file.
+4. Compare the complete source and destination bytes before removing the legacy copy.
+5. If the destination differs or the copy fails, retain the source and stop that relocation.
+6. Update references outside immutable Plan records to the retained central path.
+7. Include tracked relocations and reference updates in the task's Git changes.
+
+This cleanup can remove a tracked legacy duplicate only after its exact central copy is verified. Preserve every distinct event and different-content collision. Never remove the last copy.

@@ -13,9 +13,8 @@ This bugfix uses version `0.23.7`. Work occurs on branch `fix/cpk-053-continuous
 ## Applicable Plan History
 
 - `.agent/plan-history/plan-summary.20260901T024803899174Z.f5becdd56d889aba50bf375a29ab0feb9012128e404e73e7a664e0243eb5ab8f.md`
-- `docs/plans/cpk-053-continuous-path-proof.plan-summary.20260901T024803899174Z.f5becdd56d889aba50bf375a29ab0feb9012128e404e73e7a664e0243eb5ab8f.md`
 
-The two records contain identical bytes. The central record supports repository discovery. The sibling record links this specification to the accepted Plan.
+The central record links this specification to the accepted Plan.
 
 ## Decision Log
 

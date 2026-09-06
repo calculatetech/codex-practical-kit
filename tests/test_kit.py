@@ -626,6 +626,121 @@ class PlanHistoryHookTests(unittest.TestCase):
                 return payload["content"][0]["text"]
         self.fail("fixture has no final Plan response")
 
+    CAPTURE_EVENTS = (
+        ("Stop", None),
+        ("UserPromptSubmit", None),
+        ("SessionStart", "resume"),
+        ("SessionStart", "compact"),
+        ("SessionStart", "clear"),
+        ("SessionEnd", None),
+    )
+
+    def capture_event(self, root, name, source=None, *, title="Observed Plan", turn="plan-turn", marker="docs/feature.md"):
+        message = self.fixture_message().replace("Observed Plan", title).replace("docs/feature.md", marker)
+        if name == "Stop":
+            event = self.stop_event(root, message, turn)
+            event["session_id"] = "thread-observed"
+            return event, message
+        transcript = root.parent / "rollout.jsonl"
+        transcript.write_text(
+            self.FIXTURE.read_text().replace("Observed Plan", title)
+            .replace("plan-turn", turn).replace("docs/feature.md", json.dumps(marker)[1:-1]),
+            encoding="utf-8",
+        )
+        event = self.transcript_event(root, name, source)
+        event["transcript_path"] = str(transcript)
+        return event, message
+
+    def test_plan_history_stays_internal_for_every_event(self):
+        for name, source in self.CAPTURE_EVENTS:
+            for marker in (
+                "docs/feature.md", "none",
+                "docs/feature.md -->\n<!-- cpk-plan-spec: docs/second.md",
+            ):
+                with self.subTest(name=name, source=source, marker=marker), tempfile.TemporaryDirectory() as temp:
+                    root = Path(temp) / "repo"
+                    root.mkdir()
+                    GitFixture(root).commit("docs/feature.md", "# Feature\n")
+                    (root / "docs/second.md").write_text("# Second\n")
+                    event, message = self.capture_event(root, name, source, marker=marker)
+                    event["cwd"] = str(root / "docs")
+
+                    self.run_hook(event)
+                    self.run_hook(event)
+
+                    records = list((root / ".agent/plan-history").glob("*.md"))
+                    self.assertEqual(len(records), 1)
+                    self.assertEqual(records[0].read_bytes(), message.encode())
+                    self.assertEqual(list((root / "docs").glob("*.plan-summary.*.md")), [])
+                    subprocess.run(["git", "add", "docs", ".agent/plan-history"], cwd=root, check=True)
+                    subprocess.run(["git", "commit", "-qm", "retain Plan history"], cwd=root, check=True)
+                    clone = Path(temp) / "clone"
+                    subprocess.run(["git", "clone", "-q", str(root), str(clone)], check=True)
+                    cloned, = (clone / ".agent/plan-history").glob("*.md")
+                    self.assertEqual(cloned.read_bytes(), message.encode())
+                    self.assertEqual(list((clone / "docs").glob("*.plan-summary.*.md")), [])
+
+    def test_plan_history_handoff_then_primary_replay(self):
+        for name, source in self.CAPTURE_EVENTS:
+            with self.subTest(name=name, source=source), tempfile.TemporaryDirectory() as temp:
+                primary = Path(temp) / "primary"
+                primary.mkdir()
+                GitFixture(primary).commit("docs/feature.md", "# Feature\n")
+                task = Path(temp) / "task café worktree"
+                subprocess.run(["git", "worktree", "add", "-qb", "task", str(task)], cwd=primary, check=True)
+                event, message = self.capture_event(primary, name, source)
+                self.run_hook(event)
+                record, = (primary / ".agent/plan-history").glob("*.md")
+                destination = task / record.relative_to(primary)
+                destination.parent.mkdir(parents=True)
+                destination.write_bytes(record.read_bytes())
+                self.assertEqual(destination.read_bytes(), record.read_bytes())
+                record.unlink()
+                subprocess.run(["git", "add", ".agent/plan-history"], cwd=task, check=True)
+                subprocess.run(["git", "commit", "-qm", "retain Plan history"], cwd=task, check=True)
+
+                self.run_hook(event)
+
+                self.assertEqual(list((primary / ".agent/plan-history").glob("*.md")), [])
+                self.assertEqual(destination.read_bytes(), message.encode())
+                subprocess.run(["git", "merge", "--ff-only", "-q", "task"], cwd=primary, check=True)
+                self.assertEqual(record.read_bytes(), message.encode())
+                status = subprocess.check_output(["git", "status", "--short"], cwd=primary, text=True)
+                self.assertEqual(status, "")
+
+    def test_plan_history_cross_worktree_identity(self):
+        for name, source in self.CAPTURE_EVENTS:
+            with self.subTest(name=name, source=source), tempfile.TemporaryDirectory() as temp:
+                primary = Path(temp) / "primary"
+                primary.mkdir()
+                GitFixture(primary).commit("docs/feature.md", "# Feature\n")
+                task = Path(temp) / "task café worktree"
+                subprocess.run(["git", "worktree", "add", "-qb", "task", str(task)], cwd=primary, check=True)
+                original, original_message = self.capture_event(task, name, source)
+                self.run_hook(original)
+                original_record, = (task / ".agent/plan-history").glob("*.md")
+                # Same bytes under another event must remain a separate record.
+                new_event, _ = self.capture_event(primary, name, source, turn="new-turn")
+                self.run_hook(new_event)
+                self.run_hook(new_event)
+                records = list((primary / ".agent/plan-history").glob("*.md"))
+                self.assertEqual(len(records), 1)
+                self.assertEqual(records[0].read_bytes(), original_message.encode())
+                # Different bytes for the original event must survive a duplicate prefix.
+                changed, changed_message = self.capture_event(primary, name, source, title="Changed Plan")
+                warning = self.run_hook(changed)
+                retry = self.run_hook(changed)
+                records = list((primary / ".agent/plan-history").glob("*.md"))
+                self.assertEqual(len(records), 2)
+                self.assertEqual({p.read_bytes() for p in records}, {original_message.encode(), changed_message.encode()})
+                self.assertIn("same event identity", warning.stdout)
+                self.assertNotIn("same event identity", retry.stdout)
+                self.assertEqual(original_record.read_bytes(), original_message.encode())
+                # Finding the original in another worktree must suppress a new local copy.
+                replay, _ = self.capture_event(primary, name, source)
+                self.run_hook(replay)
+                self.assertEqual(len(list((primary / ".agent/plan-history").glob("*.md"))), 2)
+
     def test_plan_history_preserves_exact_bytes_and_event_identity(self):
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
@@ -642,11 +757,7 @@ class PlanHistoryHookTests(unittest.TestCase):
 
             first = self.run_hook(event)
             retry = self.run_hook(event)
-            records = [
-                path
-                for path in spec.parent.glob("*.plan-summary.*.md")
-                if path.name.startswith("feature[1].plan-summary.")
-            ]
+            records = list((root / ".agent" / "plan-history").glob("*.md"))
 
             self.assertEqual(first.stdout, "{}\n")
             self.assertEqual(retry.stdout, "{}\n")
@@ -659,21 +770,13 @@ class PlanHistoryHookTests(unittest.TestCase):
 
             replan = message.replace("Café plan", "Café replan")
             self.run_hook(self.stop_event(root, replan, "turn-2"))
-            records = [
-                path
-                for path in spec.parent.glob("*.plan-summary.*.md")
-                if path.name.startswith("feature[1].plan-summary.")
-            ]
+            records = list((root / ".agent" / "plan-history").glob("*.md"))
             self.assertEqual(len(records), 2)
             self.assertEqual({path.read_bytes() for path in records}, {message.encode(), replan.encode()})
 
             changed = message.replace("Café", "Changed")
             collision = self.run_hook(self.stop_event(root, changed))
-            records = [
-                path
-                for path in spec.parent.glob("*.plan-summary.*.md")
-                if path.name.startswith("feature[1].plan-summary.")
-            ]
+            records = list((root / ".agent" / "plan-history").glob("*.md"))
             self.assertEqual(len(records), 3)
             self.assertIn("same event identity", json.loads(collision.stdout)["systemMessage"])
             self.assertEqual(
@@ -687,8 +790,7 @@ class PlanHistoryHookTests(unittest.TestCase):
                 with_newline.encode(),
                 {
                     path.read_bytes()
-                    for path in spec.parent.glob("*.plan-summary.*.md")
-                    if path.name.startswith("feature[1].plan-summary.")
+                    for path in (root / ".agent" / "plan-history").glob("*.md")
                 },
             )
 
@@ -708,8 +810,8 @@ class PlanHistoryHookTests(unittest.TestCase):
 
             result = self.run_hook(self.stop_event(root, message))
 
-            self.assertEqual(len(list(root.glob("one.plan-summary.*.md"))), 1)
-            self.assertEqual(len(list(root.glob("two.plan-summary.*.md"))), 1)
+            self.assertEqual(list(root.glob("one.plan-summary.*.md")), [])
+            self.assertEqual(list(root.glob("two.plan-summary.*.md")), [])
             unlinked = list((root / ".agent" / "plan-history").glob("*.md"))
             self.assertEqual(len(unlinked), 1)
             self.assertEqual(unlinked[0].read_bytes(), message.encode())
@@ -751,25 +853,21 @@ class PlanHistoryHookTests(unittest.TestCase):
             self.assertIn("did not provide", json.loads(warning.stdout)["systemMessage"])
 
     def test_plan_history_uses_global_storage_outside_git(self):
-        with tempfile.TemporaryDirectory() as temp:
-            base = Path(temp)
-            cwd = base / "project"
-            cwd.mkdir()
-            codex_home = base / "codex"
-            message = (
-                "<proposed_plan>\n# Plan\n"
-                "<!-- cpk-plan-spec: none -->\n"
-                "</proposed_plan>"
-            )
+        for name, source in self.CAPTURE_EVENTS:
+            with self.subTest(name=name, source=source), tempfile.TemporaryDirectory() as temp:
+                base = Path(temp)
+                cwd = base / "project"
+                cwd.mkdir()
+                codex_home = base / "codex"
+                event, message = self.capture_event(cwd, name, source, marker="none")
 
-            result = self.run_hook(
-                self.stop_event(cwd, message), codex_home=codex_home
-            )
+                self.run_hook(event, codex_home=codex_home)
+                self.run_hook(event, codex_home=codex_home)
 
-            self.assertEqual(result.stdout, "{}\n")
-            records = list((codex_home / "plan-history").rglob("*.md"))
-            self.assertEqual(len(records), 1)
-            self.assertEqual(records[0].read_bytes(), message.encode())
+                record, = (codex_home / "plan-history").rglob("*.md")
+                self.assertEqual(record.read_bytes(), message.encode())
+                self.assertEqual(record.parent.name, hashlib.sha256(str(cwd.resolve()).encode()).hexdigest())
+                self.assertFalse((cwd / ".agent").exists())
 
     def test_acceptance_and_session_events_capture_the_real_rollout_shape(self):
         message = self.fixture_message()
@@ -793,9 +891,8 @@ class PlanHistoryHookTests(unittest.TestCase):
                 history = list((root / ".agent" / "plan-history").glob("*.md"))
                 siblings = list(spec.parent.glob("feature.plan-summary.*.md"))
                 self.assertEqual(len(history), 1)
-                self.assertEqual(len(siblings), 1)
+                self.assertEqual(siblings, [])
                 self.assertEqual(history[0].read_bytes(), message.encode())
-                self.assertEqual(siblings[0].read_bytes(), message.encode())
                 if name == "SessionStart":
                     output = json.loads(result.stdout)
                     self.assertEqual(
@@ -854,7 +951,7 @@ class PlanHistoryHookTests(unittest.TestCase):
             self.assertEqual(
                 len(list((root / ".agent" / "plan-history").glob("*.md"))), 1
             )
-            self.assertEqual(len(list(spec.parent.glob("feature.plan-summary.*.md"))), 1)
+            self.assertEqual(list(spec.parent.glob("feature.plan-summary.*.md")), [])
 
     def test_transcript_capture_rejects_incomplete_plan_shapes(self):
         lines = self.FIXTURE.read_text(encoding="utf-8").splitlines()
@@ -3277,7 +3374,7 @@ class IntegrationTests(unittest.TestCase):
         self.assertIn("`pwsh -File .\\doctor.ps1`", publication)
         self.assertIn("from the reviewed candidate", publication)
         self.assertIn("`Result: ready`", publication)
-        self.assertEqual(kit.KIT_VERSION, "0.23.7")
+        self.assertEqual(kit.KIT_VERSION, "0.23.8")
         self.assertNotIn("Version `0.22.0`", (ROOT / "README.md").read_text())
         self.assertNotIn("version 0.22.0", (ROOT / "CODEX-INSTALL-PROMPT.md").read_text())
 
@@ -3407,9 +3504,17 @@ class IntegrationTests(unittest.TestCase):
             skill.index("remove the redundant untracked source copy"),
         )
         self.assertIn("If the bytes differ or the destination copy fails", skill)
-        self.assertIn("Never remove a tracked, unique, unrelated, or different-content record", skill)
+        self.assertIn("During worktree handoff, never remove a tracked, unique, unrelated, or different-content record", skill)
         self.assertIn("Retain every distinct-content collision record", skill)
-        self.assertIn("These records have different discovery roles", skill)
+        self.assertIn("This is the only location for new repository summaries", skill)
+        self.assertIn("Keep these records versioned in Git", skill)
+        self.assertIn("git worktree list --porcelain -z", skill)
+        self.assertIn("also read legacy siblings", skill)
+        self.assertIn("link the existing central record", skill)
+        self.assertIn("Do not copy it back to `main`", skill)
+        self.assertIn("Compare the complete source and destination bytes before removing the legacy copy", skill)
+        self.assertNotIn("also create exact sibling records", skill)
+        self.assertNotIn("copy the exact unlinked record beside it", skill)
         self.assertIn("Never edit a Plan history record or remove its last copy", skill)
         self.assertNotIn(
             "copy each applicable untracked record to the same repository-relative path before task edits",

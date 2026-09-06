@@ -29,7 +29,7 @@ Windows users must be able to operate every root toolkit entry point with PowerS
 
 ## Prior Plan Reconciliation
 
-- `docs/plans/cpk-039-native-windows.plan-summary.20260819T211423672232Z.manual-recovery.md`: carried. The Plan history hook could not link the completed response before this ExecPlan existed. This immutable copy preserves the exact response from the thread.
+- `.agent/plan-history/plan-summary.20260819T211423672232Z.manual-recovery.md`: carried. The Plan history hook could not link the completed response before this ExecPlan existed. This immutable copy preserves the exact response from the thread.
 
 No earlier Plan history record applies to CPK-039.
 

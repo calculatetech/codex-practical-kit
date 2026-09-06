@@ -19,7 +19,7 @@ Users must be able to keep one roadmap file open while Codex works in linked Git
 
 ## Prior Plan Reconciliation
 
-- `docs/plans/cpk-038-shared-roadmap-view.plan-summary.20260819T195712262086Z.manual-recovery.md`: carried. The Plan history hook did not create its normal record, so the exact completed response was recovered from the thread before implementation.
+- `.agent/plan-history/plan-summary.20260819T195712262086Z.manual-recovery.md`: carried. The Plan history hook did not create its normal record, so the exact completed response was recovered from the thread before implementation.
 
 ## Plan Deviations
 

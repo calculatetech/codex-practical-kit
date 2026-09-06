@@ -69,7 +69,7 @@ Prompt submission selects normal mode before Plan-mode prompts. Managed hooks sa
 
 The edit hooks update `<primary-checkout>/.codex/roadmap-view.md` after an agent changes `docs/roadmap.md`. Keep this generated file open to follow worktree progress. Edit only `docs/roadmap.md`.
 
-The `plan-history` skill puts every repository summary in `.agent/plan-history/`. It also puts exact copies beside related specifications. Later planning sessions read and reconcile these records.
+The [Plan history skill](assets/skills/plan-history/SKILL.md) keeps repository summaries versioned in `.agent/plan-history/`. Specification associations stay in each record. Later planning sessions find these records across worktrees and reconcile their decisions.
 
 An unrecorded destination skill is a conflict. The installer stops before it changes that directory.
 

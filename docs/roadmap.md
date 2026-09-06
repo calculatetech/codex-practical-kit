@@ -33,6 +33,7 @@ No residual risk is accepted.
 
 ## Completed
 
+- ✅ **CPK-054 — Keep Plan summaries out of documentation folders.** Save repository summaries only in `.agent/plan-history/`, preserve specification associations, and relocate this repository's legacy copies without changing their contents.
 - ✅ **CPK-053 — Require continuous production-path proof.** Require one named runnable check to traverse every in-scope production hop from the real entry point to the terminal oracle. Version `0.23.7`.
 - ✅ **CPK-052 — Restore independent trace coverage and severity-based review stops.** Remove repeated-pass severe stops. Require a fresh clean-context trace verifier before each eligible native review. Version `0.23.6`.
 - ✅ **CPK-051 — Make POSIX RepoWise repair tests platform-independent.** Force the POSIX platform in both extensionless-path tests so they pass on Windows and POSIX hosts. Version `0.23.5`.
