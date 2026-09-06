@@ -3,12 +3,17 @@
 <!-- cpk-rule-guard: Use these labels in order: `Decision`, `Term`, `Trigger`, `Likelihood`, `Current exposure`, `Options`, `Recommendation`, and `Question`. -->
 <!-- cpk-rule-guard: Before a material technical decision, explain each option's visible result, code shape, source, new parts, proof, and maintenance cost. -->
 <!-- cpk-rule-guard: Show the complete decision brief before an interactive choice tool. The tool only collects the answer. -->
+<!-- cpk-rule-guard: Ask at most three independent material questions in one batch. -->
 
 # Decision handoffs
 
 A material decision changes scope, architecture, authority, exposure, or the delivered result.
 
 Before you request direction, investigate discoverable facts. Exclude unsupported conditions.
+
+Order material questions by their prerequisites. Ask a dependent question only after its prerequisite is settled. Ask at most three independent material questions in one batch.
+
+After each reply or source discovery, reassess the remaining questions. Keep partial answers and remove settled or obsolete questions. Ask only the next unresolved material choices. Stop the interview when the required behavior, scope, and acceptance are settled.
 
 Do not use a full handoff for discoverable facts, routine values, status questions, or minor preferences.
 
@@ -52,6 +57,6 @@ Recommend one option. If evidence does not distinguish them, select the smallest
 
 If no real choice exists, state the required action. Do not ask for direction.
 
-If direction is required, end with one exact question.
+End each decision brief with one exact question.
 
 After the user selects a material technical option, record its visible behavior and implementation shape in the active ExecPlan before implementation.

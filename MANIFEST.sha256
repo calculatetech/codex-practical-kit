@@ -37,7 +37,7 @@ baa988b652f856bce1a4e183bf327879a021896eb65617b2fd4903e34a461339  ./assets/skill
 f98f3661b7b4cfbe6a1b061e075898ae21b65cbb6765abec76b332b03cab2f9b  ./assets/skills/defect-diagnostic/references/diagnostic-summary.md
 20fb4b743b3ed14fa58ae1710bf5c621eb1f0b20dad552212221594368fa2d4c  ./assets/skills/delivery-lifecycle/SKILL.md
 5c440ca779141dceb31af7b4c04893f00832977d2d4f2255f320c93625990930  ./assets/skills/delivery-lifecycle/references/coordination.md
-76b5efe4947280c479a5dc1bbe855bee278d032f4504246711b4ba0c9eb6ee1d  ./assets/skills/delivery-lifecycle/references/decision-handoffs.md
+b24f6d4c5d6ba9d3a4ab4215eac302764e8dcb0fe2c6dc76789b3ffe77a8e21f  ./assets/skills/delivery-lifecycle/references/decision-handoffs.md
 201fd65244be49f9c5e488a9fa7d1a41617b65d343078e47d0d438b5461d1674  ./assets/skills/delivery-lifecycle/references/delivery-lifecycle.md
 2536a374b63658e5e0bbca17d1a9ed25a41b61eeb539702cc8ee7c6f41bf1a31  ./assets/skills/delivery-lifecycle/references/git-isolation.md
 84011f5085fb883fb67129e61df008a94a531ac1bbbe3bb9e6d16d2f9c78bcc4  ./assets/skills/delivery-lifecycle/references/implementation-modes.md
@@ -135,7 +135,7 @@ e1e231aac51822f7e1bb3aa61aba138cf8c5df9cefd3079b0c1b5a98eea03bd9  ./tests/fixtur
 a269775204ae7cad2457d00f5565c90da2df41a9719479f3489ec01afdd2519c  ./tests/fixtures/cpk056-agent-cases.json
 e32941eb74be1f2cdcb6c82cf71e113b841651bf0d01786f364176de2da1b9c5  ./tests/fixtures/cpk056-agent-grading.json
 289367b7090a0d71936b41f08c4a354bc2758013dceb709819de36a1b73d9aa6  ./tests/live_plan_history.py
-5a1617148fbf1045f0291252f472210f4929e6a164649179bd14e38b4f1f2563  ./tests/test_kit.py
+8f9e659ae167ccac0cab63f0fd93ac796e6dba4d8d473d70ec964053038e9298  ./tests/test_kit.py
 cfa479b5248a628ecd71194b7ac4a36bcddf17af7eb52ca2a6c3cd0566269927  ./tests/test_ponytail.py
 d16f7eadc8c668e82a1d0d2554ed04def15cb0a4b2ce13ac1ce1339bc0e62161  ./uninstall.ps1
 f12cff94ef7f9b0ca489cbe43e1de737011476966e04c1578f4977177b0da217  ./uninstall.sh

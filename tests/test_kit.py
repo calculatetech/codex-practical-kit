@@ -2658,6 +2658,14 @@ class IntegrationTests(unittest.TestCase):
         self.assertIn("If source cannot prove an impact, write `unknown`", handoff)
         self.assertIn("Do not estimate line counts.", handoff)
         self.assertIn("The tool only collects the answer.", handoff)
+        self.assertIn("Ask a dependent question only after its prerequisite is settled.", handoff)
+        self.assertIn("Ask at most three independent material questions in one batch.", handoff)
+        self.assertIn("After each reply or source discovery, reassess the remaining questions.", handoff)
+        self.assertIn("Keep partial answers and remove settled or obsolete questions.", handoff)
+        self.assertIn("Stop the interview when the required behavior, scope, and acceptance are settled.", handoff)
+        self.assertIn("End each decision brief with one exact question.", handoff)
+        self.assertIn("Do not use a full handoff for discoverable facts, routine values", handoff)
+        self.assertLess(handoff.index("investigate discoverable facts"), handoff.index("Order material questions"))
         self.assertLess(
             handoff.index("Show the complete decision brief"),
             handoff.index("Keep the tool question"),
