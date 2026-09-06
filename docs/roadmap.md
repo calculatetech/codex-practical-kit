@@ -13,7 +13,7 @@ Status legend:
 
 ## Active
 
-No task is active.
+- 🎯 **CPK-056 — Improve interviews and assess rule adherence.** Bound material questions by their prerequisites, clarify correction and proof rules, and compare agent behavior through independent assessment cases. [ExecPlan](plans/cpk-056-interviews-and-assessment.md)
 
 ## Planned next
 

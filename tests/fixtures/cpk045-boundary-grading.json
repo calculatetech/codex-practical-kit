@@ -1,0 +1,219 @@
+{
+  "purpose": "Coordinator-only expectations. Never include this file in an evaluated agent's packet or case directory.",
+  "cases": [
+    {
+      "case_id": "01",
+      "admissible": false
+    },
+    {
+      "case_id": "02",
+      "admissible": false
+    },
+    {
+      "case_id": "03",
+      "admissible": false
+    },
+    {
+      "case_id": "04",
+      "admissible": false
+    },
+    {
+      "case_id": "05",
+      "admissible": true
+    },
+    {
+      "case_id": "06",
+      "admissible": false
+    },
+    {
+      "case_id": "07",
+      "admissible": true
+    },
+    {
+      "case_id": "08",
+      "admissible": false
+    },
+    {
+      "case_id": "09",
+      "admissible": false
+    },
+    {
+      "case_id": "10",
+      "admissible": false
+    },
+    {
+      "case_id": "11",
+      "admissible": true
+    },
+    {
+      "case_id": "12",
+      "admissible": false
+    },
+    {
+      "case_id": "13",
+      "admissible": true
+    },
+    {
+      "case_id": "14",
+      "admissible": true
+    },
+    {
+      "case_id": "15",
+      "admissible": false
+    },
+    {
+      "case_id": "16",
+      "admissible": true
+    },
+    {
+      "case_id": "17",
+      "admissible": false
+    },
+    {
+      "case_id": "18",
+      "admissible": true
+    },
+    {
+      "case_id": "19",
+      "admissible": false
+    },
+    {
+      "case_id": "20",
+      "admissible": false
+    },
+    {
+      "case_id": "21",
+      "admissible": false
+    },
+    {
+      "case_id": "22",
+      "admissible": true
+    },
+    {
+      "case_id": "23",
+      "admissible": false
+    },
+    {
+      "case_id": "24",
+      "admissible": true
+    },
+    {
+      "case_id": "25",
+      "admissible": true
+    },
+    {
+      "case_id": "26",
+      "admissible": false
+    },
+    {
+      "case_id": "27",
+      "admissible": true
+    },
+    {
+      "case_id": "28",
+      "admissible": true
+    },
+    {
+      "case_id": "29",
+      "admissible": false
+    },
+    {
+      "case_id": "30",
+      "admissible": false
+    },
+    {
+      "case_id": "31",
+      "admissible": true
+    },
+    {
+      "case_id": "32",
+      "admissible": true
+    },
+    {
+      "case_id": "33",
+      "admissible": false
+    },
+    {
+      "case_id": "34",
+      "admissible": false
+    },
+    {
+      "case_id": "35",
+      "admissible": false
+    },
+    {
+      "case_id": "36",
+      "admissible": true
+    },
+    {
+      "case_id": "37",
+      "admissible": false
+    },
+    {
+      "case_id": "38",
+      "admissible": true
+    },
+    {
+      "case_id": "39",
+      "admissible": false
+    },
+    {
+      "case_id": "40",
+      "admissible": false
+    },
+    {
+      "case_id": "41",
+      "admissible": false
+    }
+  ],
+  "qualifications": {
+    "39": "Identify the omitted third clause before implementation; post-implementation closure cannot repair the accepted inventory.",
+    "40": "Require evidence of both applicable entry routes; do not confuse common helper behavior with route coverage.",
+    "41": "Exercise both real import entries with a value affected by normalization; equal correct outputs do not remove the invariant.",
+    "05": "The causal paired check is admissible evidence. Its failing mapped side rejects the broader implementation; it does not close a failing candidate."
+  },
+  "retained_obligations": [
+    "assets/skills/design-preflight/SKILL.md",
+    "assets/skills/design-preflight/references/scenario-discrimination.md",
+    "assets/skills/design-preflight/references/preflight-review.md",
+    "assets/skills/adversarial-review/SKILL.md",
+    "accepted_inventory_checked",
+    "weak_evidence_rejected",
+    "duplicate_prefix_omission_blocked",
+    "initial_and_correction_paths_proved",
+    "equal_result_invariant_preserved",
+    "unrelated_gate_fixture_rejected",
+    "traced_changes_invalidate",
+    "boundary_change_requires_preflight",
+    "all_native_review_modes_gated",
+    "tracked_execplan_status_rejected",
+    "roadmap_only_lifecycle_state",
+    "review_closure_execplan_update_rejected",
+    "resumption_sources_complete",
+    "completed_history_rewrite_rejected",
+    "incomplete_resumption_rejected",
+    "tracked_delivery_status_rejected",
+    "spec_kit_progress_rejected",
+    "untracked_progress_allowed",
+    "coordinator_trace_rejected",
+    "fresh_trace_executor_required",
+    "canonical_coverage_rules_received",
+    "missing_tests_reported",
+    "reuse_only_fresh_executor_required",
+    "checkpoint_future_work_excluded",
+    "final_complete_inventory_required",
+    "separate_component_coverage_rejected",
+    "bundled_component_calls_rejected",
+    "continuous_production_path_required",
+    "external_boundary_fake_allowed",
+    "in_scope_seam_rejected",
+    "deterministic_async_path_allowed",
+    "production_hops_complete",
+    "one_check_traverses_complete_path",
+    "external_boundary_seams",
+    "replaced_in_scope_hops_empty",
+    "exact_missing_path_check_reported",
+    "ordered_trace_inputs_complete",
+    "native_review_independent"
+  ]
+}

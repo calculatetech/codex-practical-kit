@@ -3169,47 +3169,43 @@ class IntegrationTests(unittest.TestCase):
         self.assertLess(review.index("## Boundary trace closure"), review.index("## Native discovery"))
 
         forward = (ROOT / "tests" / "fixtures" / "cpk045-boundary-forward.md").read_text()
-        for evidence in (
-            "positive-only",
-            "component-only",
-            "aggregate-only",
-            "writer-report",
-        ):
-            self.assertIn(evidence, forward)
-        self.assertIn("Use the accepted `B#` inventory as the only semantic input", forward)
-        self.assertIn("Do not add, remove, split, merge, rename, or reinterpret", forward)
-        self.assertIn("One fresh read-only subagent has no inherited task conversation", forward)
-        self.assertIn("canonical Scenario Discrimination, Owner Composition, and Full-set Results", forward)
-        self.assertIn("not the trace record or coordinator conclusions", forward)
-        self.assertIn("duplicate_prefix_omission_blocked", forward)
-        self.assertIn("equal_result_invariant_preserved", forward)
-        self.assertIn("unrelated_gate_fixture_rejected", forward)
-        self.assertIn("traced_changes_invalidate", forward)
-        self.assertIn("direct_arithmetic_can_use_exception", forward)
-        self.assertIn("all_native_review_modes_gated", forward)
-        self.assertIn("tracked_execplan_status_rejected", forward)
-        self.assertIn("roadmap_only_lifecycle_state", forward)
-        self.assertIn("review_closure_execplan_update_rejected", forward)
-        self.assertIn("resumption_sources_complete", forward)
-        self.assertIn("completed_history_rewrite_rejected", forward)
-        self.assertIn("incomplete_resumption_rejected", forward)
-        self.assertIn("tracked_delivery_status_rejected", forward)
-        self.assertIn("spec_kit_progress_rejected", forward)
-        self.assertIn("untracked_progress_allowed", forward)
-        self.assertIn("coordinator_trace_rejected", forward)
-        self.assertIn("fresh_trace_executor_required", forward)
-        self.assertIn("canonical_coverage_rules_received", forward)
-        self.assertIn("missing_tests_reported", forward)
-        self.assertIn("reuse_only_fresh_executor_required", forward)
-        self.assertIn("checkpoint_future_work_excluded", forward)
-        self.assertIn("final_complete_inventory_required", forward)
-        self.assertIn("separate_component_coverage_rejected", forward)
-        self.assertIn("bundled_component_calls_rejected", forward)
-        self.assertIn("continuous_production_path_required", forward)
-        self.assertIn("external_boundary_fake_allowed", forward)
-        self.assertIn("in_scope_seam_rejected", forward)
-        self.assertIn("deterministic_async_path_allowed", forward)
-        self.assertIn("exact_missing_path_check_reported", forward)
+        grading = json.loads((ROOT / "tests" / "fixtures" / "cpk045-boundary-grading.json").read_text())
+        identifiers = re.findall(r"^## Case ([0-9]+)$", forward, re.MULTILINE)
+        self.assertEqual(identifiers, [f"{number:02d}" for number in range(1, 42)])
+        self.assertEqual(identifiers, [case["case_id"] for case in grading["cases"]])
+        self.assertNotIn("Reject records", forward)
+        self.assertNotIn("Accept records", forward)
+        self.assertNotIn("overall", forward)
+        self.assertIn("initial implementation", forward)
+        self.assertIn("accepted review correction", forward)
+        self.assertIn("Three authoritative clauses", forward)
+        self.assertIn("normalized account identity", forward)
+        for field in ("case_id", "verdict", "evidence", "proposed_action"):
+            self.assertIn(field, forward)
+        for obligation in grading["retained_obligations"]:
+            self.assertNotIn(f"`{obligation}`", forward)
+
+    def test_assessment_inputs_and_grading_are_separate(self):
+        fixtures = ROOT / "tests" / "fixtures"
+        inputs = json.loads((fixtures / "cpk056-agent-cases.json").read_text())
+        grading = json.loads((fixtures / "cpk056-agent-grading.json").read_text())
+        cases = inputs["cases"]
+        self.assertEqual([case["id"] for case in cases], list("ABCDEFG"))
+        self.assertEqual([case["case_id"] for case in grading["cases"]], list("ABCDEFG"))
+        self.assertEqual([case["id"] for case in cases if case["mode"] == "repair"], ["E", "F"])
+        self.assertEqual(cases[0]["mode"], "interview")
+        for case in cases:
+            self.assertEqual(set(case), {"id", "mode", "task", "files"})
+            for name, content in case["files"].items():
+                self.assertNotIn("grading", name)
+                self.assertFalse(Path(name).is_absolute())
+                self.assertNotIn("..", Path(name).parts)
+                if name.endswith(".py"):
+                    compile(content, name, "exec")
+        for case in grading["cases"]:
+            self.assertTrue(case["expected"])
+        self.assertNotIn("Use local download.", json.dumps(inputs))
+        self.assertIn("Use local download.", json.dumps(grading))
 
     def test_native_review_does_not_recurse(self):
         review = (
