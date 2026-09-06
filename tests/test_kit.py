@@ -216,7 +216,7 @@ class InstallerTests(unittest.TestCase):
             self.assertEqual(set(remaining), {"PreToolUse", "SessionStart"})
             self.assertNotIn(kit.HOOKS_START, config_path.read_text())
 
-    def test_plan_mode_prompt_selects_normal_mode(self):
+    def test_plan_prompt_preserves_plugin_mode_and_history(self):
         with tempfile.TemporaryDirectory() as temp:
             paths = self.paths(Path(temp))
             script = paths.install_root / "hooks" / "session_start.py"
@@ -238,12 +238,30 @@ class InstallerTests(unittest.TestCase):
 
             self.assertEqual(
                 run({"hook_event_name": "UserPromptSubmit", "permission_mode": "plan"}),
-                "normal mode\nUse plan-history before planning. Read and reconcile all applicable Plan history records.\n",
+                "Use plan-history before planning. Read and reconcile all applicable Plan history records.\n",
             )
             self.assertEqual(
                 run({"hook_event_name": "UserPromptSubmit", "permission_mode": "default"}),
                 "",
             )
+
+            history = PlanHistoryHookTests()
+            for mode in ("plan", "default"):
+                for prompt in ("@ponytail full", "@ponytail off"):
+                    with self.subTest(mode=mode, prompt=prompt):
+                        root = Path(temp) / (mode + prompt.replace(" ", "-"))
+                        root.mkdir()
+                        GitFixture(root).commit("docs/feature.md", "# Feature\n")
+                        event, message = history.capture_event(root, "UserPromptSubmit")
+                        event.update(permission_mode=mode, prompt=prompt)
+                        output = run(event)
+                        self.assertEqual(
+                            output,
+                            "Use plan-history before planning. Read and reconcile all applicable Plan history records.\n"
+                            if mode == "plan" else "",
+                        )
+                        record, = (root / ".agent/plan-history").glob("*.md")
+                        self.assertEqual(record.read_bytes(), message.encode())
 
     def test_reinstall_removes_duplicate_managed_hooks(self):
         with tempfile.TemporaryDirectory() as temp:
@@ -2898,7 +2916,7 @@ class IntegrationTests(unittest.TestCase):
         self.assertIn("one signal has multiple causes", composition)
         self.assertIn("Do not test every event permutation", composition)
 
-    def test_implementation_modes_are_phase_scoped(self):
+    def test_ponytail_modes_have_only_upstream_owner(self):
         root = ROOT / "assets" / "skills"
         owner = (
             root
@@ -2913,13 +2931,10 @@ class IntegrationTests(unittest.TestCase):
         review = (root / "adversarial-review" / "SKILL.md").read_text()
 
         self.assertIn("cpk-rule-owner: implementation-modes", owner)
-        self.assertIn("Keep normal mode active through accepted test scope", owner)
-        self.assertIn("requirements, planning, research, Scenario Proof", owner)
-        self.assertIn("test code, production code, or an accepted review correction", owner)
-        self.assertIn("explicit user mode selection overrides", owner)
-        self.assertIn("without, disable, or exclude Ponytail", owner)
-        self.assertIn("Return to normal mode before each read-only review pass", owner)
-        self.assertIn("managed prompt hook selects normal mode", owner)
+        self.assertIn("Leave Ponytail modes to the upstream plugin and user selections", owner)
+        self.assertIn("Fix each required behavior, oracle, and planned runnable check before implementation", owner)
+        self.assertNotIn("normal mode", owner)
+        self.assertNotIn("Ponytail full", owner)
         self.assertIn("Use xhigh reasoning for each fresh read-only planning challenger", owner)
         self.assertIn("main thread's configured reasoning effort for implementation", owner)
         self.assertIn("accepted correction", owner)
@@ -2929,7 +2944,7 @@ class IntegrationTests(unittest.TestCase):
                 content,
             )
         self.assertIn("Give a correction challenger the accepted finding", preflight)
-        self.assertIn("Implementation after accepted test scope", agents)
+        self.assertNotIn("Implementation after accepted test scope", agents)
         self.assertNotIn("Code changes: `ponytail`", agents)
         for route in (delivery, preflight, research, review):
             self.assertIn("implementation-modes.md", route)

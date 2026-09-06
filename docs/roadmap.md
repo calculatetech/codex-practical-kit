@@ -13,7 +13,7 @@ Status legend:
 
 ## Active
 
-No task is active.
+- 🎯 **CPK-055 — Install the official Ponytail plugin.** Preserve upstream skills, hooks, modes, and user settings through native Codex installation. Remove toolkit mode overrides and document complete component removal.
 
 ## Planned next
 

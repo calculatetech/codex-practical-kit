@@ -65,7 +65,7 @@ If a repository needs an override, keep only the project-specific rule in the ne
 
 Keep a repository `.agent/PLANS.md` only when the project needs a different ExecPlan contract. You must maintain that file manually.
 
-Prompt submission selects normal mode before Plan-mode prompts. Managed hooks save a completed Plan before the next prompt continues and at session lifecycle boundaries.
+Prompt submission adds a Plan history reminder to Plan-mode prompts. Managed hooks save a completed Plan before the next prompt continues and at session lifecycle boundaries.
 
 The edit hooks update `<primary-checkout>/.codex/roadmap-view.md` after an agent changes `docs/roadmap.md`. Keep this generated file open to follow worktree progress. Edit only `docs/roadmap.md`.
 

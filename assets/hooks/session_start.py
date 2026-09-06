@@ -383,7 +383,6 @@ elif event.get("hook_event_name") == "UserPromptSubmit":
     if warnings:
         context.append("Codex Practical Kit: " + "; ".join(warnings))
     if event.get("permission_mode") == "plan":
-        context.append("normal mode")
         context.append("Use plan-history before planning. Read and reconcile all applicable Plan history records.")
     if context:
         print("\n".join(context))
