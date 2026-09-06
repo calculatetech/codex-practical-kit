@@ -61,9 +61,12 @@ class InstallerTests(unittest.TestCase):
             return_value=("/usr/bin/uv", "/usr/bin/repowise"),
         )
         self.runtime.start()
+        self.ponytail = mock.patch.object(kit, "ponytail_status", return_value=(True, {"installed": True}))
+        self.ponytail.start()
 
     def tearDown(self):
         self.runtime.stop()
+        self.ponytail.stop()
 
     def test_run_decodes_utf8_subprocess_output(self):
         result = kit.run(
@@ -1553,7 +1556,9 @@ class RepoWiseRuntimeTests(unittest.TestCase):
                 kit.shutil, "which", return_value=None
             ), mock.patch.object(
                 kit, "stage_upstream_skills", side_effect=fake_stage
-            ), mock.patch.object(kit, "run", side_effect=fake_run):
+            ), mock.patch.object(kit, "run", side_effect=fake_run), mock.patch.object(
+                kit, "ponytail_status", return_value=(True, {"installed": True})
+            ):
                 kit.install_core(Namespace(), paths)
 
             manifest = json.loads((paths.install_root / "install-manifest.json").read_text())
@@ -3450,13 +3455,13 @@ class IntegrationTests(unittest.TestCase):
 
         readme = (ROOT / "README.md").read_text()
         self.assertIn(
-            "On macOS or Linux, run:\n\n```bash\n"
-            "python3 kit.py remove-repo <repository>\n```",
+            "On macOS or Linux:\n\n```bash\n"
+            "python3 kit.py remove-repo /path/to/repository --delete-index\n```",
             readme,
         )
         self.assertIn(
-            "On Windows, run:\n\n```powershell\n"
-            "python kit.py remove-repo <repository>\n```",
+            "On Windows:\n\n```powershell\n"
+            "python kit.py remove-repo C:\\path\\to\\repository --delete-index\n```",
             readme,
         )
 

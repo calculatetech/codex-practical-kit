@@ -25,6 +25,13 @@
     }
   },
   "runtime_tools": {
+    "ponytail": {
+      "install_mode": "native Codex plugin; install when absent; updates and removal owned by Codex",
+      "license": "MIT",
+      "marketplace": "DietrichGebert/ponytail",
+      "plugin_id": "ponytail@ponytail",
+      "repository": "https://github.com/DietrichGebert/ponytail"
+    },
     "repowise": {
       "install_mode": "uv tool install; not bundled",
       "license": "AGPL-3.0-or-later",
@@ -66,23 +73,6 @@
       ],
       "license": "MIT",
       "repository": "https://github.com/UditAkhourii/neuroarxiv"
-    },
-    "ponytail": {
-      "commit": "2ed6c52c9d7e5e56942508591085fd45dea277d3",
-      "files": [
-        {
-          "destination": "ponytail/SKILL.md",
-          "git_blob_sha1": "02c0712c86277d49d18a77da3a2b825657bf02d1",
-          "path": "skills/ponytail/SKILL.md"
-        },
-        {
-          "destination": "ponytail/LICENSE",
-          "git_blob_sha1": "715d483338cea4365f0d91a27799cf61226d6bcf",
-          "path": "LICENSE"
-        }
-      ],
-      "license": "MIT",
-      "repository": "https://github.com/DietrichGebert/ponytail"
     },
     "simple-english": {
       "commit": "59bf6702197a5aadc96d197ea17f290d8d50dcd3",

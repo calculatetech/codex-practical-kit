@@ -29,6 +29,21 @@ The task uses branch `task/cpk-055-native-ponytail` from `main` at `c5fe5779d6b5
 
 The accepted source is [.agent/plan-history/plan-summary.20260906T145108959420Z.4ca59f1efb35d2fec6091bc88b5848bb2e50226576f0a493f9ec85ed1838c57b.md](../../.agent/plan-history/plan-summary.20260906T145108959420Z.4ca59f1efb35d2fec6091bc88b5848bb2e50226576f0a493f9ec85ed1838c57b.md). Its decisions are carried. The user's explicit plugin-only mode choice supersedes phase-based mode selection in [CPK-028](cpk-028-phase-scoped-minimalism.md) and [CPK-029](cpk-029-plan-mode-hook.md). Their other requirements remain carried; their historical contents remain unchanged. Earlier Plan records retain their unrelated decisions, including installation ownership and central Plan capture.
 
+Record: [.agent/plan-history/plan-summary.20260824T164719361941Z.f1479c9effab9071b8ccaa86dce1dbee407b79647c6bb7d542aea8c75caae32b.md](../../.agent/plan-history/plan-summary.20260824T164719361941Z.f1479c9effab9071b8ccaa86dce1dbee407b79647c6bb7d542aea8c75caae32b.md)
+
+Status: superseded
+
+Scope: its retained CPK-028 authority for automatic Ponytail mode selection only.
+
+Reason: the user explicitly selected plugin-only mode ownership in the accepted CPK-055 Plan.
+
+Replacement: the upstream plugin and user selections control modes. All unrelated retained decisions remain carried.
+
+## Surprises & Discoveries
+
+
+Native Codex refuses plugin inspection when the selected `CODEX_HOME` directory does not exist. Fresh installation creates that directory before inspection. Existing installation files remain unchanged during prerequisite checks.
+
 ## Product boundary
 
 
@@ -59,12 +74,12 @@ The preflight challenger identified two additional test obligations within B4 an
 
 CP1 removes the managed Ponytail route, automatic mode instructions, and prompt-hook `normal mode` output. Retain test-scope requirements, challenger reasoning, Plan capture, planning reminders, and other hooks. Update the installed-hook and rule-owner tests in `tests/test_kit.py`. Correct the README's prompt-hook statement. This checkpoint's owner is the managed hook and lifecycle reference. Its review and local commit cover only this boundary and its specification.
 
-CP2 changes `kit.py` to inspect `codex plugin marketplace list --json` and `codex plugin list --marketplace ponytail --json`. Pass the selected Codex home to every native command. Add the official `DietrichGebert/ponytail` marketplace and `ponytail@ponytail` plugin only when absent. Validate prerequisites and ownership before mutation. Remove Ponytail from copied upstream skills and add its legacy name to obsolete skills. Update Doctor, the lock descriptor, README, CODEX-INSTALL-PROMPT.md, THIRD_PARTY.md, and checksums. This checkpoint depends on CP1 and covers native lifecycle, migration, and cleanup documentation.
+CP2 changes `kit.py` to inspect `codex plugin marketplace list --json` and `codex plugin list --marketplace ponytail --json`. Pass the selected Codex home to every native command. Add the official `DietrichGebert/ponytail` marketplace and `ponytail@ponytail` plugin only when absent. Validate prerequisites and ownership before mutation. Remove Ponytail from copied upstream skills and add its legacy name to obsolete skills. Put the native integration checks in `tests/test_ponytail.py`. Update Doctor, the lock descriptor, README, CODEX-INSTALL-PROMPT.md, THIRD_PARTY.md, and checksums. This checkpoint depends on CP1 and covers native lifecycle, migration, and cleanup documentation.
 
 ## Concrete steps and acceptance
 
 
-From the repository root, run focused checks with `TMPDIR=/var/tmp python3 -m unittest discover -s tests -p test_kit.py -k <test-name>`. CP1 must preserve the Plan reminder and emit no mode choice. CP2 must meet each row's terminal oracle through the actual toolkit path. Run `TMPDIR=/var/tmp ./run-tests.sh` for the complete suite. `/var/tmp` avoids an unrelated invalid `/tmp/.git` marker on this host.
+From the repository root, run focused checks with `TMPDIR=/var/tmp python3 -m unittest discover -s tests -p 'test_*.py' -k <test-name>`. CP1 must preserve the Plan reminder and emit no mode choice. CP2 must meet each row's terminal oracle through the actual toolkit path. Run `TMPDIR=/var/tmp ./run-tests.sh` for the complete suite. `/var/tmp` avoids an unrelated invalid `/tmp/.git` marker on this host.
 
 Use an isolated Codex home for a real native installation smoke check. Confirm all six skill files and three hook events from its native catalog and package. Exercise full, lite, ultra, off, status, persistent defaults, and lifecycle hooks with isolated upstream state. Preserve upstream package bytes. Complete checkpoint trace verification and native reviews, followed by the final complete native review. Then run `./install.sh` and `./doctor.sh` on the host; Doctor must report `Result: ready`.
 

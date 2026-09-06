@@ -22,7 +22,9 @@ Review the changes in `~/.codex/AGENTS.md`, `~/.codex/PLANS.md`, and `~/.codex/c
 
 Confirm that these skills are installed: `delivery-lifecycle`, `neuroarxiv`, `plan-history`, `publication`, `repository-knowledge`, `roadmap-maintainer`, and `toolkit-maintainer`. Confirm that `codex-practical-kit-rules` and `task-brief` are absent. Confirm that the RepoWise MCP table has `default_tools_approval_mode = "approve"`, `required = true`, and `startup_timeout_sec = 1800`.
 
-Do not trust the Codex hook on my behalf. Tell me to open `/hooks` in a new Codex session. If version 0.2.0 was active, do not resume that old session. That session can retain the stale continuation that version 0.2.1 corrected.
+Verify that Node.js and native Codex plugin commands work before changing an existing installation. Install the official `ponytail@ponytail` plugin only when absent. Preserve its existing version, settings, and enabled or disabled state. Use the selected Codex home for native commands. Reject a conflicting marketplace source or unowned standalone Ponytail skill. Remove the old copied skill only when the toolkit manifest owns it and native installation succeeds. Confirm that the plugin provides all six Ponytail skills and its lifecycle hooks. Do not change Ponytail modes. Explain the Codex `@ponytail` skill controls and link to README's complete-removal steps.
+
+Do not trust toolkit or Ponytail hooks on my behalf. Tell me to open `/hooks` in a new Codex session. If version 0.2.0 was active, do not resume that old session. That session can retain the stale continuation that version 0.2.1 corrected.
 
 The installer must reuse `uv` when it is present. If `uv` is absent, install the pinned version. If RepoWise is absent, install the pinned version as a persistent uv tool. If I am in a Git repository on Windows, run `pwsh -File .\setup-repo.ps1 .`. On macOS or Linux, run `./setup-repo.sh .`. Do not enable model-written RepoWise prose unless I explicitly say yes. Confirm that `.git/hooks/post-commit` contains the managed RepoWise block.
 

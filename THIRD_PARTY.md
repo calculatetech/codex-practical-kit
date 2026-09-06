@@ -5,8 +5,9 @@
 ### Ponytail
 
 - Source: https://github.com/DietrichGebert/ponytail
-- Pinned commit: `2ed6c52c9d7e5e56942508591085fd45dea277d3`
-- Installed files: `skills/ponytail/SKILL.md`, `LICENSE`
+- Installation: official native Codex plugin `ponytail@ponytail` from the `DietrichGebert/ponytail` marketplace
+- Installed content: all six skills, lifecycle hooks, scripts, and upstream assets
+- Version policy: install when absent; preserve existing versions and settings; Codex owns updates and removal
 - License: MIT
 
 ### SimpleEnglish

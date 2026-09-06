@@ -70,8 +70,8 @@ CUSTOM_SKILLS = (
     "toolkit-maintainer",
     "plan-history",
 )
-OBSOLETE_SKILLS = ("task-brief", "codex-practical-kit-rules")
-UPSTREAM_SKILLS = ("ponytail", "simple-english", "neuroarxiv")
+OBSOLETE_SKILLS = ("task-brief", "codex-practical-kit-rules", "ponytail")
+UPSTREAM_SKILLS = ("simple-english", "neuroarxiv")
 ALL_SKILLS = (*UPSTREAM_SKILLS, *CUSTOM_SKILLS)
 
 
@@ -491,7 +491,64 @@ def manifest_path(paths: InstallPaths) -> Path:
     return paths.install_root / "install-manifest.json"
 
 
+def codex_plugin(paths: InstallPaths, *args: str) -> dict[str, Any]:
+    result = run(
+        ["codex", "plugin", *args, "--json"],
+        env={**os.environ, "CODEX_HOME": str(paths.codex_home)},
+    )
+    try:
+        data = json.loads(result.stdout)
+    except json.JSONDecodeError as exc:
+        raise KitError("Codex plugin command did not return valid JSON.") from exc
+    if not isinstance(data, dict):
+        raise KitError("Codex plugin command did not return a JSON object.")
+    return data
+
+
+def official_ponytail_source(source: str) -> bool:
+    return source.rstrip("/").removesuffix(".git").lower() in {
+        "dietrichgebert/ponytail",
+        "https://github.com/dietrichgebert/ponytail",
+        "git@github.com:dietrichgebert/ponytail",
+        "ssh://git@github.com/dietrichgebert/ponytail",
+    }
+
+
+def ponytail_status(paths: InstallPaths) -> tuple[bool, dict[str, Any] | None]:
+    try:
+        run(["node", "--version"], timeout=20)
+    except KitError as exc:
+        raise KitError(f"Ponytail requires Node.js on PATH. {exc}") from exc
+    try:
+        marketplaces = codex_plugin(paths, "marketplace", "list").get("marketplaces")
+        installed = codex_plugin(paths, "list", "--marketplace", "ponytail").get("installed")
+    except KitError as exc:
+        raise KitError(f"Ponytail requires working native Codex plugin commands. {exc}") from exc
+    if not isinstance(marketplaces, list) or not isinstance(installed, list):
+        raise KitError("Codex plugin listings are missing marketplace or installation records.")
+    marketplace_found = False
+    plugin = None
+    for item in marketplaces + installed:
+        if not isinstance(item, dict):
+            raise KitError("Codex plugin listing contains an invalid record.")
+        if item.get("name") != "ponytail":
+            continue
+        source = item.get("marketplaceSource", {})
+        if not isinstance(source, dict) or source.get("sourceType") != "git" or not official_ponytail_source(str(source.get("source", ""))):
+            raise KitError("Ponytail marketplace conflicts with the official DietrichGebert/ponytail source.")
+        if item in marketplaces:
+            marketplace_found = True
+        elif item.get("pluginId") == "ponytail@ponytail" and item.get("installed") is True:
+            package = item.get("source", {})
+            if not isinstance(package, dict) or package.get("source") != "git" or not official_ponytail_source(str(package.get("url", ""))):
+                raise KitError("Installed Ponytail plugin conflicts with the official DietrichGebert/ponytail source.")
+            plugin = item
+    return marketplace_found, plugin
+
+
 def install_core(args: argparse.Namespace, paths: InstallPaths) -> None:
+    paths.codex_home.mkdir(parents=True, exist_ok=True)
+    marketplace_found, ponytail = ponytail_status(paths)
     paths.install_root.parent.mkdir(parents=True, exist_ok=True)
     paths.install_root.mkdir(parents=True, exist_ok=True)
     previous_manifest = json_load(manifest_path(paths), {})
@@ -511,6 +568,9 @@ def install_core(args: argparse.Namespace, paths: InstallPaths) -> None:
         for item in previous_records
         if isinstance(item, dict) and item.get("name") in OBSOLETE_SKILLS
     }
+    legacy_ponytail = paths.skills_home / "ponytail"
+    if (legacy_ponytail.exists() or legacy_ponytail.is_symlink()) and "ponytail" not in obsolete_names:
+        raise KitError(f"This Ponytail skill is not owned by this kit: {legacy_ponytail}")
     plan = plans_path(paths)
     plan_owned = (
         isinstance(previous_manifest, dict)
@@ -535,6 +595,10 @@ def install_core(args: argparse.Namespace, paths: InstallPaths) -> None:
         if plan.exists() and not plan_owned:
             raise KitError(f"This plans file already exists and is not owned by this kit: {plan}")
         validate_global_repowise_config(paths)
+        if ponytail is None:
+            if not marketplace_found:
+                codex_plugin(paths, "marketplace", "add", "DietrichGebert/ponytail")
+            codex_plugin(paths, "add", "ponytail@ponytail")
         uv, repowise = ensure_repowise_runtime(paths)
         install_runtime(paths)
 
@@ -984,6 +1048,15 @@ def check(condition: bool, label: str, detail: str = "") -> bool:
 
 def doctor(args: argparse.Namespace, paths: InstallPaths) -> int:
     ok = True
+    try:
+        _, ponytail = ponytail_status(paths)
+        detail = (
+            f"{ponytail.get('version', 'unknown version')} ({'enabled' if ponytail.get('enabled') else 'disabled by user'})"
+            if ponytail else "not installed; run the toolkit installer"
+        )
+        ok &= check(ponytail is not None, "Ponytail native plugin and Node.js", detail)
+    except KitError as exc:
+        ok &= check(False, "Ponytail native plugin and Node.js", str(exc))
     manifest = json_load(manifest_path(paths), {})
     ok &= check(isinstance(manifest, dict) and bool(manifest), "core install manifest", str(manifest_path(paths)))
     installed_version = manifest.get("kit_version") if isinstance(manifest, dict) else None
@@ -1051,7 +1124,10 @@ def doctor(args: argparse.Namespace, paths: InstallPaths) -> int:
     codex_version = command_version(["codex", "--version"])
     ok &= check(bool(codex_version), "Codex CLI", codex_version or "not found")
     if codex_version:
-        login = run(["codex", "login", "status"], check=False, timeout=30)
+        login = run(
+            ["codex", "login", "status"], check=False, timeout=30,
+            env={**os.environ, "CODEX_HOME": str(paths.codex_home)},
+        )
         login_text = (login.stdout or login.stderr).strip().replace("\n", " ")
         ok &= check(login.returncode == 0, "Codex login", login_text[:240])
 
@@ -1163,7 +1239,8 @@ def main(argv: list[str] | None = None) -> int:
             print(f"Global instructions: {paths.codex_home / 'AGENTS.md'}")
             print(f"Global ExecPlan rules: {plans_path(paths)}")
             print(f"Hooks: {paths.codex_home / 'config.toml'}")
-            print("Open a new Codex session and use `/hooks` to review and trust the Session Start hook.")
+            print("Ponytail: native Codex plugin; existing versions and settings preserved.")
+            print("Open a new Codex session and use `/hooks` to review and trust toolkit and Ponytail hooks.")
             if args.repo:
                 repo_args = argparse.Namespace(repo=args.repo, prose=args.repowise_prose)
                 setup_repo(repo_args, paths)
