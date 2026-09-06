@@ -36,6 +36,10 @@ Hold unrelated factors constant when practical and split a row when one contrast
 
 Follow the production path to the required terminal oracle. A runnable check is insufficient when the named requirement can be false while the check passes.
 
+Establish external compatibility with an input oracle independent of the candidate. Use an authoritative provider contract or retained provider input. A candidate's request generator or successful mock is not independent evidence by itself.
+
+Label synthetic examples and state the accepted local requirement they prove. They do not establish observed provider behavior. Deterministic external fakes remain valid when their accepted inputs have this independent basis. If required provider semantics lack that basis, mark them unknown. Apply [Research first](../../research-first/SKILL.md) for missing external-contract evidence.
+
 Before implementation, record the discriminator, contrast, production path, required oracle, and planned check. Before review, run the named check and keep its result in the ignored task-result record. An aggregate suite result is supporting evidence only.
 
 ## Trace closure

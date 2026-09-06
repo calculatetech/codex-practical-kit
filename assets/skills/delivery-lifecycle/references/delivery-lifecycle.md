@@ -2,7 +2,7 @@
 <!-- cpk-rule-guard: Finalize substantive documentation before review. -->
 <!-- cpk-rule-guard: Keep detailed results in one ignored `.agent/test-results/` file per task. -->
 <!-- cpk-rule-guard: Freeze every tracked task record before the task commit, CI, push, pull request, merge, or publication. -->
-<!-- cpk-rule-guard: Invoke Design Preflight before implementation or an accepted review correction when its trigger matches, even outside Plan Mode. -->
+<!-- cpk-rule-guard: Invoke Design Preflight before implementation or an accepted correction when its trigger matches, even outside Plan Mode. -->
 <!-- cpk-rule-guard: The roadmap is the only tracked lifecycle-state record. -->
 <!-- cpk-rule-guard: A tooling failure outside task scope permits read-only diagnosis, not repository writes without explicit user authority. -->
 
@@ -12,7 +12,7 @@ Do not perform unrelated refactors, dependency updates, formatting, or fixes.
 
 Task scope includes the current repository and each repository that the user explicitly names. A tooling failure outside task scope permits read-only diagnosis, not repository writes without explicit user authority. Report a portable diagnostic and stop when the in-scope task cannot continue.
 
-Invoke Design Preflight before implementation or an accepted review correction when its trigger matches, even outside Plan Mode.
+Invoke Design Preflight before implementation or an accepted correction when its trigger matches, even outside Plan Mode.
 
 Validate every implementation with relevant tests and linting. Add one runnable check for non-trivial logic.
 
@@ -43,6 +43,11 @@ After the freeze, record delivery progress and results only in Git, GitHub, the 
 A substantive correction reopens the candidate. Finalize its applicable documentation, validation, review, and closure before the next freeze.
 
 End the final response with one `Review:` status and one `Docs:` status from the applicable skills.
+
+## Corrections after failed checks
+
+<!-- cpk-rule-route-only: adversarial-review -->
+[Correction authority](../../adversarial-review/SKILL.md)
 
 ## Design gate
 

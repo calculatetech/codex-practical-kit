@@ -13,7 +13,7 @@ Record one object for every candidate finding in source order.
 
 ```json
 {
-  "source": "native-local | github-codex | human | ci | audit | user",
+  "source": "native-local | local-check | github-codex | human | ci | audit | user",
   "source_id": "Stable source label",
   "finding": {
     "title": "Concrete observation",

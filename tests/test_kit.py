@@ -2901,7 +2901,7 @@ class IntegrationTests(unittest.TestCase):
         repository = (root / "repository-knowledge" / "SKILL.md").read_text()
 
         invocation = (
-            "Invoke Design Preflight before implementation or an accepted review correction "
+            "Invoke Design Preflight before implementation or an accepted correction "
             "when its trigger matches, even outside Plan Mode."
         )
         self.assertIn(invocation, delivery)
@@ -2911,6 +2911,9 @@ class IntegrationTests(unittest.TestCase):
         self.assertIn("Plan Mode and an explicit skill request are not prerequisites", preflight)
         self.assertIn("Apply the same entry gate to an accepted correction", preflight)
         self.assertIn("The small-change exception still applies", preflight)
+        self.assertIn("The exemption omits only the challenger.", preflight)
+        self.assertIn("../adversarial-review/SKILL.md#validate-findings", preflight)
+        self.assertIn("waives no applicable card, boundary inventory, proof, documentation, or review obligation", preflight)
         self.assertIn(
             "When the strict-simplification exemption above does not apply, an accepted correction",
             preflight,
@@ -2928,6 +2931,9 @@ class IntegrationTests(unittest.TestCase):
         self.assertIn("smallest counterexample ordering", composition)
         self.assertIn("one signal has multiple causes", composition)
         self.assertIn("Do not test every event permutation", composition)
+        self.assertIn("include that decision authority in the oracle", composition)
+        self.assertIn("initial request and each later collection or continuation", composition)
+        self.assertIn("A helper name, traversed hop, or correct final records alone do not prove decision authority", composition)
 
     def test_ponytail_modes_have_only_upstream_owner(self):
         root = ROOT / "assets" / "skills"
@@ -3133,6 +3139,13 @@ class IntegrationTests(unittest.TestCase):
             owner,
         )
         self.assertIn("Use their deterministic checks and native review.", owner)
+        self.assertIn("input oracle independent of the candidate", owner)
+        self.assertIn("authoritative provider contract or retained provider input", owner)
+        self.assertIn("request generator or successful mock is not independent evidence by itself", owner)
+        self.assertIn("Label synthetic examples and state the accepted local requirement they prove", owner)
+        self.assertIn("Deterministic external fakes remain valid", owner)
+        self.assertIn("If required provider semantics lack that basis, mark them unknown", owner)
+        self.assertIn("../../research-first/SKILL.md", owner)
         self.assertIn(
             "For an eligible executable production-code candidate with a boundary inventory, "
             "run trace closure immediately before each native review.",
@@ -3297,6 +3310,9 @@ class IntegrationTests(unittest.TestCase):
         root = ROOT / "assets" / "skills" / "adversarial-review"
         review = (root / "SKILL.md").read_text()
         finding = (root / "references" / "finding-format.md").read_text()
+        delivery = (
+            ROOT / "assets" / "skills" / "delivery-lifecycle" / "references" / "delivery-lifecycle.md"
+        ).read_text()
         scope = (
             ROOT
             / "assets"
@@ -3308,6 +3324,14 @@ class IntegrationTests(unittest.TestCase):
 
         for source in ("local", "PR", "human", "CI", "audit", "user-supplied"):
             self.assertIn(source, review)
+        self.assertIn("cpk-rule-route-only: adversarial-review", delivery)
+        self.assertIn("[Correction authority](../../adversarial-review/SKILL.md)", delivery)
+        self.assertIn("Apply this gate before an unplanned correction for a failed local test or build", review)
+        self.assertIn("Expected test failures within an accepted implementation plan retain that plan's authority", review)
+        self.assertIn("Apply this gate to proposed corrections outside that accepted change", review)
+        self.assertIn("Before the candidate's first native review, retain its planned review mode", review)
+        self.assertIn("After native discovery, use a native delta review", review)
+        self.assertIn('"source": "native-local | local-check | github-codex | human | ci | audit | user"', finding)
         self.assertLess(review.index("Classify the accepted end result"), review.index("Validate severity"))
         self.assertIn("Raw reviewer severity does not authorize action.", review)
         self.assertIn("The accepted result remains correct. Exclude and report", review)

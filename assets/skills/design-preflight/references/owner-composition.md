@@ -18,6 +18,8 @@ Add one composed runnable check that reaches each supported reopening without an
 
 One named check invokes the real production entry point. Each proof case follows one causal path through every in-scope hop to the terminal oracle.
 
+When a requirement assigns a decision to an owner, include that decision authority in the oracle. For request selection, prove who selects the initial request and each later collection or continuation. Use source and causal evidence from the real owners. A helper name, traversed hop, or correct final records alone do not prove decision authority.
+
 A named check can be parameterized. Independent component calls in one check do not form a causal production path.
 
 A proof seam can replace only an opaque external system. It cannot replace an in-scope production hop.

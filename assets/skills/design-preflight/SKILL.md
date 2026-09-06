@@ -12,6 +12,7 @@ license: MIT
 <!-- cpk-rule-owner: design-preflight -->
 <!-- cpk-rule-guard: Use the same fresh read-only challenger for an unanchored derivation and an informed adversarial challenge. -->
 <!-- cpk-rule-guard: Skip the challenger when a correction is a strict simplification that adds no broader behavior. -->
+<!-- cpk-rule-guard: The exemption omits only the challenger. -->
 <!-- cpk-rule-guard: Bound the challenger source packet by the accepted task outcome. -->
 
 # Design preflight
@@ -85,6 +86,8 @@ Every non-trivial runtime preflight requires one task ExecPlan. Merge the accept
 ## Two-phase challenge
 
 Skip the challenger when a correction is a strict simplification that adds no broader behavior. The correction must reject or delete the starting design, use an existing owner or upstream or native capability, and add no interface, persistent state, dependency, fallback, or supported behavior. One direct runnable check must prove the retained result.
+
+For a proposed correction, apply [correction authority](../adversarial-review/SKILL.md#validate-findings) before this exemption. The exemption omits only the challenger. It grants no implementation authority and waives no applicable card, boundary inventory, proof, documentation, or review obligation.
 
 The strict-simplification exemption above takes precedence over every challenger requirement below.
 
