@@ -97,6 +97,8 @@ CP2 adds the remaining collaboration guidance to Delivery Lifecycle, Coordinatio
 
 ## Validation and delivery
 
+Publication version: `0.23.9`. This patch includes the CPK-055 installation fix and the CPK-056 and CPK-057 guidance changes.
+
 From the repository root, run focused checks before each checkpoint review:
 
     python3 -m unittest discover -s tests -p test_kit.py -k review
