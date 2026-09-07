@@ -1,4 +1,5 @@
 <!-- cpk-rule-owner: delivery-lifecycle -->
+<!-- cpk-rule-guard: The implementation owner completes validation before review. -->
 <!-- cpk-rule-guard: Finalize substantive documentation before review. -->
 <!-- cpk-rule-guard: Keep detailed results in one ignored `.agent/test-results/` file per task. -->
 <!-- cpk-rule-guard: Freeze every tracked task record before the task commit, CI, push, pull request, merge, or publication. -->
@@ -14,7 +15,9 @@ Task scope includes the current repository and each repository that the user exp
 
 Invoke Design Preflight before implementation or an accepted correction when its trigger matches, even outside Plan Mode.
 
-Validate every implementation with relevant tests and linting. Add one runnable check for non-trivial logic.
+The implementation owner completes validation before review. Run the checks appropriate to the change and every required repository check. Add one meaningful runnable check for non-trivial logic. Do not add tests that merely mirror a reversible, low-impact edit.
+
+After checks pass, repeat or broaden them only for changed code, failures, or a concrete unresolved concern. Perform that validation outside review. Reading this lifecycle during review does not assign implementation work to the reviewer.
 
 Keep detailed results in one ignored `.agent/test-results/` file per task. Never stage that file.
 

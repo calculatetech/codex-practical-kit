@@ -3291,6 +3291,20 @@ class IntegrationTests(unittest.TestCase):
         self.assertIn("Keep the roadmap task Active", review)
         self.assertNotIn("Keep the task and roadmap Active", review)
         self.assertIn("Previous reviewed candidate", packet)
+        execution = review.split("## Reviewer execution\n", 1)[1].split("\n## ", 1)[0]
+        self.assertIn("Reviewers must not execute tests or delegate test execution", execution)
+        self.assertIn("suites, focused tests, and reproduction scripts", execution)
+        self.assertIn("Read source, test bodies, and available recorded results", execution)
+        self.assertIn("Report source-backed defects even when prior checks passed", execution)
+        self.assertIn("cannot assume implementation authority to run checks", execution)
+        self.assertIn("include the first paragraph of this section", execution)
+        self.assertIn("The implementation owner completes validation before review", lifecycle)
+        self.assertIn("every required repository check", lifecycle)
+        self.assertIn("one meaningful runnable check for non-trivial logic", lifecycle)
+        self.assertIn("merely mirror a reversible, low-impact edit", lifecycle)
+        self.assertIn("only for changed code, failures, or a concrete unresolved concern", lifecycle)
+        self.assertIn("Perform that validation outside review", lifecycle)
+        self.assertIn("does not assign implementation work to the reviewer", lifecycle)
         self.assertIn("Stable subtask identifier", packet)
         self.assertIn("Previous accepted checkpoint", packet)
         self.assertIn("Pre-stage tracked-change classification", packet)
@@ -3454,6 +3468,10 @@ class IntegrationTests(unittest.TestCase):
         self.assertIn("no retained applicable finding", publication)
         self.assertIn("An excluded finding does not block readiness", publication)
         self.assertIn("Post `@codex review` again for the new head", publication)
+        first_request = procedure.split("Post `@codex review` for that exact pull-request head.", 1)[1].split("\n\n", 1)[0]
+        repeat_request = procedure.split("Post `@codex review` again for the new head.", 1)[1].split("\n\n", 1)[0]
+        self.assertIn("../../adversarial-review/SKILL.md#reviewer-execution", first_request)
+        self.assertIn("Include the same canonical hosted request instructions", repeat_request)
         self.assertIn("Apply Plan History handoff from the publishing worktree", publication)
         self.assertLess(
             procedure.rindex("Apply Plan History handoff from the publishing worktree"),

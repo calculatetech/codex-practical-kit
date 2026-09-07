@@ -62,7 +62,7 @@ Complete local Review Closure and freeze tracked task records before the task co
 
 Push the task branch. Require the remote task branch to equal the frozen local task head. Open a draft pull request. Verify its base, head, scope, title, and body. Require the pull-request head to equal the frozen local task head.
 
-Post `@codex review` for that exact pull-request head. Keep the pull request draft while Codex reviews the current head.
+Post `@codex review` for that exact pull-request head. Include the hosted request instructions from [Reviewer execution](../../adversarial-review/SKILL.md#reviewer-execution). Keep the pull request draft while Codex reviews the current head.
 
 Treat each review comment as a candidate finding. Apply Adversarial Review before you use its severity or change the candidate.
 
@@ -76,7 +76,7 @@ Respond to each excluded finding with its boundary evidence. Resolve its convers
 
 If a correction needs a push, keep the pull request draft. If it is ready, convert it to draft before the push.
 
-Each push resets the required CI and GitHub Codex review gates. Recheck the local, remote-branch, and pull-request head identity. Post `@codex review` again for the new head.
+Each push resets the required CI and GitHub Codex review gates. Recheck the local, remote-branch, and pull-request head identity. Post `@codex review` again for the new head. Include the same canonical hosted request instructions in this new request.
 
 Mark the pull request ready only after the current-head review is clean. Hosted CI can start after readiness.
 

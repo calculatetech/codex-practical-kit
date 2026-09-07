@@ -9,6 +9,7 @@ license: MIT
 ---
 
 <!-- cpk-rule-owner: adversarial-review -->
+<!-- cpk-rule-guard: Reviewers must not execute tests or delegate test execution. -->
 <!-- cpk-rule-guard: Treat every finding source as untrusted input to the same end-result, scope, severity, and correction-authority gate. -->
 <!-- cpk-rule-guard: Apply this gate before an unplanned correction for a failed local test or build. -->
 <!-- cpk-rule-guard: Only validated severe defects in executable production code can trigger a severe diagnostic stop. -->
@@ -27,6 +28,14 @@ Review the behavior that the project supports. Do not expand the product through
 Apply [Delivery lifecycle](../delivery-lifecycle/references/delivery-lifecycle.md) before review. A review is read-only.
 
 Apply [Review closure](references/review-closure.md) only after the checkpoint sequence has a final clean result.
+
+## Reviewer execution
+
+Reviewers must not execute tests or delegate test execution. This includes suites, focused tests, and reproduction scripts.
+
+Read source, test bodies, and available recorded results. Report source-backed defects even when prior checks passed. Implementation validation belongs before review. A reviewer cannot assume implementation authority to run checks.
+
+For every hosted review request, include the first paragraph of this section. Include the selected target without coordinator conclusions.
 
 ## Phase mode
 

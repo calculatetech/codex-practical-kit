@@ -13,7 +13,7 @@ Status legend:
 
 ## Active
 
-No task is active.
+- 🎯 **CPK-057 — Separate review from testing and complete Astra guidance.** Keep test execution before review and add bounded autonomy, clear communication, and useful delegation to the existing rule owners. [ExecPlan](plans/cpk-057-review-and-astra-guidance.md)
 
 ## Planned next
 

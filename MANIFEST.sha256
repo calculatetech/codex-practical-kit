@@ -16,6 +16,7 @@ a3414533de88c12d4fedfd5c1311c505dc87364674cc8e599a982cacbe1620c6  ./.agent/plan-
 638cd1793106a2558de86307d2d5e6d5cefd1e9b4abf72af3efa4208b2977ffb  ./.agent/plan-history/plan-summary.20260906T145108959420Z.4ca59f1efb35d2fec6091bc88b5848bb2e50226576f0a493f9ec85ed1838c57b.md
 1785f081f04355b1e551186d9ce5194ebaa902a71fffe52436c1d04d99c194f5  ./.agent/plan-history/plan-summary.20260906T161604059175Z.811836c214ecc89cb39c692f4366e4e79e56a698bf0d01445feb86fcd2c725f4.md
 8c4e7fa9c1f9a84d5211c84c41cc20ed6a13a3ebc881bb175f1be6106db1fa85  ./.agent/plan-history/plan-summary.20260906T184718818166Z.101806a6188b911af737dd47187082418727ed7042831dd332d77360d1cb6b93.md
+a4d0bc13747cf250f25fb599b37f90cf519c95a29382f4da544afe9ff8095372  ./.agent/plan-history/plan-summary.20260907T162300226611Z.ddc507f2e3b9b24182cb6abc4eb4782feae98a0c25f8cdc174a2bf8c2c9932a1.md
 d60f352d0db1404c70afb4bb8b2ca3fd1c610572aa40720e8a0b7baa7885418c  ./.gitattributes
 15cefba6945d22a52b5b8ef6dd656fffcb698627b9fb23dacc5c8ec27ad1680d  ./.gitignore
 6d7a25701ba2532525fe556f1a55529ab09af6675522f749afb22609f7f8183e  ./CODEX-INSTALL-PROMPT.md
@@ -26,7 +27,7 @@ e4912f4f8d644555dcd57d5e336a249cf8a9d7f6222b78096d6b403f45a8a215  ./PLAYGROUND.m
 59b191889c8b7d098ddaf6b029f6f12b3ce6590893e1823f4448ad3b90c03fb4  ./assets/AGENTS.block.md
 90edd43aadb411c3e0fbd99593785c20339c8f1c9a52ae8b4b87a96f073875c4  ./assets/hooks/session_start.py
 3027ffa3ef382dcd0c96f6280ba861bb4a9410011e1176d71d7aa7911805821f  ./assets/runtime/repowise_bootstrap.py
-6ed93a7cf580f239fa566de077ffbf83efad3d5d6252fcd64a33be37ec41c382  ./assets/skills/adversarial-review/SKILL.md
+a564a3b00a86f43d38318b76168593bc965b2f1decf67a328d499a054aa35f36  ./assets/skills/adversarial-review/SKILL.md
 78443f93e9ee4861a0d7a110af7e6d5f1e7d736e1459324530eb584c6b08ba58  ./assets/skills/adversarial-review/references/finding-format.md
 6b4f1df93ab8b89b1e1602f59a3322b454406043a10807ebda736f2927faee91  ./assets/skills/adversarial-review/references/review-closure.md
 1fb5a8e70354f6fb00fc39b0f37eaee543455e17980f4e55eb367947fd0e945c  ./assets/skills/adversarial-review/references/review-packet.md
@@ -38,7 +39,7 @@ f98f3661b7b4cfbe6a1b061e075898ae21b65cbb6765abec76b332b03cab2f9b  ./assets/skill
 20fb4b743b3ed14fa58ae1710bf5c621eb1f0b20dad552212221594368fa2d4c  ./assets/skills/delivery-lifecycle/SKILL.md
 5c440ca779141dceb31af7b4c04893f00832977d2d4f2255f320c93625990930  ./assets/skills/delivery-lifecycle/references/coordination.md
 b24f6d4c5d6ba9d3a4ab4215eac302764e8dcb0fe2c6dc76789b3ffe77a8e21f  ./assets/skills/delivery-lifecycle/references/decision-handoffs.md
-dacaeaf6d4e04d30fc90465ee7d036b34faf1695267dbdfd8c7d30059cbb24cf  ./assets/skills/delivery-lifecycle/references/delivery-lifecycle.md
+d15b430127f232cb5546fd36dfa7d203e45e931dcae8d594c2bb93e29c523203  ./assets/skills/delivery-lifecycle/references/delivery-lifecycle.md
 2536a374b63658e5e0bbca17d1a9ed25a41b61eeb539702cc8ee7c6f41bf1a31  ./assets/skills/delivery-lifecycle/references/git-isolation.md
 84011f5085fb883fb67129e61df008a94a531ac1bbbe3bb9e6d16d2f9c78bcc4  ./assets/skills/delivery-lifecycle/references/implementation-modes.md
 5321020ed78b97a2fd7aa68967e0ca92aa807f61225b060789b37432737e65dd  ./assets/skills/design-preflight/SKILL.md
@@ -53,7 +54,7 @@ cbe50a5f10a5adcf1725a7eddf56380ef8ac292e6fe32edfe069c5c02fdcc816  ./assets/skill
 a9b148f2415583aaee2c8cd17822138e8ff8770670534b55a2e6ff2e4f1a936c  ./assets/skills/plan-history/SKILL.md
 c67909e4aadda369b9550c09c5cc0311e3d86ef24f1965133eaf5cbdcbd84169  ./assets/skills/plan-history/agents/openai.yaml
 5ac5175efb1ee5fcd32b14d120361d148c0c2983095dc4d0dc90fa6e8a27b756  ./assets/skills/publication/SKILL.md
-d50ac757a4362fdac479048fcc1d3b81ff165564235ec900608055c9c72384ee  ./assets/skills/publication/references/publication.md
+a9bf1bbaa51743d53b8646c34c2f277660213fe9fbf3aeb2ede30c077667be1c  ./assets/skills/publication/references/publication.md
 b87078d33fa47da8a2f60b1b5155671f593b7dcf198e50e307c788bd42bc154c  ./assets/skills/publication/references/versioning.md
 5af495ac8c59b05338ac7424be2e511bc652155ea71a88480ad7c5a9915c245a  ./assets/skills/repository-knowledge/SKILL.md
 9d9df859a645afe71bc517e7eeb77f34b31db0ca72fa0963d2f7474c8dcbbc31  ./assets/skills/repository-knowledge/agents/openai.yaml
@@ -119,7 +120,8 @@ d8f7dfc833661cbd58913b85d334adb88e3ea9f1f337925a351fa113b814311f  ./docs/plans/c
 3b1c190e91b261b96d5e7aba31623d0c47b6e7128e7634344356e2d8d6961630  ./docs/plans/cpk-054-internal-plan-history.md
 a2a2977403154705fc3d73fde0f45548c4722cc20b11cc189fe44f7982899224  ./docs/plans/cpk-055-native-ponytail.md
 8df1adc8b9063bc5035e6b91a95f39e3dd571be8db66cc4ab5161f7f16e4c879  ./docs/plans/cpk-056-interviews-and-assessment.md
-05ef4797699a6dd8cc9b418c31656b7165426d8ed6dc035091bac62c38b3f6bd  ./docs/roadmap.md
+d1763bb42b59084deb13ef38d759083331e6701d27346e371ec84ff9cdb97801  ./docs/plans/cpk-057-review-and-astra-guidance.md
+6e522b01d63b73f89428077bf5d56eae7cd405d316b0d3e817ec2c444a9e3175  ./docs/roadmap.md
 6f8f14ca5fd8ad935eee66256b3f7c49d5c40957eedff938ba21365e30869719  ./doctor.ps1
 ab56a88d9188979f06ea142d1f58ea0d6ad9088e83a965bd324209d83da513ad  ./doctor.sh
 8087bdb3ee654c0baac278a8e3bf85e33e314f8acfd486e7ebf675126a697058  ./install.ps1
@@ -135,7 +137,7 @@ e1e231aac51822f7e1bb3aa61aba138cf8c5df9cefd3079b0c1b5a98eea03bd9  ./tests/fixtur
 a269775204ae7cad2457d00f5565c90da2df41a9719479f3489ec01afdd2519c  ./tests/fixtures/cpk056-agent-cases.json
 e32941eb74be1f2cdcb6c82cf71e113b841651bf0d01786f364176de2da1b9c5  ./tests/fixtures/cpk056-agent-grading.json
 289367b7090a0d71936b41f08c4a354bc2758013dceb709819de36a1b73d9aa6  ./tests/live_plan_history.py
-fe26baeb585b997000136b6ec7868b0ff3b5a66fed9fe36d74d29f4c4a3c5ecf  ./tests/test_kit.py
+0102b2489eb29907f0992c5f05c6cd9c7c6f5f7c279dd371ee5de04b4bf2a0fe  ./tests/test_kit.py
 cfa479b5248a628ecd71194b7ac4a36bcddf17af7eb52ca2a6c3cd0566269927  ./tests/test_ponytail.py
 d16f7eadc8c668e82a1d0d2554ed04def15cb0a4b2ce13ac1ce1339bc0e62161  ./uninstall.ps1
 f12cff94ef7f9b0ca489cbe43e1de737011476966e04c1578f4977177b0da217  ./uninstall.sh
