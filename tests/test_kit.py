@@ -2637,8 +2637,20 @@ class IntegrationTests(unittest.TestCase):
             / "decision-handoffs.md"
         ).read_text()
         preflight = (ROOT / "assets" / "skills" / "design-preflight" / "SKILL.md").read_text()
+        lifecycle = (
+            ROOT / "assets" / "skills" / "delivery-lifecycle" / "references" / "delivery-lifecycle.md"
+        ).read_text()
+        prose = (ROOT / "assets" / "skills" / "docs-maintainer" / "SKILL.md").read_text()
 
         self.assertIn("Apply `simple-english` before you draft", handoff)
+        self.assertIn("Carry prior authorization forward within the active mode and accepted scope", lifecycle)
+        self.assertIn("requested outcome is complete or a real blocker prevents progress", lifecycle)
+        self.assertIn("Complete authorized preparation before requesting approval", lifecycle)
+        self.assertIn("Autonomy does not expand correction authority", lifecycle)
+        self.assertIn("[Decision Handoffs](decision-handoffs.md)", lifecycle)
+        self.assertIn("concise, connected paragraphs", prose)
+        self.assertIn("Preserve required structured formats and exact technical content", prose)
+        self.assertIn("does not remove decision fields, evidence, commands, or identifiers", prose)
         self.assertIn("Treat an internal code term as unfamiliar", handoff)
         self.assertIn("Before a material technical decision", handoff)
         self.assertIn("selects a material technical option", handoff)
@@ -2881,6 +2893,11 @@ class IntegrationTests(unittest.TestCase):
         self.assertIn("cpk-rule-route-only: supported-model", coordination)
         self.assertIn("design-preflight/references/supported-model.md", coordination)
         self.assertNotIn("at most one subagent at a time", coordination)
+        self.assertIn("User instructions take precedence over skill guidelines", coordination)
+        self.assertIn("name and link to the exact `SKILL.md`", coordination)
+        self.assertIn("Quote the relevant instruction and explain how it applies", coordination)
+        self.assertIn("Distinguish an explicit requirement from your interpretation", coordination)
+        self.assertIn("Keep spaces between words and numbers", coordination)
 
         preflight = (
             ROOT / "assets" / "skills" / "design-preflight" / "SKILL.md"

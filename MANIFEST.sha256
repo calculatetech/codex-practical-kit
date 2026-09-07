@@ -37,9 +37,9 @@ a564a3b00a86f43d38318b76168593bc965b2f1decf67a328d499a054aa35f36  ./assets/skill
 baa988b652f856bce1a4e183bf327879a021896eb65617b2fd4903e34a461339  ./assets/skills/defect-diagnostic/agents/openai.yaml
 f98f3661b7b4cfbe6a1b061e075898ae21b65cbb6765abec76b332b03cab2f9b  ./assets/skills/defect-diagnostic/references/diagnostic-summary.md
 20fb4b743b3ed14fa58ae1710bf5c621eb1f0b20dad552212221594368fa2d4c  ./assets/skills/delivery-lifecycle/SKILL.md
-5c440ca779141dceb31af7b4c04893f00832977d2d4f2255f320c93625990930  ./assets/skills/delivery-lifecycle/references/coordination.md
+9320e46907d34dd905159c75abba4b37bd7ce990f30a023d6b80c4715d6a0196  ./assets/skills/delivery-lifecycle/references/coordination.md
 b24f6d4c5d6ba9d3a4ab4215eac302764e8dcb0fe2c6dc76789b3ffe77a8e21f  ./assets/skills/delivery-lifecycle/references/decision-handoffs.md
-d15b430127f232cb5546fd36dfa7d203e45e931dcae8d594c2bb93e29c523203  ./assets/skills/delivery-lifecycle/references/delivery-lifecycle.md
+d9d882f331eaed467f783b899073d992b9f9872927f76ce8c7a2069295a8a080  ./assets/skills/delivery-lifecycle/references/delivery-lifecycle.md
 2536a374b63658e5e0bbca17d1a9ed25a41b61eeb539702cc8ee7c6f41bf1a31  ./assets/skills/delivery-lifecycle/references/git-isolation.md
 84011f5085fb883fb67129e61df008a94a531ac1bbbe3bb9e6d16d2f9c78bcc4  ./assets/skills/delivery-lifecycle/references/implementation-modes.md
 5321020ed78b97a2fd7aa68967e0ca92aa807f61225b060789b37432737e65dd  ./assets/skills/design-preflight/SKILL.md
@@ -50,7 +50,7 @@ f76714fd1656bfce65a6a923c4dac0abbcb8e274fae84d3f0f4821cfa00345c9  ./assets/skill
 ac9ff3e77bb4958f6c7514c6ce7c4ca27e3638534bc8cd19753ea0f39f83e42e  ./assets/skills/design-preflight/references/scenario-discrimination.md
 4acee4d97f68fc7b0d84e7fbe6f35d1e87b7a7f68c8bf624c2dcf79887623635  ./assets/skills/design-preflight/references/scope-boundaries.md
 cbe50a5f10a5adcf1725a7eddf56380ef8ac292e6fe32edfe069c5c02fdcc816  ./assets/skills/design-preflight/references/supported-model.md
-1c229416f4b4b14906846eef1e62c3ab8e934235debb16a10c0b79d1cd20f380  ./assets/skills/docs-maintainer/SKILL.md
+daafd85498937e8dd2914156fef193ea75e418d1ff49367e645d3c5bfcbe3b48  ./assets/skills/docs-maintainer/SKILL.md
 a9b148f2415583aaee2c8cd17822138e8ff8770670534b55a2e6ff2e4f1a936c  ./assets/skills/plan-history/SKILL.md
 c67909e4aadda369b9550c09c5cc0311e3d86ef24f1965133eaf5cbdcbd84169  ./assets/skills/plan-history/agents/openai.yaml
 5ac5175efb1ee5fcd32b14d120361d148c0c2983095dc4d0dc90fa6e8a27b756  ./assets/skills/publication/SKILL.md
@@ -61,7 +61,7 @@ b87078d33fa47da8a2f60b1b5155671f593b7dcf198e50e307c788bd42bc154c  ./assets/skill
 28bc4da413408c5f8e10974625e6f34906c5127ab5ab1b5f6be836d4d360607e  ./assets/skills/research-first/SKILL.md
 c5465d35f51779e1b75da0d96bdb75e792fbe0a2691685f4c5e54140f1ed7388  ./assets/skills/roadmap-maintainer/SKILL.md
 a8a3764af5e50240c687019e5bf56d927728a0e802ab4ce2168d3816e2b69cbd  ./assets/skills/roadmap-maintainer/assets/roadmap-template.md
-10f95a544687f67b7c71c3c67f48ec65f9f4533c09916f654ba61744fabeb937  ./assets/skills/toolkit-maintainer/SKILL.md
+afe980a9557961e9fa13d65fa066c62d50b87523234a4f88886ae494a1e302be  ./assets/skills/toolkit-maintainer/SKILL.md
 913770b6e8fa270a4f8927ce9840c877366eb6a06a76a4fac47b3c773b9bcf4c  ./docs/HOTFIX-0.2.1.md
 78823831a732ebf870c45b9acc92abddfdddbdbb47db6db81a38ada0497de00f  ./docs/OPERATING-MANUAL.md
 97dd789229fa55905bd20290c2767ef7bd274cc81965a6f4eb1136dda9ed0adb  ./docs/OPTIONAL-REVIEW-TOOLS.md
@@ -137,7 +137,7 @@ e1e231aac51822f7e1bb3aa61aba138cf8c5df9cefd3079b0c1b5a98eea03bd9  ./tests/fixtur
 a269775204ae7cad2457d00f5565c90da2df41a9719479f3489ec01afdd2519c  ./tests/fixtures/cpk056-agent-cases.json
 e32941eb74be1f2cdcb6c82cf71e113b841651bf0d01786f364176de2da1b9c5  ./tests/fixtures/cpk056-agent-grading.json
 289367b7090a0d71936b41f08c4a354bc2758013dceb709819de36a1b73d9aa6  ./tests/live_plan_history.py
-0102b2489eb29907f0992c5f05c6cd9c7c6f5f7c279dd371ee5de04b4bf2a0fe  ./tests/test_kit.py
+5590c2c3ec4c40facc2a257559003d412792d8a9225f435830882ace79e9fafa  ./tests/test_kit.py
 cfa479b5248a628ecd71194b7ac4a36bcddf17af7eb52ca2a6c3cd0566269927  ./tests/test_ponytail.py
 d16f7eadc8c668e82a1d0d2554ed04def15cb0a4b2ce13ac1ce1339bc0e62161  ./uninstall.ps1
 f12cff94ef7f9b0ca489cbe43e1de737011476966e04c1578f4977177b0da217  ./uninstall.sh

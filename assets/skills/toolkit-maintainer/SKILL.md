@@ -8,6 +8,7 @@ license: MIT
 ---
 
 <!-- cpk-rule-owner: rule-ownership -->
+<!-- cpk-rule-guard: Audit applicable live instructions for conflicts and duplicate requirements when changing guidance. -->
 <!-- cpk-rule-guard: A live toolkit rule has exactly one authoritative file. -->
 <!-- cpk-rule-guard: A router names an applicable skill or links to a rule owner. It does not summarize the rule. -->
 <!-- cpk-rule-guard: A `cpk-rule-route-only` section contains only its marker and one Markdown link. -->
@@ -29,3 +30,5 @@ Completed ExecPlans, roadmap history, diagnostics, test records, and source test
 An active ExecPlan records task facts and decisions. It links a general toolkit rule instead of copying that rule.
 
 When a rule changes, edit its owner. Update links only when the owner path changes.
+
+Audit applicable live instructions for conflicts and duplicate requirements when changing guidance. Include the routes and linked skills that can affect the requested result. Preserve deliberate repository overrides and upstream skill ownership. Correct toolkit-owned conflicts in the existing owner instead of adding another instruction layer.

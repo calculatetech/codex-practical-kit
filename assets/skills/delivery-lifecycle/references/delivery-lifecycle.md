@@ -1,4 +1,5 @@
 <!-- cpk-rule-owner: delivery-lifecycle -->
+<!-- cpk-rule-guard: Carry prior authorization forward within the active mode and accepted scope. -->
 <!-- cpk-rule-guard: The implementation owner completes validation before review. -->
 <!-- cpk-rule-guard: Finalize substantive documentation before review. -->
 <!-- cpk-rule-guard: Keep detailed results in one ignored `.agent/test-results/` file per task. -->
@@ -8,6 +9,10 @@
 <!-- cpk-rule-guard: A tooling failure outside task scope permits read-only diagnosis, not repository writes without explicit user authority. -->
 
 # Delivery lifecycle
+
+Treat requests for action as instructions to complete the authorized work. Carry prior authorization forward within the active mode and accepted scope. Use available context for routine reversible decisions. Continue until the requested outcome is complete or a real blocker prevents progress.
+
+Complete authorized preparation before requesting approval for an action that still needs it. Do not add warnings or approval barriers for hypothetical risks. Use [Decision Handoffs](decision-handoffs.md) for unresolved material choices. Autonomy does not expand correction authority.
 
 Do not perform unrelated refactors, dependency updates, formatting, or fixes.
 

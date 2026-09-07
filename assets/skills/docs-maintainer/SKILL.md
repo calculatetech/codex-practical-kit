@@ -12,10 +12,19 @@ license: MIT
 
 <!-- cpk-rule-owner: docs-maintainer -->
 <!-- cpk-rule-guard: Update the smallest existing document that owns the fact. -->
+<!-- cpk-rule-guard: Preserve required structured formats and exact technical content. -->
 
 # Documentation maintainer
 
 Keep the documentation true. Do not write documentation to prove that you wrote documentation.
+
+## Communication
+
+For ordinary explanations, lead with the outcome and give the supporting detail next. Default to concise, connected paragraphs. Use lists for parallel items, steps, or comparisons. Match technical detail to the reader's background and the task.
+
+Avoid stock phrases, invented compound labels, and unnecessary contrasts or concluding summaries. Do not add unnecessary hyphenated descriptions. Reuse `simple-english` for plain language and vocabulary.
+
+Preserve required structured formats and exact technical content. A prose preference does not remove decision fields, evidence, commands, or identifiers.
 
 ## Process
 
