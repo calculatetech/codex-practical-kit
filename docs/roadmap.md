@@ -13,7 +13,7 @@ Status legend:
 
 ## Active
 
-- 🎯 **CPK-057 — Separate review from testing and complete Astra guidance.** Keep test execution before review and add bounded autonomy, clear communication, and useful delegation to the existing rule owners. [ExecPlan](plans/cpk-057-review-and-astra-guidance.md)
+No task is active.
 
 ## Planned next
 
@@ -33,6 +33,7 @@ No residual risk is accepted.
 
 ## Completed
 
+- ✅ **CPK-057 — Separate review from testing and complete Astra guidance.** Keep test execution before review and add bounded autonomy, clear communication, and useful delegation to the existing rule owners. [ExecPlan](plans/cpk-057-review-and-astra-guidance.md)
 - ✅ **CPK-056 — Improve interviews and assess rule adherence.** Bound material questions by their prerequisites, clarify correction and proof rules, and compare agent behavior through independent assessment cases. [ExecPlan](plans/cpk-056-interviews-and-assessment.md)
 - ✅ **CPK-055 — Install the official Ponytail plugin.** Preserve upstream skills, hooks, modes, and user settings through native Codex installation. Remove toolkit mode overrides and document complete component removal.
 - ✅ **CPK-054 — Keep Plan summaries out of documentation folders.** Save repository summaries only in `.agent/plan-history/`, preserve specification associations, and relocate this repository's legacy copies without changing their contents.
