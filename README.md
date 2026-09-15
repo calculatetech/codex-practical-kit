@@ -266,6 +266,12 @@ Repository-owned `AGENTS.md`, `.agent/PLANS.md`, roadmaps, and other project doc
 
 Remove the toolkit source checkout or downloaded archive only when you no longer need it. Leave unrelated Codex configuration and other plugins intact.
 
+## Contributing
+
+Changes use draft pull requests and Codex review before readiness. The required `toolkit-tests` check runs when a PR becomes ready and after pushes to `main`. It runs the toolkit tests and verifies distribution checksums.
+
+Protected `main` requires a pull request, passing CI, and resolved conversations. Codex review is a separate publication gate; no additional human approval is required. Follow the [publication procedure](assets/skills/publication/references/publication.md).
+
 ## Verification
 
 On macOS or Linux, run:

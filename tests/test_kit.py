@@ -3455,9 +3455,32 @@ class IntegrationTests(unittest.TestCase):
         self.assertIn("`pwsh -File .\\doctor.ps1`", publication)
         self.assertIn("from the reviewed candidate", publication)
         self.assertIn("`Result: ready`", publication)
-        self.assertEqual(kit.KIT_VERSION, "0.23.9")
+        self.assertEqual(kit.KIT_VERSION, "0.24.0")
         self.assertNotIn("Version `0.22.0`", (ROOT / "README.md").read_text())
         self.assertNotIn("version 0.22.0", (ROOT / "CODEX-INSTALL-PROMPT.md").read_text())
+
+    def test_ci_runs_only_after_readiness_or_main_push(self):
+        directory = ROOT / ".github" / "workflows"
+        self.assertEqual({p.name for p in directory.iterdir()}, {"ci.yml"})
+        workflow = (directory / "ci.yml").read_text()
+        self.assertEqual(workflow.split("jobs:", 1)[0], """name: CI
+
+on:
+  pull_request:
+    branches: [main]
+    types: [ready_for_review]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+""")
+        self.assertIn("  toolkit-tests:\n", workflow)
+        self.assertIn("      - run: ./run-tests.sh\n", workflow)
+        self.assertIn("      - run: sha256sum --check MANIFEST.sha256\n", workflow)
+        self.assertNotIn("continue-on-error:", workflow)
+        self.assertNotIn("if:", workflow)
 
     def test_pr_publication_reviews_draft_before_ci(self):
         root = ROOT / "assets" / "skills"
