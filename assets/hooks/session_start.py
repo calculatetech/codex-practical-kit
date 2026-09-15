@@ -390,7 +390,7 @@ elif event.get("hook_event_name") == "SessionStart":
     warnings = save_transcript_plan(event)
     context = "Codex Practical Kit is active. Read the managed AGENTS.md links that apply to this task."
     if event.get("source") == "compact":
-        context += " Apply repository-knowledge before the next repository lookup. Keep it active until the task ends. Before later planning, use plan-history and reconcile all applicable records."
+        context += " Apply repository-knowledge before the next repository lookup. Keep it active until the task ends. Use plan-history to resume saved reconciliation after compaction."
     if warnings:
         context += " Plan history warning: " + "; ".join(warnings)
     print(json.dumps({

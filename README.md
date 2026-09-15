@@ -72,6 +72,8 @@ The edit hooks update `<primary-checkout>/.codex/roadmap-view.md` after an agent
 
 The [Plan history skill](assets/skills/plan-history/SKILL.md) keeps repository summaries versioned in `.agent/plan-history/`. Specification associations stay in each record. Later planning sessions find these records across worktrees and reconcile their decisions.
 
+For large histories, agents create reusable reading summaries under `.agent/plan-history/compacted/`. Original records remain unchanged. The skill also preserves reading progress across normal context compaction.
+
 An unrecorded destination skill is a conflict. The installer stops before it changes that directory.
 
 Open a new Codex session after installation. Use `/hooks` to review and trust the toolkit and Ponytail commands.
@@ -263,6 +265,12 @@ Plan history remains in repository `.agent/plan-history/` directories and the `$
 Repository-owned `AGENTS.md`, `.agent/PLANS.md`, roadmaps, and other project documentation remain. So do indexes and views in repositories that you did not remove in step 1. Core uninstall does not keep a repository list.
 
 Remove the toolkit source checkout or downloaded archive only when you no longer need it. Leave unrelated Codex configuration and other plugins intact.
+
+## Contributing
+
+Changes use draft pull requests and Codex review before readiness. The required `toolkit-tests` check runs when a PR becomes ready and after pushes to `main`. It runs the toolkit tests and verifies distribution checksums.
+
+Protected `main` requires a pull request, passing CI, and resolved conversations. Codex review is a separate publication gate; no additional human approval is required. Follow the [publication procedure](assets/skills/publication/references/publication.md).
 
 ## Verification
 
