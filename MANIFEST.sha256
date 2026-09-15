@@ -22,10 +22,10 @@ d60f352d0db1404c70afb4bb8b2ca3fd1c610572aa40720e8a0b7baa7885418c  ./.gitattribut
 6d7a25701ba2532525fe556f1a55529ab09af6675522f749afb22609f7f8183e  ./CODEX-INSTALL-PROMPT.md
 6612129aca01053f15098204fb4bbaafdf85a667956202530bdcbc339e58e462  ./LICENSE
 e4912f4f8d644555dcd57d5e336a249cf8a9d7f6222b78096d6b403f45a8a215  ./PLAYGROUND.md
-6eddb87e6d3e1e06141bbe43a88d112d9e1d017e6a365e7bba11e0da08988830  ./README.md
+dd0fb88790b16349c9a139ddfcdaab9132ea1facb2e2e633a6d36da96aa07763  ./README.md
 979191eeef7975567b4c44c9fb6dc38bf78e431eda582ff55d4f37eb2f69a441  ./THIRD_PARTY.md
 59b191889c8b7d098ddaf6b029f6f12b3ce6590893e1823f4448ad3b90c03fb4  ./assets/AGENTS.block.md
-90edd43aadb411c3e0fbd99593785c20339c8f1c9a52ae8b4b87a96f073875c4  ./assets/hooks/session_start.py
+b9f9eb58967f54b19fb3a58b1db32e4c25299ae10c06e2e45a6611c250801a71  ./assets/hooks/session_start.py
 3027ffa3ef382dcd0c96f6280ba861bb4a9410011e1176d71d7aa7911805821f  ./assets/runtime/repowise_bootstrap.py
 a564a3b00a86f43d38318b76168593bc965b2f1decf67a328d499a054aa35f36  ./assets/skills/adversarial-review/SKILL.md
 78443f93e9ee4861a0d7a110af7e6d5f1e7d736e1459324530eb584c6b08ba58  ./assets/skills/adversarial-review/references/finding-format.md
@@ -51,7 +51,7 @@ ac9ff3e77bb4958f6c7514c6ce7c4ca27e3638534bc8cd19753ea0f39f83e42e  ./assets/skill
 4acee4d97f68fc7b0d84e7fbe6f35d1e87b7a7f68c8bf624c2dcf79887623635  ./assets/skills/design-preflight/references/scope-boundaries.md
 cbe50a5f10a5adcf1725a7eddf56380ef8ac292e6fe32edfe069c5c02fdcc816  ./assets/skills/design-preflight/references/supported-model.md
 daafd85498937e8dd2914156fef193ea75e418d1ff49367e645d3c5bfcbe3b48  ./assets/skills/docs-maintainer/SKILL.md
-a9b148f2415583aaee2c8cd17822138e8ff8770670534b55a2e6ff2e4f1a936c  ./assets/skills/plan-history/SKILL.md
+8d9900474c986b5a9c18fda2a2444e65ecd20ada61edce9779a1018ea08ccf6a  ./assets/skills/plan-history/SKILL.md
 c67909e4aadda369b9550c09c5cc0311e3d86ef24f1965133eaf5cbdcbd84169  ./assets/skills/plan-history/agents/openai.yaml
 5ac5175efb1ee5fcd32b14d120361d148c0c2983095dc4d0dc90fa6e8a27b756  ./assets/skills/publication/SKILL.md
 a9bf1bbaa51743d53b8646c34c2f277660213fe9fbf3aeb2ede30c077667be1c  ./assets/skills/publication/references/publication.md
@@ -121,7 +121,8 @@ d8f7dfc833661cbd58913b85d334adb88e3ea9f1f337925a351fa113b814311f  ./docs/plans/c
 a2a2977403154705fc3d73fde0f45548c4722cc20b11cc189fe44f7982899224  ./docs/plans/cpk-055-native-ponytail.md
 8df1adc8b9063bc5035e6b91a95f39e3dd571be8db66cc4ab5161f7f16e4c879  ./docs/plans/cpk-056-interviews-and-assessment.md
 a5d8013da3d22afba28c1259e29e3255d1d19969d0934b2f59069f0de80ea31b  ./docs/plans/cpk-057-review-and-astra-guidance.md
-2fd92d860f05222ec7543cf8aff83ff9424acc51c7ca2c617a039b6e3f1156cf  ./docs/roadmap.md
+5f2abf3bc85fbfc580d05139165ff95f29a3a85246bab2724c5f949eb93f26a5  ./docs/plans/cpk-058-plan-history-compaction.md
+0eabae6b80c6d6f511789777b6a7b61e3de7c20628f73f9d8c7e8e8adaa6fbe0  ./docs/roadmap.md
 6f8f14ca5fd8ad935eee66256b3f7c49d5c40957eedff938ba21365e30869719  ./doctor.ps1
 ab56a88d9188979f06ea142d1f58ea0d6ad9088e83a965bd324209d83da513ad  ./doctor.sh
 8087bdb3ee654c0baac278a8e3bf85e33e314f8acfd486e7ebf675126a697058  ./install.ps1
@@ -137,7 +138,7 @@ e1e231aac51822f7e1bb3aa61aba138cf8c5df9cefd3079b0c1b5a98eea03bd9  ./tests/fixtur
 a269775204ae7cad2457d00f5565c90da2df41a9719479f3489ec01afdd2519c  ./tests/fixtures/cpk056-agent-cases.json
 e32941eb74be1f2cdcb6c82cf71e113b841651bf0d01786f364176de2da1b9c5  ./tests/fixtures/cpk056-agent-grading.json
 289367b7090a0d71936b41f08c4a354bc2758013dceb709819de36a1b73d9aa6  ./tests/live_plan_history.py
-a752cb4eb2a58614ab988106a83e9263bba3f30da9fb0f55bcd1a17375fcd1b9  ./tests/test_kit.py
+f3c78eb60e746e1fbcc140ab297c0283748d83353eb2a1182002283809eeb8e4  ./tests/test_kit.py
 cfa479b5248a628ecd71194b7ac4a36bcddf17af7eb52ca2a6c3cd0566269927  ./tests/test_ponytail.py
 d16f7eadc8c668e82a1d0d2554ed04def15cb0a4b2ce13ac1ce1339bc0e62161  ./uninstall.ps1
 f12cff94ef7f9b0ca489cbe43e1de737011476966e04c1578f4977177b0da217  ./uninstall.sh

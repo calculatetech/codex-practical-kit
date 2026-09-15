@@ -72,6 +72,8 @@ The edit hooks update `<primary-checkout>/.codex/roadmap-view.md` after an agent
 
 The [Plan history skill](assets/skills/plan-history/SKILL.md) keeps repository summaries versioned in `.agent/plan-history/`. Specification associations stay in each record. Later planning sessions find these records across worktrees and reconcile their decisions.
 
+For large histories, agents create reusable reading summaries under `.agent/plan-history/compacted/`. Original records remain unchanged. The skill also preserves reading progress across normal context compaction.
+
 An unrecorded destination skill is a conflict. The installer stops before it changes that directory.
 
 Open a new Codex session after installation. Use `/hooks` to review and trust the toolkit and Ponytail commands.
