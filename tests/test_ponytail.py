@@ -31,6 +31,7 @@ class PonytailIntegrationTests(unittest.TestCase):
             mock.patch.object(kit, "download_file", return_value=b"# upstream fixture\n"),
             mock.patch.object(kit, "ensure_repowise_runtime", return_value=("fake-uv", "fake-repowise")),
             mock.patch.object(kit, "find_runtime_command", side_effect=lambda paths, name: "fake-" + name),
+            mock.patch.object(kit, "codex_executable", return_value="codex"),
             mock.patch.dict(os.environ, {"CODEX_HOME": str(self.root / "default")}),
         ):
             patch.start()

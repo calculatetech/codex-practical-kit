@@ -24,7 +24,7 @@ from pathlib import Path
 from typing import Any, Iterable
 
 KIT_ID = "codex-practical-kit"
-KIT_VERSION = "0.24.0"
+KIT_VERSION = "0.24.1"
 REPOWISE_VERSION = "0.45.0"
 UV_VERSION = "0.12.4"
 UV_INSTALLER_URL = f"https://astral.sh/uv/{UV_VERSION}/install.sh"
@@ -176,6 +176,12 @@ def command_version(command: list[str]) -> str | None:
         return None
     text = (result.stdout or result.stderr).strip()
     return text.splitlines()[0] if text else None
+
+
+def codex_executable() -> str:
+    if not is_windows():
+        return "codex"
+    return shutil.which("codex") or "codex"
 
 
 def json_load(path: Path, default: Any) -> Any:
@@ -493,7 +499,7 @@ def manifest_path(paths: InstallPaths) -> Path:
 
 def codex_plugin(paths: InstallPaths, *args: str) -> dict[str, Any]:
     result = run(
-        ["codex", "plugin", *args, "--json"],
+        [codex_executable(), "plugin", *args, "--json"],
         env={**os.environ, "CODEX_HOME": str(paths.codex_home)},
     )
     try:
@@ -1121,11 +1127,12 @@ def doctor(args: argparse.Namespace, paths: InstallPaths) -> int:
             version or "unavailable",
         )
 
-    codex_version = command_version(["codex", "--version"])
+    codex = codex_executable()
+    codex_version = command_version([codex, "--version"])
     ok &= check(bool(codex_version), "Codex CLI", codex_version or "not found")
     if codex_version:
         login = run(
-            ["codex", "login", "status"], check=False, timeout=30,
+            [codex, "login", "status"], check=False, timeout=30,
             env={**os.environ, "CODEX_HOME": str(paths.codex_home)},
         )
         login_text = (login.stdout or login.stderr).strip().replace("\n", " ")

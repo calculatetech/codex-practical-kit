@@ -33,6 +33,7 @@ No residual risk is accepted.
 
 ## Completed
 
+- ✅ **CPK-060 — Resolve the Codex command on Windows.** Use the Windows npm command shim for native plugin installation and Doctor checks. Publish version `0.24.1`. [ExecPlan](plans/cpk-060-windows-codex-resolution.md)
 - ✅ **CPK-059 — Publish through protected pull requests.** Add readiness-triggered CI, make the repository public, protect main, and release reusable Plan History as version `0.24.0`. [ExecPlan](plans/cpk-059-public-pr-release.md)
 - ✅ **CPK-058 — Compact Plan History and resume interrupted reads.** Reuse verified summaries without changing original records, and preserve reading progress across normal context compaction. [ExecPlan](plans/cpk-058-plan-history-compaction.md)
 - ✅ **CPK-057 — Separate review from testing and complete Astra guidance.** Keep test execution before review and add bounded autonomy, clear communication, and useful delegation to the existing rule owners. [ExecPlan](plans/cpk-057-review-and-astra-guidance.md)

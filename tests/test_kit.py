@@ -22,6 +22,7 @@ class GitFixture:
     def __init__(self, root: Path):
         self.root = root
         subprocess.run(["git", "init", "-q"], cwd=root, check=True)
+        subprocess.run(["git", "config", "core.autocrlf", "false"], cwd=root, check=True)
         subprocess.run(["git", "config", "user.email", "test@example.com"], cwd=root, check=True)
         subprocess.run(["git", "config", "user.name", "Test"], cwd=root, check=True)
 
@@ -77,6 +78,14 @@ class InstallerTests(unittest.TestCase):
             ]
         )
         self.assertEqual(result.stdout, "✓")
+
+    def test_windows_codex_command_resolves_npm_cmd_shim(self):
+        shim = r"C:\Users\Example\AppData\Roaming\npm\codex.CMD"
+        with mock.patch.object(kit, "is_windows", return_value=True), mock.patch.object(
+            kit.shutil, "which", return_value=shim
+        ) as which:
+            self.assertEqual(kit.codex_executable(), shim)
+        which.assert_called_once_with("codex")
 
     def paths(self, base: Path) -> kit.InstallPaths:
         return kit.InstallPaths(
@@ -697,7 +706,7 @@ class PlanHistoryHookTests(unittest.TestCase):
                     subprocess.run(["git", "add", "docs", ".agent/plan-history"], cwd=root, check=True)
                     subprocess.run(["git", "commit", "-qm", "retain Plan history"], cwd=root, check=True)
                     clone = Path(temp) / "clone"
-                    subprocess.run(["git", "clone", "-q", str(root), str(clone)], check=True)
+                    subprocess.run(["git", "-c", "core.autocrlf=false", "clone", "-q", str(root), str(clone)], check=True)
                     cloned, = (clone / ".agent/plan-history").glob("*.md")
                     self.assertEqual(cloned.read_bytes(), message.encode())
                     self.assertEqual(list((clone / "docs").glob("*.plan-summary.*.md")), [])
@@ -3455,7 +3464,7 @@ class IntegrationTests(unittest.TestCase):
         self.assertIn("`pwsh -File .\\doctor.ps1`", publication)
         self.assertIn("from the reviewed candidate", publication)
         self.assertIn("`Result: ready`", publication)
-        self.assertEqual(kit.KIT_VERSION, "0.24.0")
+        self.assertEqual(kit.KIT_VERSION, "0.24.1")
         self.assertNotIn("Version `0.22.0`", (ROOT / "README.md").read_text())
         self.assertNotIn("version 0.22.0", (ROOT / "CODEX-INSTALL-PROMPT.md").read_text())
 
