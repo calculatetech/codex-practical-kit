@@ -25,10 +25,19 @@
     }
   },
   "runtime_tools": {
+    "12ui": {
+      "install_mode": "native Codex plugin; install when absent; refresh through its named marketplace",
+      "license": "MIT",
+      "marketplace": "just-every/12ui-plugin",
+      "marketplace_name": "12ui-plugin",
+      "plugin_id": "12ui-design@12ui-plugin",
+      "repository": "https://github.com/just-every/12ui-plugin"
+    },
     "ponytail": {
-      "install_mode": "native Codex plugin; install when absent; updates and removal owned by Codex",
+      "install_mode": "native Codex plugin; install when absent; refresh through its named marketplace",
       "license": "MIT",
       "marketplace": "DietrichGebert/ponytail",
+      "marketplace_name": "ponytail",
       "plugin_id": "ponytail@ponytail",
       "repository": "https://github.com/DietrichGebert/ponytail"
     },
@@ -72,6 +81,8 @@
         }
       ],
       "license": "MIT",
+      "license_path": "LICENSE",
+      "root": "skills/neuroarxiv",
       "repository": "https://github.com/UditAkhourii/neuroarxiv"
     },
     "simple-english": {
@@ -99,6 +110,8 @@
         }
       ],
       "license": "MIT",
+      "license_path": "LICENSE",
+      "root": "skills/simple-english",
       "repository": "https://github.com/AminBlg/SimpleEnglish"
     }
   }

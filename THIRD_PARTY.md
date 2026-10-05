@@ -10,6 +10,14 @@
 - Version policy: install when absent; preserve existing versions and settings; Codex owns updates and removal
 - License: MIT
 
+### 12UI
+
+- Source: https://github.com/just-every/12ui-plugin
+- Installation: official native Codex plugin `12ui-design@12ui-plugin` from the `just-every/12ui-plugin` marketplace
+- Use: website projects only
+- Version policy: install when absent; refresh through the named marketplace; preserve enabled state and user data
+- License: MIT
+
 ### SimpleEnglish
 
 - Source: https://github.com/AminBlg/SimpleEnglish

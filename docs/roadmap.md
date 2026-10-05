@@ -33,6 +33,7 @@ No residual risk is accepted.
 
 ## Completed
 
+- ✅ **CPK-062 — Apply managed updates and add website-only 12UI.** Add explicit update application through thin Bash and PowerShell launchers, reconcile the source lock with the selected installation, install or refresh the official 12UI plugin, and route 12UI only for website projects. [ExecPlan](plans/cpk-062-managed-update-application-12ui.md)
 - ✅ **CPK-061 — Report managed component updates and clean up finished agent threads.** Add a read-only update check for RepoWise and every other managed component. Teach coordinators to preserve required follow-ups, close terminal delegated threads, and archive finished history with native tools. [ExecPlan](plans/cpk-061-component-updates-agent-cleanup.md)
 - ✅ **CPK-060 — Resolve the Codex command on Windows.** Use the Windows npm command shim for native plugin installation and Doctor checks. Publish version `0.24.1`. [ExecPlan](plans/cpk-060-windows-codex-resolution.md)
 - ✅ **CPK-059 — Publish through protected pull requests.** Add readiness-triggered CI, make the repository public, protect main, and release reusable Plan History as version `0.24.0`. [ExecPlan](plans/cpk-059-public-pr-release.md)

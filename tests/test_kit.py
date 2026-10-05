@@ -66,10 +66,13 @@ class InstallerTests(unittest.TestCase):
         self.runtime.start()
         self.ponytail = mock.patch.object(kit, "ponytail_status", return_value=(True, {"installed": True}))
         self.ponytail.start()
+        self.twelve_ui = mock.patch.object(kit, "twelve_ui_status", return_value=(True, {"installed": True}))
+        self.twelve_ui.start()
 
     def tearDown(self):
         self.runtime.stop()
         self.ponytail.stop()
+        self.twelve_ui.stop()
 
     def test_run_decodes_utf8_subprocess_output(self):
         result = kit.run(
@@ -1379,14 +1382,23 @@ class RepoWiseRuntimeTests(unittest.TestCase):
             self.assertEqual(kit.find_runtime_command(paths, "uv"), str(command))
             which.assert_called_once_with("uv.exe")
 
+    def test_runtime_discovery_prefers_selected_manifest_command(self):
+        with tempfile.TemporaryDirectory() as temp:
+            paths = self.paths(Path(temp))
+            selected = Path(temp) / "selected-uv"
+            selected.write_text("uv")
+            kit.write_file(kit.manifest_path(paths), json.dumps({"uv": str(selected)}))
+            with mock.patch.object(kit.shutil, "which", return_value="/external/uv"):
+                self.assertEqual(kit.find_runtime_command(paths, "uv"), str(selected))
+
     def test_runtime_pins_match_lock_file(self):
         runtime = json.loads((ROOT / "upstream.lock.json").read_text())["runtime_tools"]
-        self.assertEqual(runtime["uv"]["version"], kit.UV_VERSION)
-        self.assertEqual(runtime["uv"]["installers"]["posix"]["url"], kit.UV_INSTALLER_URL)
-        self.assertEqual(runtime["uv"]["installers"]["posix"]["sha256"], kit.UV_INSTALLER_SHA256)
-        self.assertEqual(runtime["uv"]["installers"]["windows"]["url"], kit.UV_WINDOWS_INSTALLER_URL)
-        self.assertEqual(runtime["uv"]["installers"]["windows"]["sha256"], kit.UV_WINDOWS_INSTALLER_SHA256)
-        self.assertEqual(runtime["repowise"]["version"], kit.REPOWISE_VERSION)
+        version = runtime["uv"]["version"]
+        self.assertEqual(runtime["uv"]["installers"]["posix"]["url"], f"https://astral.sh/uv/{version}/install.sh")
+        self.assertEqual(runtime["uv"]["installers"]["windows"]["url"], f"https://astral.sh/uv/{version}/install.ps1")
+        self.assertRegex(runtime["uv"]["installers"]["posix"]["sha256"], r"^[0-9a-f]{64}$")
+        self.assertRegex(runtime["uv"]["installers"]["windows"]["sha256"], r"^[0-9a-f]{64}$")
+        self.assertRegex(runtime["repowise"]["version"], r"^\d+\.\d+\.\d+$")
 
     def test_missing_uv_runs_verified_installer_once(self):
         with tempfile.TemporaryDirectory() as temp:
@@ -1407,7 +1419,8 @@ class RepoWiseRuntimeTests(unittest.TestCase):
             ) as download, mock.patch.object(kit, "run", side_effect=fake_run) as run:
                 uv = kit.ensure_uv(paths)
             self.assertEqual(uv, str(paths.home / ".local" / "bin" / "uv"))
-            download.assert_called_once_with(kit.UV_INSTALLER_URL, kit.UV_INSTALLER_SHA256)
+            installer = kit.load_lock()["runtime_tools"]["uv"]["installers"]["posix"]
+            download.assert_called_once_with(installer["url"], installer["sha256"])
             run.assert_called_once()
 
     def test_missing_windows_uv_runs_verified_powershell_installer_once(self):
@@ -1440,9 +1453,8 @@ class RepoWiseRuntimeTests(unittest.TestCase):
             ) as download, mock.patch.object(kit, "run", side_effect=fake_run) as run:
                 uv = kit.ensure_uv(paths)
             self.assertEqual(uv, str(paths.home / ".local" / "bin" / "uv.exe"))
-            download.assert_called_once_with(
-                kit.UV_WINDOWS_INSTALLER_URL, kit.UV_WINDOWS_INSTALLER_SHA256
-            )
+            installer = kit.load_lock()["runtime_tools"]["uv"]["installers"]["windows"]
+            download.assert_called_once_with(installer["url"], installer["sha256"])
             run.assert_called_once()
 
     @unittest.skipUnless(shutil.which("pwsh"), "PowerShell 7 is not installed")
@@ -1570,6 +1582,8 @@ class RepoWiseRuntimeTests(unittest.TestCase):
                 kit, "stage_upstream_skills", side_effect=fake_stage
             ), mock.patch.object(kit, "run", side_effect=fake_run), mock.patch.object(
                 kit, "ponytail_status", return_value=(True, {"installed": True})
+            ), mock.patch.object(
+                kit, "twelve_ui_status", return_value=(True, {"installed": True})
             ):
                 kit.install_core(Namespace(), paths)
 
@@ -2121,6 +2135,9 @@ class ComponentUpdateTests(unittest.TestCase):
         runtime = lock["runtime_tools"]
         skills = lock["skills"]
         return {
+            kit.github_api_url(runtime["12ui"]["repository"], "releases/latest"): {
+                "tag_name": "design-v0.2.107"
+            },
             kit.github_api_url(runtime["ponytail"]["repository"], "releases/latest"): {
                 "tag_name": "v4.12.0"
             },
@@ -2173,11 +2190,34 @@ class ComponentUpdateTests(unittest.TestCase):
 
         self.assertEqual(status, 0)
         self.assertEqual(stderr, "")
-        self.assertEqual(len(calls), 5)
+        self.assertEqual(len(calls), len(responses))
         self.assertEqual(set(calls), set(responses))
-        for name in (*kit.load_lock()["runtime_tools"], *kit.load_lock()["skills"]):
+        lock = kit.load_lock()
+        expected_lines = [
+            "Managed component updates:",
+            "- 12ui: Codex-owned plugin; upstream release design-v0.2.107; use the Codex plugin manager",
+            "- ponytail: Codex-owned plugin; upstream release v4.12.0; use the Codex plugin manager",
+            (
+                f"- repowise: toolkit pin {lock['runtime_tools']['repowise']['version']}; "
+                f"upstream release {lock['runtime_tools']['repowise']['version']}; same identity"
+            ),
+            (
+                f"- uv: toolkit pin {lock['runtime_tools']['uv']['version']}; "
+                f"upstream release v{lock['runtime_tools']['uv']['version']}; same identity"
+            ),
+            (
+                f"- neuroarxiv: toolkit revision {lock['skills']['neuroarxiv']['commit']}; "
+                f"upstream revision {lock['skills']['neuroarxiv']['commit']}; same identity"
+            ),
+            (
+                f"- simple-english: toolkit revision {lock['skills']['simple-english']['commit']}; "
+                f"upstream revision {'f' * 40}; upstream differs"
+            ),
+        ]
+        self.assertEqual(stdout, "\n".join(expected_lines) + "\n")
+        for name in (*lock["runtime_tools"], *lock["skills"]):
             self.assertEqual(stdout.count(f"- {name}:"), 1)
-        for name in kit.load_lock()["optional_tools"]:
+        for name in lock["optional_tools"]:
             self.assertNotIn(name, stdout)
             self.assertFalse(any(name in url for url in calls))
         self.assertIn("simple-english:", stdout)
@@ -2243,6 +2283,9 @@ class ComponentUpdateTests(unittest.TestCase):
 
     def test_check_updates_stops_once_on_request_error(self):
         lock_before = (ROOT / "upstream.lock.json").read_bytes()
+        success, complete, error, _ = self.run_check(self.responses())
+        self.assertEqual((success, error), (0, ""))
+        self.assertTrue(complete.startswith("Managed component updates:\n"))
         uv_url = kit.github_api_url(
             kit.load_lock()["runtime_tools"]["uv"]["repository"], "releases/latest"
         )
@@ -2263,7 +2306,8 @@ class ComponentUpdateTests(unittest.TestCase):
                 self.assertEqual(stderr.count("ERROR:"), 1)
                 self.assertIn(detail, stderr)
                 self.assertEqual(calls[-1], uv_url)
-                self.assertEqual(len(calls), 3)
+                self.assertEqual(calls.count(uv_url), 1)
+                self.assertNotIn("Managed component updates:", stderr)
                 write_file.assert_not_called()
                 run.assert_not_called()
                 codex_plugin.assert_not_called()
@@ -2669,6 +2713,11 @@ class IntegrationTests(unittest.TestCase):
         self.assertIn("cpk-rule-owner: execplans", plans)
         self.assertNotIn("Task Brief", preflight)
         self.assertNotIn("task-brief", kit.ALL_SKILLS)
+
+    def test_12ui_router_is_website_only(self):
+        rules = (ROOT / "assets" / "AGENTS.block.md").read_text()
+        self.assertEqual(rules.count("Use 12ui-design only for website projects."), 2)
+        self.assertIn("Do not use it for native apps or other UI work.", rules)
 
     def test_rule_owners_are_unique(self):
         live = [
@@ -3799,7 +3848,7 @@ permissions:
         shell = {path.stem for path in shell_paths}
         powershell = {path.stem for path in powershell_paths}
         self.assertEqual(
-            shell, {"install", "uninstall", "setup-repo", "doctor", "run-tests"}
+            shell, {"install", "uninstall", "setup-repo", "doctor", "run-tests", "check-updates", "apply-updates"}
         )
         self.assertEqual(powershell, shell)
         self.assertTrue(all(path.parent == Path(".") for path in shell_paths | powershell_paths))
