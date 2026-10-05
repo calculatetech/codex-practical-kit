@@ -164,7 +164,7 @@ class PonytailIntegrationTests(unittest.TestCase):
         result, output = self.cli("install")
         self.assertEqual(result, 0, output)
         self.assertIn("`/hooks` to review and trust toolkit and plugin hooks", output)
-        self.assertEqual(len(self.mutations()), 4)
+        self.assertEqual(len(self.mutations()), 2)
         package = self.paths.codex_home / "plugins/cache/ponytail"
         self.assertEqual(sorted(p.parent.name for p in package.glob("skills/*/SKILL.md")), sorted(self.SKILLS))
         self.assertEqual(set(json.loads((package / "hooks.json").read_text())["hooks"]), {"SessionStart", "UserPromptSubmit", "SubagentStart"})
@@ -207,7 +207,7 @@ class PonytailIntegrationTests(unittest.TestCase):
     def test_existing_official_plugin_is_reused(self):
         kit.write_file(self.paths.codex_home / "config.toml", '# unrelated user configuration\n')
         self.assertEqual(self.cli("install")[0], 0)
-        self.assertEqual(len(self.mutations()), 4)
+        self.assertEqual(len(self.mutations()), 2)
         self.calls.clear()
         for enabled in (True, False):
             with self.subTest(enabled=enabled):
@@ -320,9 +320,7 @@ class PonytailIntegrationTests(unittest.TestCase):
                 self.write_state(state)
                 self.assertEqual(self.cli("install")[0], 0)
                 self.assertFalse((self.paths.skills_home / "ponytail").exists())
-                installed_marketplaces = self.state()["marketplaces"]
-                self.assertEqual(installed_marketplaces[: len(state["marketplaces"])], state["marketplaces"])
-                self.assertEqual(installed_marketplaces[-1]["name"], "12ui-plugin")
+                self.assertEqual(self.state()["marketplaces"], state["marketplaces"])
 
 
 if __name__ == "__main__":

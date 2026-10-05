@@ -301,7 +301,7 @@ def managed_candidates(*, include_payloads: bool = False) -> tuple[dict[str, Any
                 candidate["runtime_tools"][name]["installers"] = installers
         elif component.get("plugin_id"):
             upstream = release_identity(repository)
-            if name in {"ponytail", "12ui"}:
+            if name == "ponytail":
                 lines.append(
                     f"{name}: Codex-owned plugin; upstream release {upstream}; use the Codex plugin manager"
                 )
@@ -465,7 +465,6 @@ def apply_updates(args: argparse.Namespace, paths: InstallPaths) -> None:
     candidate, _, payloads = managed_candidates(include_payloads=True)
     plugin_states = {
         "ponytail": ponytail_status(paths),
-        "12ui": twelve_ui_status(paths),
     }
     require_clean_update_source(paths)
     install_core(
@@ -743,9 +742,7 @@ def native_plugin_status(paths: InstallPaths, name: str) -> tuple[bool, dict[str
         elif item.get("pluginId") == plugin_id and item.get("installed") is True:
             package = item.get("source", {})
             package_ok = isinstance(package, dict) and (
-                package.get("source") == "local"
-                if name == "12ui"
-                else package.get("source") == "git"
+                package.get("source") == "git"
                 and official_plugin_source(str(package.get("url", "")), repository)
             )
             if not package_ok:
@@ -756,10 +753,6 @@ def native_plugin_status(paths: InstallPaths, name: str) -> tuple[bool, dict[str
 
 def ponytail_status(paths: InstallPaths) -> tuple[bool, dict[str, Any] | None]:
     return native_plugin_status(paths, "ponytail")
-
-
-def twelve_ui_status(paths: InstallPaths) -> tuple[bool, dict[str, Any] | None]:
-    return native_plugin_status(paths, "12ui")
 
 
 def install_core(
@@ -775,7 +768,6 @@ def install_core(
     paths.codex_home.mkdir(parents=True, exist_ok=True)
     plugin_states = plugin_states or {
         "ponytail": ponytail_status(paths),
-        "12ui": twelve_ui_status(paths),
     }
     paths.install_root.parent.mkdir(parents=True, exist_ok=True)
     paths.install_root.mkdir(parents=True, exist_ok=True)
@@ -1320,7 +1312,7 @@ def check(condition: bool, label: str, detail: str = "") -> bool:
 
 def doctor(args: argparse.Namespace, paths: InstallPaths) -> int:
     ok = True
-    for label, status in (("Ponytail", ponytail_status), ("12UI", twelve_ui_status)):
+    for label, status in (("Ponytail", ponytail_status),):
         try:
             _, plugin = status(paths)
             detail = (

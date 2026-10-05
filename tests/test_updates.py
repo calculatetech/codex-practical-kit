@@ -222,34 +222,33 @@ class ApplyUpdateTests(unittest.TestCase):
 
     def test_apply_native_plugins_preserves_user_state(self):
         disabled = {"installed": True, "enabled": False, "user": "keep"}
-        states = {"ponytail": (True, {"installed": True, "enabled": True}), "12ui": (True, disabled)}
+        states = {"ponytail": (True, disabled)}
         paths, calls = self._run_install_plugins(states, refresh=True)
         self.assertEqual(
             calls,
-            [("marketplace", "upgrade", "ponytail"), ("marketplace", "upgrade", "12ui-plugin")],
+            [("marketplace", "upgrade", "ponytail")],
         )
         self.assertFalse(disabled["enabled"])
         self.assertEqual(disabled["user"], "keep")
         self.assertTrue((paths.codex_home / "AGENTS.md").is_file())
 
-    def test_install_12ui_absent_or_existing(self):
-        absent = {"ponytail": (True, {"installed": True}), "12ui": (False, None)}
+    def test_install_ponytail_absent_or_existing(self):
+        absent = {"ponytail": (False, None)}
         _paths, calls = self._run_install_plugins(absent, refresh=False)
         self.assertEqual(
             calls,
-            [("marketplace", "add", "just-every/12ui-plugin"), ("add", "12ui-design@12ui-plugin")],
+            [("marketplace", "add", "DietrichGebert/ponytail"), ("add", "ponytail@ponytail")],
         )
-        existing = {"ponytail": (True, {"installed": True}), "12ui": (True, {"installed": True, "enabled": False})}
+        existing = {"ponytail": (True, {"installed": True, "enabled": False})}
         _paths, calls = self._run_install_plugins(existing, refresh=False)
         self.assertEqual(calls, [])
-        existing_marketplace = {"ponytail": (True, {"installed": True}), "12ui": (True, None)}
+        existing_marketplace = {"ponytail": (True, None)}
         _paths, calls = self._run_install_plugins(existing_marketplace, refresh=True)
         self.assertEqual(
             calls,
             [
                 ("marketplace", "upgrade", "ponytail"),
-                ("marketplace", "upgrade", "12ui-plugin"),
-                ("add", "12ui-design@12ui-plugin"),
+                ("add", "ponytail@ponytail"),
             ],
         )
 
@@ -266,11 +265,10 @@ class ApplyUpdateTests(unittest.TestCase):
             "repowise": lock["runtime_tools"]["repowise"]["version"],
             "uv": "v" + lock["runtime_tools"]["uv"]["version"],
             "ponytail": "v4.12.0",
-            "12ui": "design-v0.2.107",
         }
 
         def release(repository):
-            for name in ("12ui", "ponytail", "uv"):
+            for name in ("ponytail", "uv"):
                 if repository == lock["runtime_tools"][name]["repository"]:
                     return responses[name]
             self.fail(repository)
@@ -586,6 +584,8 @@ class ComposedUpdateTests(unittest.TestCase):
             "--skills-home", str(self.paths.skills_home),
             "--install-root", str(self.paths.install_root),
         ]
+        if command == "check-updates":
+            args = [command]
         stdout, stderr = io.StringIO(), io.StringIO()
         with mock.patch.object(subprocess, "run", side_effect=self.fake_run), contextlib.redirect_stdout(
             stdout
@@ -609,13 +609,13 @@ class ComposedUpdateTests(unittest.TestCase):
         selected = json.loads((self.source / "upstream.lock.json").read_text())
         self.assertEqual(selected["runtime_tools"]["repowise"]["version"], "9.9.9")
         self.assertEqual(selected["runtime_tools"]["uv"]["version"], "8.8.8")
-        self.assertEqual(set(selected["runtime_tools"]), {"12ui", "ponytail", "repowise", "uv"})
+        self.assertEqual(set(selected["runtime_tools"]), {"ponytail", "repowise", "uv"})
         self.assertEqual(set(selected["skills"]), set(self.skill_payloads))
         self.assertFalse(
             any(name in url for name in selected["optional_tools"] for url in self.http_calls)
         )
         self.assertEqual(self.http_calls.count("https://pypi.org/pypi/repowise/json"), 1)
-        for name in ("12ui", "ponytail", "uv"):
+        for name in ("ponytail", "uv"):
             self.assertEqual(
                 self.http_calls.count(
                     kit.github_api_url(selected["runtime_tools"][name]["repository"], "releases/latest")
@@ -645,8 +645,7 @@ class ComposedUpdateTests(unittest.TestCase):
             {name: item["commit"] for name, item in manifest["upstream"].items()},
             self.skill_commits,
         )
-        installed_12ui = next(item for item in self.plugin_state["installed"] if item["name"] == "12ui-design")
-        self.assertTrue(installed_12ui["enabled"])
+        self.assertFalse(any(item["name"] == "12ui-design" for item in self.plugin_state["installed"]))
         ponytail = next(item for item in self.plugin_state["installed"] if item["name"] == "ponytail")
         self.assertFalse(ponytail["enabled"])
         self.assertEqual(ponytail["user"], "keep")
@@ -670,25 +669,21 @@ class ComposedUpdateTests(unittest.TestCase):
         )
         self.assertEqual(
             sum(call[1:3] == ["plugin", "add"] and call[3] == "12ui-design@12ui-plugin" for call in first_processes),
-            1,
+            0,
         )
         self.assertEqual(
             sum(call[1:4] == ["plugin", "marketplace", "add"] and call[4] == "just-every/12ui-plugin" for call in first_processes),
-            1,
+            0,
         )
 
         stale = self.paths.skills_home / "simple-english"
         (stale / "SKILL.md").write_text("stale")
         (stale / "obsolete.md").write_text("obsolete")
-        installed_12ui["enabled"] = False
-        installed_12ui["user"] = "preserve"
         status, stdout, stderr = self.cli("apply-updates")
         self.assertEqual((status, stderr), (0, ""))
         self.assertIn("Managed component updates applied.", stdout)
         self.assertEqual((stale / "SKILL.md").read_bytes(), self.skill_payloads["simple-english"]["skills/simple-english/SKILL.md"])
         self.assertFalse((stale / "obsolete.md").exists())
-        self.assertFalse(installed_12ui["enabled"])
-        self.assertEqual(installed_12ui["user"], "preserve")
         router = (self.paths.codex_home / "AGENTS.md").read_text()
         self.assertIn("Use 12ui-design only for website projects", router)
         self.assertNotIn("all non-trivial UI", router.lower())
@@ -696,15 +691,12 @@ class ComposedUpdateTests(unittest.TestCase):
             call[0][4] for call in self.process_calls
             if call[0][1:4] == ["plugin", "marketplace", "upgrade"]
         ]
-        self.assertEqual(upgrades[-2:], ["ponytail", "12ui-plugin"])
+        self.assertEqual(upgrades, ["ponytail", "ponytail"])
         self.assertEqual(
             (self.paths.codex_home / "plugins/cache/ponytail/revision").read_text(),
             "refreshed",
         )
-        self.assertEqual(
-            (self.paths.codex_home / "plugins/cache/12ui-plugin/revision").read_text(),
-            "refreshed",
-        )
+        self.assertFalse((self.paths.codex_home / "plugins/cache/12ui-plugin").exists())
         self.assertTrue(
             all(
                 home == str(self.paths.codex_home)
@@ -715,83 +707,69 @@ class ComposedUpdateTests(unittest.TestCase):
         self.assertEqual(self.plugin_state["marketplaces"][0], {"name": "unrelated", "root": "keep"})
         self.assertEqual(self.cli("doctor")[0], 0)
 
-    def test_install_main_fresh_and_preserves_disabled_12ui(self):
+    def test_12ui_is_unmanaged_across_install_apply_and_doctor(self):
         candidate, _lines, _payloads = kit.managed_candidates(include_payloads=True)
         kit.write_file(
             self.source / "upstream.lock.json",
             json.dumps(candidate, indent=2, sort_keys=True) + "\n",
         )
         self.commit_source_lock()
-        status, stdout, stderr = self.cli("install")
-        self.assertEqual((status, stderr), (0, ""))
-        self.assertIn("Core kit installed.", stdout)
-        self.assertEqual(
-            sum(item["name"] == "12ui-plugin" for item in self.plugin_state["marketplaces"]),
-            1,
-        )
-        self.assertEqual(
-            sum(item["name"] == "12ui-design" for item in self.plugin_state["installed"]),
-            1,
-        )
-        installed = next(item for item in self.plugin_state["installed"] if item["name"] == "12ui-design")
-        self.assertTrue(installed["enabled"])
-        self.assertIn(
-            "Use 12ui-design only for website projects",
-            (self.paths.codex_home / "AGENTS.md").read_text(),
-        )
-        self.assertNotIn(
-            "all non-trivial UI",
-            (self.paths.codex_home / "AGENTS.md").read_text().lower(),
-        )
-        self.assertEqual(self.cli("doctor")[0], 0)
-
-        installed["enabled"] = False
-        installed["user"] = "keep"
-        before = len(self.process_calls)
-        self.assertEqual(self.cli("install")[0], 0)
-        mutations = [
-            command for command, _home in self.process_calls[before:]
-            if command[:2] == ["codex", "plugin"]
-            and (command[2:4] == ["marketplace", "add"] or command[2] == "add")
-        ]
-        self.assertEqual(mutations, [])
-        self.assertFalse(installed["enabled"])
-        self.assertEqual(installed["user"], "keep")
-        self.assertEqual(
-            sum(item["name"] == "12ui-design" for item in self.plugin_state["installed"]),
-            1,
-        )
-        self.assertNotIn(
-            "all non-trivial UI",
-            (self.paths.codex_home / "AGENTS.md").read_text().lower(),
-        )
-        self.assertEqual(self.cli("doctor")[0], 0)
-
-        self.plugin_state["installed"] = [
-            item for item in self.plugin_state["installed"] if item["name"] != "12ui-design"
-        ]
-        before = len(self.process_calls)
-        self.assertEqual(self.cli("install")[0], 0)
-        install_calls = [call[0] for call in self.process_calls[before:]]
-        self.assertTrue(any(call[1:3] == ["plugin", "add"] and call[3] == "12ui-design@12ui-plugin" for call in install_calls))
-        installed_12ui = next(item for item in self.plugin_state["installed"] if item["name"] == "12ui-design")
-        installed_12ui["enabled"] = False
-        installed_12ui["user"] = "ordinary-install-preserves"
-        before = len(self.process_calls)
-        self.assertEqual(self.cli("install")[0], 0)
-        self.assertFalse(installed_12ui["enabled"])
-        self.assertEqual(installed_12ui["user"], "ordinary-install-preserves")
-        self.assertFalse(
-            any(
-                call[0][1:3] == ["plugin", "add"] and call[0][3] == "12ui-design@12ui-plugin"
-                for call in self.process_calls[before:]
-            )
-        )
-        self.assertEqual(self.cli("doctor")[0], 0)
+        # Retained Codex listing shape, independent of the toolkit's request generator.
+        curated = {
+            "pluginId": "12ui-design@openai-curated-remote",
+            "name": "12ui-design",
+            "marketplaceName": "openai-curated-remote",
+            "version": "0.2.65",
+            "installed": True,
+            "enabled": False,
+            "source": {"source": "remote", "id": "plugins_6a8915941e8c8191ae58d10e41cc322f"},
+            "user": "keep",
+        }
+        cache = self.paths.codex_home / "plugins/cache/openai-curated-remote/12ui-design/0.2.65/skills/12ui-design/SKILL.md"
+        for existing in (False, True):
+            with self.subTest(existing_12ui=existing):
+                if existing:
+                    self.plugin_state["installed"].append(copy.deepcopy(curated))
+                    kit.write_file(cache, "# separately installed 12UI\n")
+                    kit.write_file(
+                        self.paths.codex_home / "config.toml",
+                        kit.read_text(self.paths.codex_home / "config.toml")
+                        + '\n[plugins."12ui-design@openai-curated-remote"]\nenabled = false\n',
+                    )
+                before = len(self.process_calls)
+                http_before = len(self.http_calls)
+                for command in ("check-updates", "install", "apply-updates", "install", "doctor"):
+                    status, stdout, stderr = self.cli(command)
+                    self.assertEqual((status, stderr), (0, ""), command)
+                    if command == "check-updates":
+                        self.assertNotIn("12ui", stdout.lower())
+                    elif command == "doctor":
+                        self.assertIn("Result: ready", stdout)
+                        self.assertNotIn("12UI", stdout)
+                plugins = [
+                    item for item in self.plugin_state["installed"]
+                    if item["name"] == "12ui-design"
+                ]
+                self.assertEqual(plugins, [curated] if existing else [])
+                if existing:
+                    self.assertEqual(cache.read_bytes(), b"# separately installed 12UI\n")
+                    self.assertIn(
+                        '[plugins."12ui-design@openai-curated-remote"]\nenabled = false',
+                        (self.paths.codex_home / "config.toml").read_text(),
+                    )
+                router = (self.paths.codex_home / "AGENTS.md").read_text()
+                self.assertIn("Use 12ui-design only for website projects", router)
+                self.assertIn("Do not use it for native apps or other UI work", router)
+                self.assertFalse(
+                    any("12ui" in argument.lower() for command, _home in self.process_calls[before:] for argument in command)
+                )
+                self.assertFalse(any("12ui" in url.lower() for url in self.http_calls[http_before:]))
+                self.assertFalse((self.paths.codex_home / "plugins/cache/12ui-plugin").exists())
+                self.assertEqual((self.default_home / "sentinel").read_bytes(), self.default_before)
 
     def test_apply_main_stops_after_first_operation_error(self):
         self.assertEqual(self.cli("apply-updates")[0], 0)
-        self.fail_upgrade = "12ui-plugin"
+        self.fail_upgrade = "ponytail"
         before = len(self.process_calls)
         status, stdout, stderr = self.cli("apply-updates")
         calls = self.process_calls[before:]
@@ -802,18 +780,18 @@ class ComposedUpdateTests(unittest.TestCase):
         self.assertNotIn("Managed component updates applied.", stderr)
         self.assertEqual(
             [call[0][4] for call in calls if call[0][1:4] == ["plugin", "marketplace", "upgrade"]],
-            ["ponytail", "12ui-plugin"],
+            ["ponytail"],
         )
         self.assertEqual(
             sum(
-                call[0][1:5] == ["plugin", "marketplace", "upgrade", "12ui-plugin"]
+                call[0][1:5] == ["plugin", "marketplace", "upgrade", "ponytail"]
                 for call in calls
             ),
             1,
         )
         self.assertEqual(
             calls[-1][0][1:5],
-            ["plugin", "marketplace", "upgrade", "12ui-plugin"],
+            ["plugin", "marketplace", "upgrade", "ponytail"],
         )
         self.assertFalse(any(Path(call[0][0]).name.startswith("uv") for call in calls))
 
@@ -932,7 +910,6 @@ class ComposedUpdateTests(unittest.TestCase):
             lines = ["Managed component updates:"]
             lines.extend(
                 (
-                    "- 12ui: Codex-owned plugin; upstream release design-v0.2.107; use the Codex plugin manager",
                     "- ponytail: Codex-owned plugin; upstream release v4.12.0; use the Codex plugin manager",
                     (
                         f"- repowise: toolkit pin {lock['runtime_tools']['repowise']['version']}; "
@@ -961,7 +938,7 @@ class ComposedUpdateTests(unittest.TestCase):
             lock = json.loads((self.source / "upstream.lock.json").read_text())
             self.assertEqual(lock["runtime_tools"]["repowise"]["version"], "9.9.9")
             self.assertEqual(lock["runtime_tools"]["uv"]["version"], "8.8.8")
-            self.assertEqual(set(lock["runtime_tools"]), {"12ui", "ponytail", "repowise", "uv"})
+            self.assertEqual(set(lock["runtime_tools"]), {"ponytail", "repowise", "uv"})
             self.assertEqual(set(lock["skills"]), {"neuroarxiv", "simple-english"})
             expected_files = {
                 "neuroarxiv": {
@@ -1010,6 +987,9 @@ class ComposedUpdateTests(unittest.TestCase):
         self.assertEqual(bash_check.returncode, 0, bash_check.stderr)
         self.assertEqual(bash_check.stdout, expected_check_output())
         self.assertEqual(snapshot(self.paths), before)
+        self.assertFalse(
+            any("12ui" in item["command"][1].lower() for item in calls() if item["command"][0] == "http")
+        )
 
         clear_calls()
         bash_apply = invoke("apply-updates.sh", *options(self.paths))
@@ -1018,6 +998,7 @@ class ComposedUpdateTests(unittest.TestCase):
         assert_ready(self.paths)
         bash_calls = calls()
         bash_urls = [item["command"][1] for item in bash_calls if item["command"][0] == "http"]
+        self.assertFalse(any("12ui" in url.lower() for url in bash_urls))
         lock = json.loads((self.source / "upstream.lock.json").read_text())
         self.assertFalse(any(name in url for name in lock["optional_tools"] for url in bash_urls))
         for name, component in lock["skills"].items():
@@ -1029,7 +1010,7 @@ class ComposedUpdateTests(unittest.TestCase):
             )
             self.assertEqual(bash_urls.count(tree_url), 1, name)
         self.assertEqual(bash_urls.count("https://pypi.org/pypi/repowise/json"), 1)
-        for name in ("12ui", "ponytail", "uv"):
+        for name in ("ponytail", "uv"):
             self.assertEqual(
                 bash_urls.count(
                     kit.github_api_url(lock["runtime_tools"][name]["repository"], "releases/latest")
@@ -1049,11 +1030,11 @@ class ComposedUpdateTests(unittest.TestCase):
         )
         self.assertEqual(
             [item for item in mutations if item[:2] == ["marketplace", "add"]],
-            [["marketplace", "add", "just-every/12ui-plugin"]],
+            [],
         )
         self.assertEqual(
             [item for item in mutations if item[:1] == ["add"]],
-            [["add", "12ui-design@12ui-plugin"]],
+            [],
         )
         self.assertEqual(
             sum(
@@ -1091,9 +1072,8 @@ class ComposedUpdateTests(unittest.TestCase):
         self.assertEqual(bash_install.returncode, 0, bash_install.stderr)
         assert_ready(bash_paths)
         state = json.loads((fixture / "plugins.json").read_text())
-        installed_12ui = next(item for item in state["installed"] if item["name"] == "12ui-design")
-        installed_12ui["enabled"] = False
-        installed_12ui["user"] = "keep-bash"
+        self.assertFalse(any(item["name"] == "12ui-design" for item in state["installed"]))
+        state["installed"].append(self.plugin("12ui", enabled=False, user="keep-bash"))
         (fixture / "plugins.json").write_text(json.dumps(state))
         clear_calls()
         self.assertEqual(invoke("install.sh", *options(bash_paths)).returncode, 0)
@@ -1121,9 +1101,8 @@ class ComposedUpdateTests(unittest.TestCase):
         self.assertEqual(powershell_install.returncode, 0, powershell_install.stderr)
         assert_ready(powershell_paths)
         state = json.loads((fixture / "plugins.json").read_text())
-        installed_12ui = next(item for item in state["installed"] if item["name"] == "12ui-design")
-        installed_12ui["enabled"] = False
-        installed_12ui["user"] = "keep-powershell"
+        self.assertFalse(any(item["name"] == "12ui-design" for item in state["installed"]))
+        state["installed"].append(self.plugin("12ui", enabled=False, user="keep-powershell"))
         (fixture / "plugins.json").write_text(json.dumps(state))
         clear_calls()
         self.assertEqual(invoke("install.ps1", *options(powershell_paths)).returncode, 0)
@@ -1147,14 +1126,15 @@ class ComposedUpdateTests(unittest.TestCase):
         self.assertEqual(powershell_check.returncode, 0, powershell_check.stderr)
         self.assertEqual(powershell_check.stdout, expected_check_output())
         self.assertEqual(snapshot(self.paths), before)
+        self.assertFalse(
+            any("12ui" in item["command"][1].lower() for item in calls() if item["command"][0] == "http")
+        )
 
         stale = self.paths.skills_home / "simple-english"
         (stale / "SKILL.md").write_text("stale")
         (stale / "obsolete.md").write_text("obsolete")
         state = json.loads((fixture / "plugins.json").read_text())
-        installed_12ui = next(item for item in state["installed"] if item["name"] == "12ui-design")
-        installed_12ui["enabled"] = False
-        installed_12ui["user"] = "keep-apply"
+        state["installed"].append(self.plugin("12ui", enabled=False, user="keep-apply"))
         (fixture / "plugins.json").write_text(json.dumps(state))
         clear_calls()
         powershell_apply = invoke("apply-updates.ps1", *options(self.paths))
@@ -1177,7 +1157,7 @@ class ComposedUpdateTests(unittest.TestCase):
             item["command"][1] for item in power_calls if item["command"][0] == "http"
         ]
         self.assertEqual(power_urls.count("https://pypi.org/pypi/repowise/json"), 1)
-        for name in ("12ui", "ponytail", "uv"):
+        for name in ("ponytail", "uv"):
             self.assertEqual(
                 power_urls.count(
                     kit.github_api_url(lock["runtime_tools"][name]["repository"], "releases/latest")
@@ -1208,7 +1188,7 @@ class ComposedUpdateTests(unittest.TestCase):
             item["command"][4] for item in power_calls
             if item["command"][1:4] == ["plugin", "marketplace", "upgrade"]
         ]
-        self.assertEqual(upgrades, ["ponytail", "12ui-plugin"])
+        self.assertEqual(upgrades, ["ponytail"])
         self.assertEqual(
             sum(
                 item["command"][1:] == ["--version"]
@@ -1230,7 +1210,8 @@ class ComposedUpdateTests(unittest.TestCase):
         )
         self.assertEqual((self.default_home / "sentinel").read_bytes(), self.default_before)
         self.assertEqual((self.paths.codex_home / "plugins/cache/ponytail/revision").read_text(), "refreshed")
-        self.assertEqual((self.paths.codex_home / "plugins/cache/12ui-plugin/revision").read_text(), "refreshed")
+        self.assertFalse((self.paths.codex_home / "plugins/cache/12ui-plugin").exists())
+        self.assertFalse(any("12ui" in url.lower() for url in power_urls))
 
         self.commit_source_lock()
         state = json.loads((fixture / "plugins.json").read_text())
@@ -1246,7 +1227,7 @@ class ComposedUpdateTests(unittest.TestCase):
             self.assertEqual(len(calls()), 1)
             self.assertEqual(calls()[0]["command"][0], "http")
         state["fail_http"] = False
-        state["fail"] = "12ui-plugin"
+        state["fail"] = "ponytail"
         (fixture / "plugins.json").write_text(json.dumps(state))
         for script in ("apply-updates.sh", "apply-updates.ps1"):
             clear_calls()
@@ -1258,7 +1239,7 @@ class ComposedUpdateTests(unittest.TestCase):
             failed_calls = calls()
             failed_upgrade = [
                 item for item in failed_calls
-                if item["command"][1:5] == ["plugin", "marketplace", "upgrade", "12ui-plugin"]
+                if item["command"][1:5] == ["plugin", "marketplace", "upgrade", "ponytail"]
             ]
             self.assertEqual(len(failed_upgrade), 1)
             self.assertEqual(failed_calls[-1], failed_upgrade[0])

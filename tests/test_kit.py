@@ -66,13 +66,10 @@ class InstallerTests(unittest.TestCase):
         self.runtime.start()
         self.ponytail = mock.patch.object(kit, "ponytail_status", return_value=(True, {"installed": True}))
         self.ponytail.start()
-        self.twelve_ui = mock.patch.object(kit, "twelve_ui_status", return_value=(True, {"installed": True}))
-        self.twelve_ui.start()
 
     def tearDown(self):
         self.runtime.stop()
         self.ponytail.stop()
-        self.twelve_ui.stop()
 
     def test_run_decodes_utf8_subprocess_output(self):
         result = kit.run(
@@ -1514,7 +1511,7 @@ class RepoWiseRuntimeTests(unittest.TestCase):
             self.assertEqual(
                 commands,
                 [
-                    ["/usr/bin/uv", "tool", "install", "repowise==0.45.0"],
+                    ["/usr/bin/uv", "tool", "install", f"repowise=={kit.load_lock()['runtime_tools']['repowise']['version']}"],
                     ["/usr/bin/uv", "tool", "update-shell"],
                 ],
             )
@@ -1582,8 +1579,6 @@ class RepoWiseRuntimeTests(unittest.TestCase):
                 kit, "stage_upstream_skills", side_effect=fake_stage
             ), mock.patch.object(kit, "run", side_effect=fake_run), mock.patch.object(
                 kit, "ponytail_status", return_value=(True, {"installed": True})
-            ), mock.patch.object(
-                kit, "twelve_ui_status", return_value=(True, {"installed": True})
             ):
                 kit.install_core(Namespace(), paths)
 
@@ -1592,7 +1587,7 @@ class RepoWiseRuntimeTests(unittest.TestCase):
             self.assertEqual(repowise.read_bytes(), b"repaired")
             self.assertEqual(manifest["repowise"], str(repowise))
             self.assertIn(
-                [r"C:\Tools\uv.exe", "tool", "install", "--force", "repowise==0.45.0"],
+                [r"C:\Tools\uv.exe", "tool", "install", "--force", f"repowise=={kit.load_lock()['runtime_tools']['repowise']['version']}"],
                 commands,
             )
 
@@ -1653,7 +1648,7 @@ class RepoWiseRuntimeTests(unittest.TestCase):
             self.assertEqual(result, str(repowise))
             self.assertEqual(repowise.read_bytes(), b"unchanged")
             self.assertIn(
-                ["/usr/bin/uv", "tool", "install", "--force", "repowise==0.45.0"],
+                ["/usr/bin/uv", "tool", "install", "--force", f"repowise=={kit.load_lock()['runtime_tools']['repowise']['version']}"],
                 commands,
             )
 
@@ -1666,7 +1661,7 @@ class RepoWiseRuntimeTests(unittest.TestCase):
             ), mock.patch.object(
                 kit,
                 "run",
-                return_value=subprocess.CompletedProcess([], 0, "RepoWise 0.45.0", ""),
+                return_value=subprocess.CompletedProcess([], 0, f"RepoWise {kit.load_lock()['runtime_tools']['repowise']['version']}", ""),
             ) as run:
                 result = kit.ensure_repowise(paths, r"C:\Tools\uv.exe")
             self.assertEqual(result, str(repowise))
@@ -1697,7 +1692,7 @@ class RepoWiseRuntimeTests(unittest.TestCase):
                 self.assertEqual(kit.ensure_repowise(paths, "/usr/bin/uv"), str(repowise))
 
             self.assertIn(
-                ["/usr/bin/uv", "tool", "install", "--force", "repowise==0.45.0"],
+                ["/usr/bin/uv", "tool", "install", "--force", f"repowise=={kit.load_lock()['runtime_tools']['repowise']['version']}"],
                 commands,
             )
 
@@ -2135,9 +2130,6 @@ class ComponentUpdateTests(unittest.TestCase):
         runtime = lock["runtime_tools"]
         skills = lock["skills"]
         return {
-            kit.github_api_url(runtime["12ui"]["repository"], "releases/latest"): {
-                "tag_name": "design-v0.2.107"
-            },
             kit.github_api_url(runtime["ponytail"]["repository"], "releases/latest"): {
                 "tag_name": "v4.12.0"
             },
@@ -2195,7 +2187,6 @@ class ComponentUpdateTests(unittest.TestCase):
         lock = kit.load_lock()
         expected_lines = [
             "Managed component updates:",
-            "- 12ui: Codex-owned plugin; upstream release design-v0.2.107; use the Codex plugin manager",
             "- ponytail: Codex-owned plugin; upstream release v4.12.0; use the Codex plugin manager",
             (
                 f"- repowise: toolkit pin {lock['runtime_tools']['repowise']['version']}; "
@@ -2456,7 +2447,7 @@ class IntegrationTests(unittest.TestCase):
                 kit,
                 "command_version",
                 side_effect=lambda command: (
-                    "RepoWise 0.45.0" if "repowise" in command[0] else "codex-cli 0.149"
+                    f"RepoWise {kit.load_lock()['runtime_tools']['repowise']['version']}" if "repowise" in command[0] else "codex-cli 0.149"
                 ),
             ), mock.patch.object(kit, "run", side_effect=doctor_run):
                 self.assertEqual(kit.doctor(Namespace(repo=str(linked)), paths), 0)
@@ -3100,7 +3091,7 @@ class IntegrationTests(unittest.TestCase):
         optional = (ROOT / "docs" / "OPTIONAL-REVIEW-TOOLS.md").read_text()
 
         self.assertIn("neuroarxiv", kit.UPSTREAM_SKILLS)
-        self.assertEqual(neuro["commit"], "b5d20efa12dd1ba177ce890d56809d2e027f8055")
+        self.assertRegex(neuro["commit"], r"^[0-9a-f]{40}$")
         self.assertEqual(neuro["license"], "MIT")
         self.assertEqual(
             {(item["destination"], item["git_blob_sha1"]) for item in neuro["files"]},

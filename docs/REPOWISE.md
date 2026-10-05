@@ -52,7 +52,7 @@ Agent evidence and review-packet rules are in [Repository knowledge](../assets/s
 
 RepoWise is a large external tool and uses AGPL-3.0. The kit does not copy it, modify it, or depend on its database format.
 
-Core installation reuses `uv` when present. If it is absent, the kit installs pinned uv 0.12.4 from a checksum-verified upstream script. Windows uses the official PowerShell installer. macOS and Linux use the official shell installer. The kit installs RepoWise 0.45.0 as a persistent uv tool. A later kit install upgrades only the RepoWise executable recorded at the kit-owned user-bin path. It does not replace an unrecorded command.
+Core installation reuses `uv` when present. If it is absent, the kit installs the version from `upstream.lock.json` through a checksum-verified upstream script. Windows uses the official PowerShell installer. macOS and Linux use the official shell installer. The kit installs the locked RepoWise version as a persistent uv tool. A later kit install upgrades only the RepoWise executable recorded at the kit-owned user-bin path. It does not replace an unrecorded command.
 
 Doctor uses the runtime paths in the selected installation manifest before it searches `PATH`. Doctor reports the selected uv version. Ordinary installation can reuse an existing uv. Update application installs and records the lock-selected uv.
 

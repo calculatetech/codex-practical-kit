@@ -6,7 +6,7 @@ The managed `AGENTS.md` is a small skill router. Skill descriptions keep unrelat
 
 ## Included components
 
-The kit installs the official Ponytail and 12UI plugins. It also installs these task skills:
+The kit installs the official Ponytail plugin. It also installs these task skills:
 
 - `simple-english`
 - `neuroarxiv`
@@ -44,7 +44,7 @@ pwsh -File .\install.ps1
 pwsh -File .\doctor.ps1
 ```
 
-The installer copies managed skills to `~/.agents/skills/`. Do not edit installed copies. Codex manages Ponytail and 12UI as native plugins.
+The installer copies managed skills to `~/.agents/skills/`. Do not edit installed copies. Codex manages Ponytail as a native plugin.
 
 The installer writes a managed block in `~/.codex/AGENTS.md`. It renders the absolute PLANS path and names installed skills.
 
@@ -147,11 +147,22 @@ Migration removes an old standalone Ponytail skill only when the toolkit manifes
 
 ## 12UI
 
-The installer uses the official `just-every/12ui-plugin` marketplace. It installs `12ui-design@12ui-plugin` when the plugin is absent.
+Install a compatible 12UI plugin through the Codex plugin directory if you want to use it. The toolkit does not install, update, or require 12UI.
 
 The toolkit uses 12UI only for website projects. It does not use 12UI for native applications or other user-interface work.
 
-The toolkit does not copy or edit the upstream skill. The apply command refreshes its marketplace and preserves its enabled or disabled state.
+The toolkit preserves separately installed 12UI plugins and does not copy or edit their skills.
+
+The `just-every/12ui-plugin` Git package at version `0.2.108` includes a Claude Code pane. Its hook configuration contains `modules`, which Codex `0.160.0` rejects.
+
+If an older toolkit installed that package, remove it and its marketplace registration:
+
+```text
+codex plugin remove 12ui-design@12ui-plugin
+codex plugin marketplace remove 12ui-plugin
+```
+
+These commands leave a separately installed `12ui-design@openai-curated-remote` plugin intact. Later toolkit install and apply commands do not restore the Git package.
 
 ## Rule owners
 
@@ -276,8 +287,6 @@ Set `CODEX_HOME` to the selected directory with `export CODEX_HOME="$cpk_codex_h
 ```text
 codex plugin remove ponytail@ponytail
 codex plugin marketplace remove ponytail
-codex plugin remove 12ui-design@12ui-plugin
-codex plugin marketplace remove 12ui-plugin
 ```
 
 Keep the marketplace if you still use another plugin from it. Normal toolkit uninstall never runs these commands.

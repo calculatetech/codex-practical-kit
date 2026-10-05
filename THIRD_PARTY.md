@@ -10,25 +10,16 @@
 - Version policy: install when absent; preserve existing versions and settings; Codex owns updates and removal
 - License: MIT
 
-### 12UI
-
-- Source: https://github.com/just-every/12ui-plugin
-- Installation: official native Codex plugin `12ui-design@12ui-plugin` from the `just-every/12ui-plugin` marketplace
-- Use: website projects only
-- Version policy: install when absent; refresh through the named marketplace; preserve enabled state and user data
-- License: MIT
-
 ### SimpleEnglish
 
 - Source: https://github.com/AminBlg/SimpleEnglish
-- Pinned commit: `59bf6702197a5aadc96d197ea17f290d8d50dcd3`
-- Installed files: the Simple English skill, its two reference files, and `LICENSE`
+- Pinned commit and installed files: see `skills.simple-english` in `upstream.lock.json`
 - License: MIT
 
 ### NeuroArxiv
 
 - Source: https://github.com/UditAkhourii/neuroarxiv
-- Pinned commit: `b5d20efa12dd1ba177ce890d56809d2e027f8055`
+- Pinned commit: see `skills.neuroarxiv` in `upstream.lock.json`
 - Installed files: `skills/neuroarxiv/SKILL.md`, `LICENSE`
 - License: MIT
 - Integration: required prior-art workflow for qualifying open technical mechanisms
@@ -36,7 +27,7 @@
 ### RepoWise
 
 - Source: https://github.com/repowise-dev/repowise
-- Pinned runtime version: `0.45.0`
+- Pinned runtime version: see `runtime_tools.repowise` in `upstream.lock.json`
 - License: AGPL-3.0-or-later
 - Integration: persistent uv tool, MCP server, and marker-delimited Git hook
 - RepoWise is not copied into or linked with this kit.
@@ -44,12 +35,18 @@
 ### uv
 
 - Source: https://github.com/astral-sh/uv
-- Pinned installer version: `0.12.4`
-- Installer SHA-256: `f1ee4a249799525a330df57643335120150c9102db7483b1d37546cc43af3a16`
+- Pinned installer version and platform SHA-256 values: see `runtime_tools.uv` in `upstream.lock.json`
 - License: Apache-2.0 OR MIT
 - Integration: checksum-verified upstream installer when `uv` is absent
 
 ## Optional components
+
+### 12UI
+
+- Installation and updates: Codex plugin directory, outside toolkit management
+- Use: website projects only
+- Compatibility: the toolkit does not install the `just-every/12ui-plugin` Git package because version `0.2.108` includes unsupported Claude Code hooks
+- Existing plugins: retained without changes
 
 ### OpenAI ExecPlan guidance
 
