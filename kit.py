@@ -25,7 +25,7 @@ from pathlib import Path
 from typing import Any, Iterable
 
 KIT_ID = "codex-practical-kit"
-KIT_VERSION = "0.24.1"
+KIT_VERSION = "0.25.0"
 ROOT = Path(__file__).resolve().parent
 AGENTS_START = "<!-- codex-practical-kit:start -->"
 AGENTS_END = "<!-- codex-practical-kit:end -->"

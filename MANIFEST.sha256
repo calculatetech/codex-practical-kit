@@ -132,12 +132,13 @@ a5d8013da3d22afba28c1259e29e3255d1d19969d0934b2f59069f0de80ea31b  ./docs/plans/c
 ccc9e20f5cd288592bde3dc81fd49820e9f7d62ef2274a99af8ac9781d5d3f5c  ./docs/plans/cpk-061-component-updates-agent-cleanup.md
 487d05e84cc1c1849f7dff4fc08eac2adad08af9dab8091b60bac48c8ad085c4  ./docs/plans/cpk-062-managed-update-application-12ui.md
 471a4a4af80c1f234983f629dc007708f94fde7868952f15004be57a5176eb82  ./docs/plans/cpk-063-12ui-codex-compatibility.md
-d0d2e85b0b519df2fc189c060bbad9e9e64630c47037d890cb1e6b5b4830c393  ./docs/roadmap.md
+92f55f0ad064584f3aba2b4231d8172a318999a314923028281063887157f8cf  ./docs/plans/cpk-064-publish-managed-updates.md
+4009ec9c82628acaff788261ed0206cdc7051b37daf63f8eb2dd41ac8f6f77fd  ./docs/roadmap.md
 6f8f14ca5fd8ad935eee66256b3f7c49d5c40957eedff938ba21365e30869719  ./doctor.ps1
 ab56a88d9188979f06ea142d1f58ea0d6ad9088e83a965bd324209d83da513ad  ./doctor.sh
 8087bdb3ee654c0baac278a8e3bf85e33e314f8acfd486e7ebf675126a697058  ./install.ps1
 3466d2e34145cfdaa83d793960794b2aefc96f3d9c48d22fd2af930ec819e9c4  ./install.sh
-4ed95b2f645a3d81aa0b27eeb6daba9678498304dbe90756275e62b471a47055  ./kit.py
+6b7f2ffe9cb74301a80d1ae2d78e46c5ff1a7725844ca40fe0c0a199cf72d8ef  ./kit.py
 331f17ca1486b5779d9b57a3a73834328eb3089ce612e636e6a8e5085899d61e  ./run-tests.ps1
 e6df9f1da02280a66161583529b06a34f0103041e9587afad0fac6074eecc15b  ./run-tests.sh
 85a2ba72e2b0cd1ab6c25a51f39059502415c3ac62a6bffa613d7e31b6422cd4  ./setup-repo.ps1
@@ -148,7 +149,7 @@ e1e231aac51822f7e1bb3aa61aba138cf8c5df9cefd3079b0c1b5a98eea03bd9  ./tests/fixtur
 a269775204ae7cad2457d00f5565c90da2df41a9719479f3489ec01afdd2519c  ./tests/fixtures/cpk056-agent-cases.json
 e32941eb74be1f2cdcb6c82cf71e113b841651bf0d01786f364176de2da1b9c5  ./tests/fixtures/cpk056-agent-grading.json
 289367b7090a0d71936b41f08c4a354bc2758013dceb709819de36a1b73d9aa6  ./tests/live_plan_history.py
-fe686dbf58fdd350c8dd9b5a72b7bee50573d5c51d47c1f56706ba0f41b8441b  ./tests/test_kit.py
+a9eb553c7dec86316708fac170e4488c7173822db790f9c217bc0d745c1dec98  ./tests/test_kit.py
 dbeb390655fbe5321578256db17b6a7c9edc1a4a7e7499ff5fe524dccbfc1719  ./tests/test_ponytail.py
 0657ab41fb029202f2c30262768d1b6142c45f5214a96589705cc7c3c6ae73ff  ./tests/test_updates.py
 54673ace20ec6333c73ead405c82d52560848bc8b9aa3a0102fc39935cc3ab87  ./tests/update_subprocess_fixture.py
