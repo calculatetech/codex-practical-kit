@@ -33,6 +33,7 @@ No residual risk is accepted.
 
 ## Completed
 
+- ✅ **CPK-066 — Correct runtime identity and install output.** Compare the complete RepoWise version token during installation and Doctor checks. Report only the managed Ponytail plugin in successful install output.
 - ✅ **CPK-065 — Restore the requested finished-thread archival.** Capture terminal delegated results and archive explicitly targeted finished threads with native tools. Remove the substituted closure prerequisite and preserve active work and required follow-ups. [ExecPlan](plans/cpk-065-restore-thread-archival.md)
 - ✅ **CPK-064 — Set the managed-update publication version.** Identify the combined update commands and 12UI compatibility correction as version `0.25.0`. [ExecPlan](plans/cpk-064-publish-managed-updates.md)
 - ✅ **CPK-063 — Stop reinstalling incompatible 12UI hooks.** Remove the Claude Code Git package from managed installation, updates, and Doctor. Preserve separately installed 12UI and the website-only routing rule. [ExecPlan](plans/cpk-063-12ui-codex-compatibility.md)

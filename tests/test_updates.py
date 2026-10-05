@@ -417,6 +417,7 @@ class ComposedUpdateTests(unittest.TestCase):
             "installed": [self.plugin("ponytail", enabled=False, user="keep")],
         }
         self.fail_upgrade = None
+        self.repowise_version = "9.9.9"
         self.skill_payloads = {
             "neuroarxiv": {
                 "skills/neuroarxiv/SKILL.md": b"# neuroarxiv selected\n",
@@ -527,9 +528,10 @@ class ComposedUpdateTests(unittest.TestCase):
                 target.mkdir(parents=True, exist_ok=True)
                 suffix = ".exe" if executable.endswith(".exe") else ""
                 (target / f"repowise{suffix}").write_text("fixture")
+                self.repowise_version = command[-1].split("==", 1)[1]
             return subprocess.CompletedProcess(command, 0, "", "")
         if executable in {"repowise", "repowise.exe"}:
-            return subprocess.CompletedProcess(command, 0, "RepoWise 9.9.9\n", "")
+            return subprocess.CompletedProcess(command, 0, f"RepoWise {self.repowise_version}\n", "")
         if executable != "codex":
             self.fail(f"Unexpected process: {command}")
         if command[1:] == ["--version"]:
@@ -707,6 +709,33 @@ class ComposedUpdateTests(unittest.TestCase):
         self.assertEqual(self.plugin_state["marketplaces"][0], {"name": "unrelated", "root": "keep"})
         self.assertEqual(self.cli("doctor")[0], 0)
 
+    def test_apply_matches_complete_repowise_version(self):
+        self.assertEqual(self.cli("apply-updates")[0], 0)
+        for action in ("install", "apply-updates"):
+            for version in ("9.9.9", "19.9.9", "9.9.9.post1"):
+                with self.subTest(action=action, reported_version=version):
+                    self.repowise_version = version
+                    self.assertEqual(self.cli("doctor")[0], 0 if version == "9.9.9" else 1)
+                    before = len(self.process_calls)
+                    status, stdout, stderr = self.cli(action)
+                    self.assertEqual((status, stderr), (0, ""))
+                    self.assertIn("Core kit installed." if action == "install" else "Managed component updates applied.", stdout)
+                    installs = [
+                        command for command, _home in self.process_calls[before:]
+                        if command[1:3] == ["tool", "install"]
+                    ]
+                    self.assertEqual(len(installs), 0 if version == "9.9.9" else 1)
+                    if installs:
+                        self.assertEqual(installs[0][-1], "repowise==9.9.9")
+                    self.assertEqual(self.repowise_version, "9.9.9")
+                    selected = json.loads((self.source / "upstream.lock.json").read_text())
+                    self.assertEqual(selected["runtime_tools"]["repowise"]["version"], "9.9.9")
+                    self.assertEqual(
+                        (self.source / "upstream.lock.json").read_bytes(),
+                        (self.paths.install_root / "upstream.lock.json").read_bytes(),
+                    )
+                    self.assertEqual(self.cli("doctor")[0], 0)
+
     def test_12ui_is_unmanaged_across_install_apply_and_doctor(self):
         candidate, _lines, _payloads = kit.managed_candidates(include_payloads=True)
         kit.write_file(
@@ -743,6 +772,9 @@ class ComposedUpdateTests(unittest.TestCase):
                     self.assertEqual((status, stderr), (0, ""), command)
                     if command == "check-updates":
                         self.assertNotIn("12ui", stdout.lower())
+                    elif command == "install":
+                        self.assertIn("Ponytail: native Codex plugin", stdout)
+                        self.assertNotIn("12UI", stdout)
                     elif command == "doctor":
                         self.assertIn("Result: ready", stdout)
                         self.assertNotIn("12UI", stdout)

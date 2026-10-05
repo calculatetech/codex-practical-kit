@@ -1007,7 +1007,7 @@ def ensure_repowise(
             result = None
         detail = ((result.stdout or result.stderr).strip() if result else "")
         version = detail.splitlines()[0] if detail else None
-        if result and result.returncode == 0 and version and version_expected in version:
+        if result and result.returncode == 0 and version and version.split()[-1] == version_expected:
             return repowise
         manifest = json_load(manifest_path(paths), {})
         recorded = manifest.get("repowise") if isinstance(manifest, dict) else None
@@ -1391,7 +1391,7 @@ def doctor(args: argparse.Namespace, paths: InstallPaths) -> int:
         repowise_version = load_lock()["runtime_tools"]["repowise"]["version"]
         version = command_version([repowise, "--version"])
         ok &= check(
-            bool(version and repowise_version in version),
+            bool(version and version.split()[-1] == repowise_version),
             f"RepoWise {repowise_version}",
             version or "unavailable",
         )
@@ -1541,7 +1541,7 @@ def main(argv: list[str] | None = None) -> int:
             print(f"Global instructions: {paths.codex_home / 'AGENTS.md'}")
             print(f"Global ExecPlan rules: {plans_path(paths)}")
             print(f"Hooks: {paths.codex_home / 'config.toml'}")
-            print("Ponytail and 12UI: native Codex plugins; existing versions and settings preserved.")
+            print("Ponytail: native Codex plugin; existing versions and settings preserved.")
             print("Open a new Codex session and use `/hooks` to review and trust toolkit and plugin hooks.")
             if args.repo:
                 repo_args = argparse.Namespace(repo=args.repo, prose=args.repowise_prose)
