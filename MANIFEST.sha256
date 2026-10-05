@@ -23,7 +23,7 @@ d60f352d0db1404c70afb4bb8b2ca3fd1c610572aa40720e8a0b7baa7885418c  ./.gitattribut
 6d7a25701ba2532525fe556f1a55529ab09af6675522f749afb22609f7f8183e  ./CODEX-INSTALL-PROMPT.md
 6612129aca01053f15098204fb4bbaafdf85a667956202530bdcbc339e58e462  ./LICENSE
 e4912f4f8d644555dcd57d5e336a249cf8a9d7f6222b78096d6b403f45a8a215  ./PLAYGROUND.md
-964bddcb73a1cd9492eaf0340987a5f33aa57cad53f4ca62e4c73e984f82fa3f  ./README.md
+70489ebf898ac49654b09d398e4c1c528ed6cadb7b23b5f49c5fba7859324398  ./README.md
 979191eeef7975567b4c44c9fb6dc38bf78e431eda582ff55d4f37eb2f69a441  ./THIRD_PARTY.md
 59b191889c8b7d098ddaf6b029f6f12b3ce6590893e1823f4448ad3b90c03fb4  ./assets/AGENTS.block.md
 b9f9eb58967f54b19fb3a58b1db32e4c25299ae10c06e2e45a6611c250801a71  ./assets/hooks/session_start.py
@@ -38,7 +38,7 @@ a564a3b00a86f43d38318b76168593bc965b2f1decf67a328d499a054aa35f36  ./assets/skill
 baa988b652f856bce1a4e183bf327879a021896eb65617b2fd4903e34a461339  ./assets/skills/defect-diagnostic/agents/openai.yaml
 f98f3661b7b4cfbe6a1b061e075898ae21b65cbb6765abec76b332b03cab2f9b  ./assets/skills/defect-diagnostic/references/diagnostic-summary.md
 20fb4b743b3ed14fa58ae1710bf5c621eb1f0b20dad552212221594368fa2d4c  ./assets/skills/delivery-lifecycle/SKILL.md
-9320e46907d34dd905159c75abba4b37bd7ce990f30a023d6b80c4715d6a0196  ./assets/skills/delivery-lifecycle/references/coordination.md
+a149cc13be4525d74bab07edca41b3d84770c9aa924c3ae037a5c808c248dfb4  ./assets/skills/delivery-lifecycle/references/coordination.md
 b24f6d4c5d6ba9d3a4ab4215eac302764e8dcb0fe2c6dc76789b3ffe77a8e21f  ./assets/skills/delivery-lifecycle/references/decision-handoffs.md
 d9d882f331eaed467f783b899073d992b9f9872927f76ce8c7a2069295a8a080  ./assets/skills/delivery-lifecycle/references/delivery-lifecycle.md
 2536a374b63658e5e0bbca17d1a9ed25a41b61eeb539702cc8ee7c6f41bf1a31  ./assets/skills/delivery-lifecycle/references/git-isolation.md
@@ -125,12 +125,13 @@ a5d8013da3d22afba28c1259e29e3255d1d19969d0934b2f59069f0de80ea31b  ./docs/plans/c
 5f2abf3bc85fbfc580d05139165ff95f29a3a85246bab2724c5f949eb93f26a5  ./docs/plans/cpk-058-plan-history-compaction.md
 43141b61bf800dc9956603b6e88cdd0c3a5564340d3f4aee3fb6b0682dceee00  ./docs/plans/cpk-059-public-pr-release.md
 8cea5185f3a1181dc9a1419f3f980712b2b9e35936ec2a8011629d67cd0d041f  ./docs/plans/cpk-060-windows-codex-resolution.md
-23106fd9f30090fc85692c14612b95f69be5b8d2757137a3df19ed6093d2af0b  ./docs/roadmap.md
+ccc9e20f5cd288592bde3dc81fd49820e9f7d62ef2274a99af8ac9781d5d3f5c  ./docs/plans/cpk-061-component-updates-agent-cleanup.md
+fe6379868ba2232d54e1bba3fcab4dd25e3594aa2d262c39524953f767b0c109  ./docs/roadmap.md
 6f8f14ca5fd8ad935eee66256b3f7c49d5c40957eedff938ba21365e30869719  ./doctor.ps1
 ab56a88d9188979f06ea142d1f58ea0d6ad9088e83a965bd324209d83da513ad  ./doctor.sh
 8087bdb3ee654c0baac278a8e3bf85e33e314f8acfd486e7ebf675126a697058  ./install.ps1
 3466d2e34145cfdaa83d793960794b2aefc96f3d9c48d22fd2af930ec819e9c4  ./install.sh
-7c4238f798f567de9b7de28268b5fd344a861ce8fff1d16da7f2e2966908f8f5  ./kit.py
+5469fe020aad5b51e376c4c15ef44f214b29f859529bb797aa4f23748b9726de  ./kit.py
 331f17ca1486b5779d9b57a3a73834328eb3089ce612e636e6a8e5085899d61e  ./run-tests.ps1
 e6df9f1da02280a66161583529b06a34f0103041e9587afad0fac6074eecc15b  ./run-tests.sh
 85a2ba72e2b0cd1ab6c25a51f39059502415c3ac62a6bffa613d7e31b6422cd4  ./setup-repo.ps1
@@ -141,7 +142,7 @@ e1e231aac51822f7e1bb3aa61aba138cf8c5df9cefd3079b0c1b5a98eea03bd9  ./tests/fixtur
 a269775204ae7cad2457d00f5565c90da2df41a9719479f3489ec01afdd2519c  ./tests/fixtures/cpk056-agent-cases.json
 e32941eb74be1f2cdcb6c82cf71e113b841651bf0d01786f364176de2da1b9c5  ./tests/fixtures/cpk056-agent-grading.json
 289367b7090a0d71936b41f08c4a354bc2758013dceb709819de36a1b73d9aa6  ./tests/live_plan_history.py
-9b6d3048643461026467186632f3de49fbc533aaa8a91de46b699c67cfe7bad3  ./tests/test_kit.py
+a1f37a4b26f13c014da797245895547a2dc64e7e534834507eb0ecad88a4d466  ./tests/test_kit.py
 1979109d44a6b49c01747216c99dc6598e5cc725b986df4eea60215e4598f4d8  ./tests/test_ponytail.py
 d16f7eadc8c668e82a1d0d2554ed04def15cb0a4b2ce13ac1ce1339bc0e62161  ./uninstall.ps1
 f12cff94ef7f9b0ca489cbe43e1de737011476966e04c1578f4977177b0da217  ./uninstall.sh

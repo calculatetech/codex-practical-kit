@@ -230,6 +230,89 @@ def load_lock() -> dict[str, Any]:
     return value
 
 
+def fetch_json(url: str) -> Any:
+    request = urllib.request.Request(
+        url,
+        headers={
+            "Accept": "application/vnd.github+json, application/json",
+            "User-Agent": f"{KIT_ID}/{KIT_VERSION}",
+        },
+    )
+    try:
+        with urllib.request.urlopen(request, timeout=60) as response:
+            return json.loads(response.read().decode("utf-8"))
+    except (urllib.error.URLError, TimeoutError, UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise KitError(f"Could not read component update data from {url}: {exc}") from exc
+
+
+def github_api_url(repository: str, suffix: str) -> str:
+    match = re.fullmatch(r"https://github\.com/([^/]+)/([^/]+?)(?:\.git)?/?", repository)
+    if not match:
+        raise KitError(f"Unsupported repository URL: {repository}")
+    return f"https://api.github.com/repos/{match.group(1)}/{match.group(2)}/{suffix}"
+
+
+def required_string(value: Any, field: str, url: str) -> str:
+    if not isinstance(value, str) or not value:
+        raise KitError(f"Component update source did not return {field}: {url}")
+    return value
+
+
+def check_updates() -> None:
+    lock = load_lock()
+    lines: list[str] = []
+
+    for name, component in lock["runtime_tools"].items():
+        repository = component["repository"]
+        if name == "repowise":
+            url = "https://pypi.org/pypi/repowise/json"
+            data = fetch_json(url)
+            info = data.get("info") if isinstance(data, dict) else None
+            upstream = required_string(
+                info.get("version") if isinstance(info, dict) else None,
+                "info.version",
+                url,
+            )
+            pinned = component["version"]
+            state = "same identity" if upstream == pinned else "upstream differs"
+            lines.append(f"{name}: toolkit pin {pinned}; upstream release {upstream}; {state}")
+        elif name in {"uv", "ponytail"}:
+            url = github_api_url(repository, "releases/latest")
+            data = fetch_json(url)
+            upstream = required_string(
+                data.get("tag_name") if isinstance(data, dict) else None,
+                "tag_name",
+                url,
+            )
+            if name == "ponytail":
+                lines.append(
+                    f"{name}: Codex-owned plugin; upstream release {upstream}; use the Codex plugin manager"
+                )
+            else:
+                pinned = component["version"]
+                comparable = upstream[1:] if upstream.startswith("v") else upstream
+                state = "same identity" if comparable == pinned else "upstream differs"
+                lines.append(f"{name}: toolkit pin {pinned}; upstream release {upstream}; {state}")
+        else:
+            raise KitError(f"No update source is defined for managed runtime tool: {name}")
+
+    for name, component in lock["skills"].items():
+        url = github_api_url(component["repository"], "commits?per_page=1")
+        data = fetch_json(url)
+        upstream = required_string(
+            data[0].get("sha") if isinstance(data, list) and data and isinstance(data[0], dict) else None,
+            "default-branch commit SHA",
+            url,
+        )
+        pinned = component["commit"]
+        state = "same identity" if upstream == pinned else "upstream differs"
+        lines.append(f"{name}: toolkit revision {pinned}; upstream revision {upstream}; {state}")
+
+    print("Managed component updates:")
+    for line in lines:
+        print(f"- {line}")
+
+
 def raw_github_url(repository: str, commit: str, source_path: str) -> str:
     match = re.fullmatch(r"https://github\.com/([^/]+)/([^/]+?)(?:\.git)?", repository.rstrip("/"))
     if not match:
@@ -1211,6 +1294,15 @@ def build_parser() -> argparse.ArgumentParser:
     update = sub.add_parser("repowise-update", help="Refresh the pinned RepoWise index.")
     update.add_argument("repo", nargs="?", default=".")
 
+    sub.add_parser(
+        "check-updates",
+        help="Report managed component update availability.",
+        description=(
+            "Read upstream sources and report managed component updates. "
+            "This read-only command changes no files or installations."
+        ),
+    )
+
     diag = sub.add_parser("doctor", help="Check the core kit and repository integration.")
     add_path_options(diag)
     diag.add_argument("--repo", help="Also check RepoWise in this repository.")
@@ -1237,6 +1329,9 @@ def main(argv: list[str] | None = None) -> int:
         if args.command == "repowise-update":
             update_repowise(args, paths)
             print("RepoWise index updated.")
+            return 0
+        if args.command == "check-updates":
+            check_updates()
             return 0
 
         if args.command == "install":

@@ -50,6 +50,26 @@ The installer writes a managed block in `~/.codex/AGENTS.md`. It renders the abs
 
 The installer also writes `$CODEX_HOME/PLANS.md` and managed Codex hooks. Session Start announces the AGENTS router.
 
+## Check managed component updates
+
+On macOS or Linux, run this read-only command from the source checkout:
+
+```bash
+python3 kit.py check-updates
+```
+
+On Windows, run:
+
+```powershell
+python kit.py check-updates
+```
+
+The command reads authoritative upstream sources for all managed runtime tools and bundled skills. It excludes optional tools and does not change installations, plugins, pins, or configuration.
+
+The report compares toolkit version and revision pins with upstream identities. Ponytail has no toolkit pin, so the report identifies its upstream release and Codex-owned lifecycle.
+
+A complete report returns status 0, including when upstream differs. A request error returns status 2 and prints no partial report.
+
 ## Global and repository instructions
 
 The installer manages `~/.codex/AGENTS.md` and `$CODEX_HOME/PLANS.md`. These files apply to every repository unless a nearer repository file overrides them.
