@@ -40,7 +40,7 @@ a564a3b00a86f43d38318b76168593bc965b2f1decf67a328d499a054aa35f36  ./assets/skill
 baa988b652f856bce1a4e183bf327879a021896eb65617b2fd4903e34a461339  ./assets/skills/defect-diagnostic/agents/openai.yaml
 f98f3661b7b4cfbe6a1b061e075898ae21b65cbb6765abec76b332b03cab2f9b  ./assets/skills/defect-diagnostic/references/diagnostic-summary.md
 20fb4b743b3ed14fa58ae1710bf5c621eb1f0b20dad552212221594368fa2d4c  ./assets/skills/delivery-lifecycle/SKILL.md
-a149cc13be4525d74bab07edca41b3d84770c9aa924c3ae037a5c808c248dfb4  ./assets/skills/delivery-lifecycle/references/coordination.md
+2995e2472f94e403ab399be52c0497dd591346bb4edcf86b055768551e33fefc  ./assets/skills/delivery-lifecycle/references/coordination.md
 b24f6d4c5d6ba9d3a4ab4215eac302764e8dcb0fe2c6dc76789b3ffe77a8e21f  ./assets/skills/delivery-lifecycle/references/decision-handoffs.md
 d9d882f331eaed467f783b899073d992b9f9872927f76ce8c7a2069295a8a080  ./assets/skills/delivery-lifecycle/references/delivery-lifecycle.md
 2536a374b63658e5e0bbca17d1a9ed25a41b61eeb539702cc8ee7c6f41bf1a31  ./assets/skills/delivery-lifecycle/references/git-isolation.md
@@ -133,7 +133,8 @@ ccc9e20f5cd288592bde3dc81fd49820e9f7d62ef2274a99af8ac9781d5d3f5c  ./docs/plans/c
 487d05e84cc1c1849f7dff4fc08eac2adad08af9dab8091b60bac48c8ad085c4  ./docs/plans/cpk-062-managed-update-application-12ui.md
 471a4a4af80c1f234983f629dc007708f94fde7868952f15004be57a5176eb82  ./docs/plans/cpk-063-12ui-codex-compatibility.md
 92f55f0ad064584f3aba2b4231d8172a318999a314923028281063887157f8cf  ./docs/plans/cpk-064-publish-managed-updates.md
-4009ec9c82628acaff788261ed0206cdc7051b37daf63f8eb2dd41ac8f6f77fd  ./docs/roadmap.md
+1c2e4ea4987be8065f417c1bd8296dd6db50cb2e63760dd1f6a952573f18e6b4  ./docs/plans/cpk-065-restore-thread-archival.md
+9d7541b95d56e2e3b14f2351721b28cfea3bb9ec0cc81b4a0e3322faf50e5558  ./docs/roadmap.md
 6f8f14ca5fd8ad935eee66256b3f7c49d5c40957eedff938ba21365e30869719  ./doctor.ps1
 ab56a88d9188979f06ea142d1f58ea0d6ad9088e83a965bd324209d83da513ad  ./doctor.sh
 8087bdb3ee654c0baac278a8e3bf85e33e314f8acfd486e7ebf675126a697058  ./install.ps1
@@ -149,7 +150,7 @@ e1e231aac51822f7e1bb3aa61aba138cf8c5df9cefd3079b0c1b5a98eea03bd9  ./tests/fixtur
 a269775204ae7cad2457d00f5565c90da2df41a9719479f3489ec01afdd2519c  ./tests/fixtures/cpk056-agent-cases.json
 e32941eb74be1f2cdcb6c82cf71e113b841651bf0d01786f364176de2da1b9c5  ./tests/fixtures/cpk056-agent-grading.json
 289367b7090a0d71936b41f08c4a354bc2758013dceb709819de36a1b73d9aa6  ./tests/live_plan_history.py
-a9eb553c7dec86316708fac170e4488c7173822db790f9c217bc0d745c1dec98  ./tests/test_kit.py
+2424e4d7cbf073c2b7da64f4e455b375ebd4f2c99be1df9a37aedd07e8e8676d  ./tests/test_kit.py
 dbeb390655fbe5321578256db17b6a7c9edc1a4a7e7499ff5fe524dccbfc1719  ./tests/test_ponytail.py
 0657ab41fb029202f2c30262768d1b6142c45f5214a96589705cc7c3c6ae73ff  ./tests/test_updates.py
 54673ace20ec6333c73ead405c82d52560848bc8b9aa3a0102fc39935cc3ab87  ./tests/update_subprocess_fixture.py

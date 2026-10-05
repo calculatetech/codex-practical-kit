@@ -3160,15 +3160,13 @@ class IntegrationTests(unittest.TestCase):
         ).read_text()
 
         capture = coordination.index("Capture each terminal delegated result.")
-        close = coordination.index("`close_agent`")
-        next_slot = coordination.index("Close finished agent threads before spending another agent slot.", close)
-        archive = coordination.index("Archive only an explicitly targeted finished agent subtree.", next_slot)
-        self.assertLess(capture, close)
-        self.assertLess(close, next_slot)
-        self.assertLess(next_slot, archive)
-        self.assertIn("for that exact agent", coordination)
-        self.assertIn("Closure releases open-agent capacity", coordination)
-        self.assertIn("does not prove that closure occurred", coordination)
+        archive = coordination.index("Then use exposed native thread archival", capture)
+        self.assertLess(capture, archive)
+        self.assertIn("archive that exact finished agent thread", coordination)
+        self.assertIn("specify the finished thread identifier", coordination.lower())
+        self.assertNotIn("close_agent", coordination)
+        self.assertNotIn("Close finished agent threads before spending another agent slot", coordination)
+        self.assertIn("does not prove that agent capacity was released", coordination)
         self.assertIn("Do not delete session files or edit Codex state directly", coordination)
 
     def test_coordination_archive_targets_preserve_active_work(self):
