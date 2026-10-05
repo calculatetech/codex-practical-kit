@@ -1,5 +1,6 @@
 <!-- cpk-rule-owner: routing -->
 <!-- cpk-rule-guard: Use only the skills that match the current task. -->
+<!-- cpk-rule-guard: Use 12ui-design only for website projects. -->
 
 ## Codex Practical Kit
 
@@ -19,3 +20,4 @@ Use only the skills that match the current task. Follow the focused references s
 - Severe defect analysis: `defect-diagnostic`.
 - Publication or version selection: `publication`.
 - Toolkit rule changes: `toolkit-maintainer`.
+- Use 12ui-design only for website projects. Do not use it for native apps or other UI work.

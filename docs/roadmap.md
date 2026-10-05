@@ -33,6 +33,12 @@ No residual risk is accepted.
 
 ## Completed
 
+- ✅ **CPK-066 — Correct runtime identity and install output.** Compare the complete RepoWise version token during installation and Doctor checks. Report only the managed Ponytail plugin in successful install output.
+- ✅ **CPK-065 — Restore the requested finished-thread archival.** Capture terminal delegated results and archive explicitly targeted finished threads with native tools. Remove the substituted closure prerequisite and preserve active work and required follow-ups. [ExecPlan](plans/cpk-065-restore-thread-archival.md)
+- ✅ **CPK-064 — Set the managed-update publication version.** Identify the combined update commands and 12UI compatibility correction as version `0.25.0`. [ExecPlan](plans/cpk-064-publish-managed-updates.md)
+- ✅ **CPK-063 — Stop reinstalling incompatible 12UI hooks.** Remove the Claude Code Git package from managed installation, updates, and Doctor. Preserve separately installed 12UI and the website-only routing rule. [ExecPlan](plans/cpk-063-12ui-codex-compatibility.md)
+- ✅ **CPK-062 — Apply managed updates and add website-only 12UI.** Add explicit update application through thin Bash and PowerShell launchers, reconcile the source lock with the selected installation, install or refresh the official 12UI plugin, and route 12UI only for website projects. [ExecPlan](plans/cpk-062-managed-update-application-12ui.md)
+- ✅ **CPK-061 — Report managed component updates and clean up finished agent threads.** Add a read-only update check for RepoWise and every other managed component. Teach coordinators to preserve required follow-ups, close terminal delegated threads, and archive finished history with native tools. [ExecPlan](plans/cpk-061-component-updates-agent-cleanup.md)
 - ✅ **CPK-060 — Resolve the Codex command on Windows.** Use the Windows npm command shim for native plugin installation and Doctor checks. Publish version `0.24.1`. [ExecPlan](plans/cpk-060-windows-codex-resolution.md)
 - ✅ **CPK-059 — Publish through protected pull requests.** Add readiness-triggered CI, make the repository public, protect main, and release reusable Plan History as version `0.24.0`. [ExecPlan](plans/cpk-059-public-pr-release.md)
 - ✅ **CPK-058 — Compact Plan History and resume interrupted reads.** Reuse verified summaries without changing original records, and preserve reading progress across normal context compaction. [ExecPlan](plans/cpk-058-plan-history-compaction.md)

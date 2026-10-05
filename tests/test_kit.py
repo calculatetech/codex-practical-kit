@@ -1,4 +1,6 @@
+import contextlib
 import hashlib
+import io
 import json
 import os
 import re
@@ -1377,14 +1379,23 @@ class RepoWiseRuntimeTests(unittest.TestCase):
             self.assertEqual(kit.find_runtime_command(paths, "uv"), str(command))
             which.assert_called_once_with("uv.exe")
 
+    def test_runtime_discovery_prefers_selected_manifest_command(self):
+        with tempfile.TemporaryDirectory() as temp:
+            paths = self.paths(Path(temp))
+            selected = Path(temp) / "selected-uv"
+            selected.write_text("uv")
+            kit.write_file(kit.manifest_path(paths), json.dumps({"uv": str(selected)}))
+            with mock.patch.object(kit.shutil, "which", return_value="/external/uv"):
+                self.assertEqual(kit.find_runtime_command(paths, "uv"), str(selected))
+
     def test_runtime_pins_match_lock_file(self):
         runtime = json.loads((ROOT / "upstream.lock.json").read_text())["runtime_tools"]
-        self.assertEqual(runtime["uv"]["version"], kit.UV_VERSION)
-        self.assertEqual(runtime["uv"]["installers"]["posix"]["url"], kit.UV_INSTALLER_URL)
-        self.assertEqual(runtime["uv"]["installers"]["posix"]["sha256"], kit.UV_INSTALLER_SHA256)
-        self.assertEqual(runtime["uv"]["installers"]["windows"]["url"], kit.UV_WINDOWS_INSTALLER_URL)
-        self.assertEqual(runtime["uv"]["installers"]["windows"]["sha256"], kit.UV_WINDOWS_INSTALLER_SHA256)
-        self.assertEqual(runtime["repowise"]["version"], kit.REPOWISE_VERSION)
+        version = runtime["uv"]["version"]
+        self.assertEqual(runtime["uv"]["installers"]["posix"]["url"], f"https://astral.sh/uv/{version}/install.sh")
+        self.assertEqual(runtime["uv"]["installers"]["windows"]["url"], f"https://astral.sh/uv/{version}/install.ps1")
+        self.assertRegex(runtime["uv"]["installers"]["posix"]["sha256"], r"^[0-9a-f]{64}$")
+        self.assertRegex(runtime["uv"]["installers"]["windows"]["sha256"], r"^[0-9a-f]{64}$")
+        self.assertRegex(runtime["repowise"]["version"], r"^\d+\.\d+\.\d+$")
 
     def test_missing_uv_runs_verified_installer_once(self):
         with tempfile.TemporaryDirectory() as temp:
@@ -1405,7 +1416,8 @@ class RepoWiseRuntimeTests(unittest.TestCase):
             ) as download, mock.patch.object(kit, "run", side_effect=fake_run) as run:
                 uv = kit.ensure_uv(paths)
             self.assertEqual(uv, str(paths.home / ".local" / "bin" / "uv"))
-            download.assert_called_once_with(kit.UV_INSTALLER_URL, kit.UV_INSTALLER_SHA256)
+            installer = kit.load_lock()["runtime_tools"]["uv"]["installers"]["posix"]
+            download.assert_called_once_with(installer["url"], installer["sha256"])
             run.assert_called_once()
 
     def test_missing_windows_uv_runs_verified_powershell_installer_once(self):
@@ -1438,9 +1450,8 @@ class RepoWiseRuntimeTests(unittest.TestCase):
             ) as download, mock.patch.object(kit, "run", side_effect=fake_run) as run:
                 uv = kit.ensure_uv(paths)
             self.assertEqual(uv, str(paths.home / ".local" / "bin" / "uv.exe"))
-            download.assert_called_once_with(
-                kit.UV_WINDOWS_INSTALLER_URL, kit.UV_WINDOWS_INSTALLER_SHA256
-            )
+            installer = kit.load_lock()["runtime_tools"]["uv"]["installers"]["windows"]
+            download.assert_called_once_with(installer["url"], installer["sha256"])
             run.assert_called_once()
 
     @unittest.skipUnless(shutil.which("pwsh"), "PowerShell 7 is not installed")
@@ -1500,7 +1511,7 @@ class RepoWiseRuntimeTests(unittest.TestCase):
             self.assertEqual(
                 commands,
                 [
-                    ["/usr/bin/uv", "tool", "install", "repowise==0.45.0"],
+                    ["/usr/bin/uv", "tool", "install", f"repowise=={kit.load_lock()['runtime_tools']['repowise']['version']}"],
                     ["/usr/bin/uv", "tool", "update-shell"],
                 ],
             )
@@ -1576,7 +1587,7 @@ class RepoWiseRuntimeTests(unittest.TestCase):
             self.assertEqual(repowise.read_bytes(), b"repaired")
             self.assertEqual(manifest["repowise"], str(repowise))
             self.assertIn(
-                [r"C:\Tools\uv.exe", "tool", "install", "--force", "repowise==0.45.0"],
+                [r"C:\Tools\uv.exe", "tool", "install", "--force", f"repowise=={kit.load_lock()['runtime_tools']['repowise']['version']}"],
                 commands,
             )
 
@@ -1637,7 +1648,7 @@ class RepoWiseRuntimeTests(unittest.TestCase):
             self.assertEqual(result, str(repowise))
             self.assertEqual(repowise.read_bytes(), b"unchanged")
             self.assertIn(
-                ["/usr/bin/uv", "tool", "install", "--force", "repowise==0.45.0"],
+                ["/usr/bin/uv", "tool", "install", "--force", f"repowise=={kit.load_lock()['runtime_tools']['repowise']['version']}"],
                 commands,
             )
 
@@ -1650,7 +1661,7 @@ class RepoWiseRuntimeTests(unittest.TestCase):
             ), mock.patch.object(
                 kit,
                 "run",
-                return_value=subprocess.CompletedProcess([], 0, "RepoWise 0.45.0", ""),
+                return_value=subprocess.CompletedProcess([], 0, f"RepoWise {kit.load_lock()['runtime_tools']['repowise']['version']}", ""),
             ) as run:
                 result = kit.ensure_repowise(paths, r"C:\Tools\uv.exe")
             self.assertEqual(result, str(repowise))
@@ -1681,7 +1692,7 @@ class RepoWiseRuntimeTests(unittest.TestCase):
                 self.assertEqual(kit.ensure_repowise(paths, "/usr/bin/uv"), str(repowise))
 
             self.assertIn(
-                ["/usr/bin/uv", "tool", "install", "--force", "repowise==0.45.0"],
+                ["/usr/bin/uv", "tool", "install", "--force", f"repowise=={kit.load_lock()['runtime_tools']['repowise']['version']}"],
                 commands,
             )
 
@@ -2100,6 +2111,224 @@ class RepoWiseRuntimeTests(unittest.TestCase):
             self.assertEqual(mcp_kwargs["env"]["REPOWISE_SKIP_EDITOR_SETUP"], "1")
 
 
+class ComponentUpdateTests(unittest.TestCase):
+    class Response:
+        def __init__(self, value):
+            self.data = json.dumps(value).encode("utf-8")
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *_args):
+            return False
+
+        def read(self):
+            return self.data
+
+    def responses(self):
+        lock = kit.load_lock()
+        runtime = lock["runtime_tools"]
+        skills = lock["skills"]
+        return {
+            kit.github_api_url(runtime["ponytail"]["repository"], "releases/latest"): {
+                "tag_name": "v4.12.0"
+            },
+            "https://pypi.org/pypi/repowise/json": {
+                "info": {"version": runtime["repowise"]["version"]}
+            },
+            kit.github_api_url(runtime["uv"]["repository"], "releases/latest"): {
+                "tag_name": f"v{runtime['uv']['version']}"
+            },
+            **{
+                kit.github_api_url(component["repository"], "commits?per_page=1"): [
+                    {"sha": component["commit"]}
+                ]
+                for component in skills.values()
+            },
+        }
+
+    def run_check(self, responses):
+        calls = []
+
+        def urlopen(request, timeout):
+            self.assertEqual(timeout, 60)
+            calls.append(request.full_url)
+            value = responses[request.full_url]
+            if isinstance(value, BaseException):
+                raise value
+            return self.Response(value)
+
+        stdout = io.StringIO()
+        stderr = io.StringIO()
+        with mock.patch.object(kit.urllib.request, "urlopen", side_effect=urlopen), contextlib.redirect_stdout(
+            stdout
+        ), contextlib.redirect_stderr(stderr):
+            status = kit.main(["check-updates"])
+        return status, stdout.getvalue(), stderr.getvalue(), calls
+
+    def test_check_updates_reports_complete_managed_inventory(self):
+        lock_before = (ROOT / "upstream.lock.json").read_bytes()
+        responses = self.responses()
+        final_url = kit.github_api_url(
+            kit.load_lock()["skills"]["simple-english"]["repository"],
+            "commits?per_page=1",
+        )
+        responses[final_url] = [{"sha": "f" * 40}]
+
+        with mock.patch.object(kit, "write_file") as write_file, mock.patch.object(
+            kit, "run"
+        ) as run, mock.patch.object(kit, "codex_plugin") as codex_plugin:
+            status, stdout, stderr, calls = self.run_check(responses)
+
+        self.assertEqual(status, 0)
+        self.assertEqual(stderr, "")
+        self.assertEqual(len(calls), len(responses))
+        self.assertEqual(set(calls), set(responses))
+        lock = kit.load_lock()
+        expected_lines = [
+            "Managed component updates:",
+            "- ponytail: Codex-owned plugin; upstream release v4.12.0; use the Codex plugin manager",
+            (
+                f"- repowise: toolkit pin {lock['runtime_tools']['repowise']['version']}; "
+                f"upstream release {lock['runtime_tools']['repowise']['version']}; same identity"
+            ),
+            (
+                f"- uv: toolkit pin {lock['runtime_tools']['uv']['version']}; "
+                f"upstream release v{lock['runtime_tools']['uv']['version']}; same identity"
+            ),
+            (
+                f"- neuroarxiv: toolkit revision {lock['skills']['neuroarxiv']['commit']}; "
+                f"upstream revision {lock['skills']['neuroarxiv']['commit']}; same identity"
+            ),
+            (
+                f"- simple-english: toolkit revision {lock['skills']['simple-english']['commit']}; "
+                f"upstream revision {'f' * 40}; upstream differs"
+            ),
+        ]
+        self.assertEqual(stdout, "\n".join(expected_lines) + "\n")
+        for name in (*lock["runtime_tools"], *lock["skills"]):
+            self.assertEqual(stdout.count(f"- {name}:"), 1)
+        for name in lock["optional_tools"]:
+            self.assertNotIn(name, stdout)
+            self.assertFalse(any(name in url for url in calls))
+        self.assertIn("simple-english:", stdout)
+        self.assertIn("upstream differs", stdout)
+        self.assertEqual((ROOT / "upstream.lock.json").read_bytes(), lock_before)
+        write_file.assert_not_called()
+        run.assert_not_called()
+        codex_plugin.assert_not_called()
+
+    def test_check_updates_compares_version_pins(self):
+        lock = kit.load_lock()
+        repowise_url = "https://pypi.org/pypi/repowise/json"
+        uv_url = kit.github_api_url(lock["runtime_tools"]["uv"]["repository"], "releases/latest")
+        cases = (
+            (repowise_url, {"info": {"version": lock["runtime_tools"]["repowise"]["version"]}}, "same identity"),
+            (repowise_url, {"info": {"version": "99.0.0"}}, "upstream differs"),
+            (uv_url, {"tag_name": f"v{lock['runtime_tools']['uv']['version']}"}, "same identity"),
+            (uv_url, {"tag_name": "v99.0.0"}, "upstream differs"),
+        )
+        for url, value, expected in cases:
+            with self.subTest(url=url, value=value):
+                responses = self.responses()
+                responses[url] = value
+                status, stdout, stderr, _calls = self.run_check(responses)
+                name = "repowise" if url == repowise_url else "uv"
+                line = next(line for line in stdout.splitlines() if line.startswith(f"- {name}:"))
+                pinned = lock["runtime_tools"][name]["version"]
+                upstream = value["info"]["version"] if name == "repowise" else value["tag_name"]
+                self.assertEqual(status, 0)
+                self.assertEqual(stderr, "")
+                self.assertEqual(
+                    line,
+                    f"- {name}: toolkit pin {pinned}; upstream release {upstream}; {expected}",
+                )
+
+    def test_check_updates_compares_skill_revisions(self):
+        lock = kit.load_lock()
+        for name, component in lock["skills"].items():
+            url = kit.github_api_url(component["repository"], "commits?per_page=1")
+            for upstream, expected in ((component["commit"], "same identity"), ("f" * 40, "upstream differs")):
+                with self.subTest(name=name, upstream=upstream):
+                    responses = self.responses()
+                    responses[url] = [{"sha": upstream}]
+                    status, stdout, stderr, calls = self.run_check(responses)
+                    line = next(line for line in stdout.splitlines() if line.startswith(f"- {name}:"))
+                    self.assertEqual(status, 0)
+                    self.assertEqual(stderr, "")
+                    self.assertIn(url, calls)
+                    self.assertIn(f"toolkit revision {component['commit']}", line)
+                    self.assertIn(f"upstream revision {upstream}", line)
+                    self.assertIn(expected, line)
+
+    def test_check_updates_reports_codex_owned_ponytail(self):
+        status, stdout, stderr, _calls = self.run_check(self.responses())
+        line = next(line for line in stdout.splitlines() if line.startswith("- ponytail:"))
+        self.assertEqual(status, 0)
+        self.assertEqual(stderr, "")
+        self.assertEqual(
+            line,
+            "- ponytail: Codex-owned plugin; upstream release v4.12.0; "
+            "use the Codex plugin manager",
+        )
+
+    def test_check_updates_stops_once_on_request_error(self):
+        lock_before = (ROOT / "upstream.lock.json").read_bytes()
+        success, complete, error, _ = self.run_check(self.responses())
+        self.assertEqual((success, error), (0, ""))
+        self.assertTrue(complete.startswith("Managed component updates:\n"))
+        uv_url = kit.github_api_url(
+            kit.load_lock()["runtime_tools"]["uv"]["repository"], "releases/latest"
+        )
+        for failure, detail in (
+            (kit.urllib.error.URLError("offline"), "offline"),
+            ({}, "tag_name"),
+        ):
+            with self.subTest(detail=detail):
+                responses = self.responses()
+                responses[uv_url] = failure
+                with mock.patch.object(kit, "write_file") as write_file, mock.patch.object(
+                    kit, "run"
+                ) as run, mock.patch.object(kit, "codex_plugin") as codex_plugin:
+                    status, stdout, stderr, calls = self.run_check(responses)
+
+                self.assertEqual(status, 2)
+                self.assertEqual(stdout, "")
+                self.assertEqual(stderr.count("ERROR:"), 1)
+                self.assertIn(detail, stderr)
+                self.assertEqual(calls[-1], uv_url)
+                self.assertEqual(calls.count(uv_url), 1)
+                self.assertNotIn("Managed component updates:", stderr)
+                write_file.assert_not_called()
+                run.assert_not_called()
+                codex_plugin.assert_not_called()
+        self.assertEqual((ROOT / "upstream.lock.json").read_bytes(), lock_before)
+
+    def test_update_check_is_explicit(self):
+        urlopen = mock.Mock()
+        top_level_help = ""
+        command_help = ""
+        for argv in (["--help"], ["check-updates", "--help"]):
+            with self.subTest(argv=argv), mock.patch.object(
+                kit.urllib.request, "urlopen", urlopen
+            ), contextlib.redirect_stdout(io.StringIO()) as stdout, self.assertRaises(
+                SystemExit
+            ) as raised:
+                kit.main(argv)
+            self.assertEqual(raised.exception.code, 0)
+            self.assertIn("check-updates", stdout.getvalue())
+            if argv == ["--help"]:
+                top_level_help = stdout.getvalue()
+            else:
+                command_help = stdout.getvalue()
+        self.assertIn("managed component update availability", top_level_help)
+        self.assertIn("managed component", top_level_help)
+        normalized_command_help = " ".join(command_help.split())
+        self.assertIn("read-only command", normalized_command_help)
+        self.assertIn("changes no files or installations", normalized_command_help)
+        urlopen.assert_not_called()
+
+
 class IntegrationTests(unittest.TestCase):
     def test_setup_skips_catch_up_before_first_commit(self):
         with tempfile.TemporaryDirectory() as temp:
@@ -2218,7 +2447,7 @@ class IntegrationTests(unittest.TestCase):
                 kit,
                 "command_version",
                 side_effect=lambda command: (
-                    "RepoWise 0.45.0" if "repowise" in command[0] else "codex-cli 0.149"
+                    f"RepoWise {kit.load_lock()['runtime_tools']['repowise']['version']}" if "repowise" in command[0] else "codex-cli 0.149"
                 ),
             ), mock.patch.object(kit, "run", side_effect=doctor_run):
                 self.assertEqual(kit.doctor(Namespace(repo=str(linked)), paths), 0)
@@ -2475,6 +2704,11 @@ class IntegrationTests(unittest.TestCase):
         self.assertIn("cpk-rule-owner: execplans", plans)
         self.assertNotIn("Task Brief", preflight)
         self.assertNotIn("task-brief", kit.ALL_SKILLS)
+
+    def test_12ui_router_is_website_only(self):
+        rules = (ROOT / "assets" / "AGENTS.block.md").read_text()
+        self.assertEqual(rules.count("Use 12ui-design only for website projects."), 2)
+        self.assertIn("Do not use it for native apps or other UI work.", rules)
 
     def test_rule_owners_are_unique(self):
         live = [
@@ -2857,7 +3091,7 @@ class IntegrationTests(unittest.TestCase):
         optional = (ROOT / "docs" / "OPTIONAL-REVIEW-TOOLS.md").read_text()
 
         self.assertIn("neuroarxiv", kit.UPSTREAM_SKILLS)
-        self.assertEqual(neuro["commit"], "b5d20efa12dd1ba177ce890d56809d2e027f8055")
+        self.assertRegex(neuro["commit"], r"^[0-9a-f]{40}$")
         self.assertEqual(neuro["license"], "MIT")
         self.assertEqual(
             {(item["destination"], item["git_blob_sha1"]) for item in neuro["files"]},
@@ -2914,6 +3148,66 @@ class IntegrationTests(unittest.TestCase):
         ).read_text()
         self.assertIn("cpk-rule-route-only: coordination", preflight)
         self.assertIn("delivery-lifecycle/references/coordination.md", preflight)
+
+    def test_coordination_cleans_terminal_agent_threads(self):
+        coordination = (
+            ROOT
+            / "assets"
+            / "skills"
+            / "delivery-lifecycle"
+            / "references"
+            / "coordination.md"
+        ).read_text()
+
+        capture = coordination.index("Capture each terminal delegated result.")
+        archive = coordination.index("Then use exposed native thread archival", capture)
+        self.assertLess(capture, archive)
+        self.assertIn("archive that exact finished agent thread", coordination)
+        self.assertIn("specify the finished thread identifier", coordination.lower())
+        self.assertNotIn("close_agent", coordination)
+        self.assertNotIn("Close finished agent threads before spending another agent slot", coordination)
+        self.assertIn("does not prove that agent capacity was released", coordination)
+        self.assertIn("Do not delete session files or edit Codex state directly", coordination)
+
+    def test_coordination_archive_targets_preserve_active_work(self):
+        coordination = (
+            ROOT
+            / "assets"
+            / "skills"
+            / "delivery-lifecycle"
+            / "references"
+            / "coordination.md"
+        ).read_text()
+
+        self.assertIn("specify the finished thread identifier", coordination)
+        self.assertIn("Do not use a default target that can select the coordinator", coordination)
+        self.assertIn("Archiving a parent can also archive its descendants", coordination)
+        self.assertIn("wait until every descendant has finished", coordination)
+        self.assertIn("owes no required follow-up", coordination)
+        self.assertIn(
+            "Do not interrupt or replace a healthy active delegated task because it is slow",
+            coordination,
+        )
+
+    def test_coordination_cleanup_preserves_required_followups(self):
+        coordination = (
+            ROOT
+            / "assets"
+            / "skills"
+            / "delivery-lifecycle"
+            / "references"
+            / "coordination.md"
+        ).read_text()
+        preflight = (
+            ROOT / "assets" / "skills" / "design-preflight" / "SKILL.md"
+        ).read_text()
+
+        self.assertIn("A stopped turn does not finish an assignment", coordination)
+        self.assertIn("when a required follow-up remains", coordination)
+        self.assertIn("Keep the same agent available", coordination)
+        self.assertIn("complete assignment reports `complete` or `blocked`", coordination)
+        self.assertIn("Keep the same challenger identity for both phases", preflight)
+        self.assertIn("give the same challenger the coordinator's complete card", preflight)
 
     def test_default_mode_preflight_and_repowise_continue_through_corrections(self):
         root = ROOT / "assets" / "skills"
@@ -3464,7 +3758,7 @@ class IntegrationTests(unittest.TestCase):
         self.assertIn("`pwsh -File .\\doctor.ps1`", publication)
         self.assertIn("from the reviewed candidate", publication)
         self.assertIn("`Result: ready`", publication)
-        self.assertEqual(kit.KIT_VERSION, "0.24.1")
+        self.assertEqual(kit.KIT_VERSION, "0.25.0")
         self.assertNotIn("Version `0.22.0`", (ROOT / "README.md").read_text())
         self.assertNotIn("version 0.22.0", (ROOT / "CODEX-INSTALL-PROMPT.md").read_text())
 
@@ -3543,7 +3837,7 @@ permissions:
         shell = {path.stem for path in shell_paths}
         powershell = {path.stem for path in powershell_paths}
         self.assertEqual(
-            shell, {"install", "uninstall", "setup-repo", "doctor", "run-tests"}
+            shell, {"install", "uninstall", "setup-repo", "doctor", "run-tests", "check-updates", "apply-updates"}
         )
         self.assertEqual(powershell, shell)
         self.assertTrue(all(path.parent == Path(".") for path in shell_paths | powershell_paths))

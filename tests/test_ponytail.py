@@ -47,25 +47,40 @@ class PonytailIntegrationTests(unittest.TestCase):
     def write_state(self, state, home=None):
         kit.write_file(self.state_path(home), json.dumps(state, sort_keys=True))
 
-    def seed_plugin(self, *, enabled=True, source=None, home=None):
-        source = source or self.SOURCE
+    def seed_plugin(self, *, enabled=True, source=None, home=None, name="ponytail"):
+        source = source or (self.SOURCE if name == "ponytail" else "https://github.com/just-every/12ui-plugin.git")
+        marketplace = "ponytail" if name == "ponytail" else "12ui-plugin"
+        plugin_name = "ponytail" if name == "ponytail" else "12ui-design"
+        plugin_id = f"{plugin_name}@{marketplace}"
         marketplace_source = {"sourceType": "git", "source": source}
+        package_source = (
+            {"source": "git", "url": source, "ref": "user-ref"}
+            if name == "ponytail"
+            else {"source": "local", "path": "."}
+        )
         plugin = {
-            "name": "ponytail", "pluginId": "ponytail@ponytail", "installed": True,
+            "name": plugin_name, "pluginId": plugin_id, "installed": True,
             "version": "user-version", "enabled": enabled,
-            "source": {"source": "git", "url": source, "ref": "user-ref"},
+            "source": package_source,
             "marketplaceSource": marketplace_source,
         }
-        self.write_state({"marketplaces": [{"name": "ponytail", "marketplaceSource": marketplace_source}], "installed": [plugin]}, home)
+        state = self.state(home)
+        state["marketplaces"] = [item for item in state["marketplaces"] if item.get("name") != marketplace]
+        state["installed"] = [item for item in state["installed"] if item.get("pluginId") != plugin_id]
+        state["marketplaces"].append({"name": marketplace, "marketplaceSource": marketplace_source})
+        state["installed"].append(plugin)
+        self.write_state(state, home)
         home = home or self.paths.codex_home
         config = home / "config.toml"
-        text = re.sub(r'(?m)^\[plugins\."ponytail@ponytail"\]\nenabled = (?:true|false)\n', '', kit.read_text(config))
-        kit.write_file(config, text + '\n[plugins."ponytail@ponytail"]\nenabled = ' + str(enabled).lower() + '\n')
-        kit.write_file(home / "plugins/data/ponytail-ponytail/.ponytail-active", "ultra")
-        kit.write_file(self.paths.home / ".config/ponytail/config.json", '{"defaultMode":"off"}')
+        pattern = rf'(?m)^\[plugins\."{re.escape(plugin_id)}"\]\nenabled = (?:true|false)\n'
+        text = re.sub(pattern, '', kit.read_text(config))
+        kit.write_file(config, text + f'\n[plugins."{plugin_id}"]\nenabled = ' + str(enabled).lower() + '\n')
+        if name == "ponytail":
+            kit.write_file(home / "plugins/data/ponytail-ponytail/.ponytail-active", "ultra")
+            kit.write_file(self.paths.home / ".config/ponytail/config.json", '{"defaultMode":"off"}')
 
     def native_run(self, command, **kwargs):
-        if command[0] not in ("node", "codex", "fake-repowise"):
+        if command[0] not in ("node", "codex", "fake-repowise", "fake-uv"):
             return self.real_run(command, **kwargs)
         env = kwargs.get("env") or os.environ
         home = Path(env["CODEX_HOME"])
@@ -75,7 +90,11 @@ class PonytailIntegrationTests(unittest.TestCase):
                 raise FileNotFoundError("node")
             return subprocess.CompletedProcess(command, 0, "v22.0.0\n", "")
         if command[0] == "fake-repowise":
-            return subprocess.CompletedProcess(command, 0, "RepoWise " + kit.REPOWISE_VERSION, "")
+            version = kit.load_lock()["runtime_tools"]["repowise"]["version"]
+            return subprocess.CompletedProcess(command, 0, "RepoWise " + version, "")
+        if command[0] == "fake-uv":
+            version = kit.load_lock()["runtime_tools"]["uv"]["version"]
+            return subprocess.CompletedProcess(command, 0, "uv " + version, "")
         if command[1] != "plugin":
             return subprocess.CompletedProcess(command, 0, "codex-cli test" if command[1] == "--version" else "Logged in", "")
         if self.missing == "plugins":
@@ -86,22 +105,33 @@ class PonytailIntegrationTests(unittest.TestCase):
         state = self.state(home)
         if args == ["marketplace", "list", "--json"]:
             output = {"marketplaces": state["marketplaces"]}
-        elif args == ["list", "--marketplace", "ponytail", "--json"]:
-            output = {"installed": state["installed"], "available": []}
-        elif args == ["marketplace", "add", "DietrichGebert/ponytail", "--json"]:
-            state["marketplaces"].append({"name": "ponytail", "marketplaceSource": {"sourceType": "git", "source": self.SOURCE}})
+        elif len(args) == 4 and args[:2] == ["list", "--marketplace"] and args[3] == "--json":
+            marketplace = args[2]
+            output = {"installed": [item for item in state["installed"] if item["pluginId"].endswith("@" + marketplace)], "available": []}
+        elif args[:2] == ["marketplace", "add"] and args[-1] == "--json":
+            source = args[2]
+            marketplace = "ponytail" if "ponytail" in source.lower() else "12ui-plugin"
+            url = self.SOURCE if marketplace == "ponytail" else "https://github.com/just-every/12ui-plugin.git"
+            state["marketplaces"].append({"name": marketplace, "marketplaceSource": {"sourceType": "git", "source": url}})
             self.write_state(state, home)
             output = {"added": True}
-        elif args == ["add", "ponytail@ponytail", "--json"]:
+        elif args[:1] == ["add"] and args[-1] == "--json":
             if self.missing == "install":
                 return subprocess.CompletedProcess(command, 1, "", "native plugin installation failed")
-            self.seed_plugin(home=home)
+            plugin_id = args[1]
+            name = "ponytail" if plugin_id == "ponytail@ponytail" else "12ui"
+            self.seed_plugin(home=home, name=name)
             installed = self.state(home)
-            installed["marketplaces"] = state["marketplaces"]
+            existing = {item["name"]: item for item in installed["marketplaces"]}
+            existing.update({item["name"]: item for item in state["marketplaces"]})
+            installed["marketplaces"] = list(existing.values())
             self.write_state(installed, home)
-            for skill in self.SKILLS:
-                kit.write_file(home / "plugins/cache/ponytail/skills" / skill / "SKILL.md", "native package fixture")
-            kit.write_file(home / "plugins/cache/ponytail/hooks.json", json.dumps({"hooks": {name: [] for name in ("SessionStart", "UserPromptSubmit", "SubagentStart")}}))
+            if name == "ponytail":
+                for skill in self.SKILLS:
+                    kit.write_file(home / "plugins/cache/ponytail/skills" / skill / "SKILL.md", "native package fixture")
+                kit.write_file(home / "plugins/cache/ponytail/hooks.json", json.dumps({"hooks": {event: [] for event in ("SessionStart", "UserPromptSubmit", "SubagentStart")}}))
+            else:
+                kit.write_file(home / "plugins/cache/12ui-plugin/skills/12ui-design/SKILL.md", "12UI fixture")
             output = {"installed": True}
         else:
             self.fail(f"Unexpected native mutation or command: {command}")
@@ -133,7 +163,7 @@ class PonytailIntegrationTests(unittest.TestCase):
         self.assertFalse(self.paths.codex_home.exists())
         result, output = self.cli("install")
         self.assertEqual(result, 0, output)
-        self.assertIn("`/hooks` to review and trust toolkit and Ponytail hooks", output)
+        self.assertIn("`/hooks` to review and trust toolkit and plugin hooks", output)
         self.assertEqual(len(self.mutations()), 2)
         package = self.paths.codex_home / "plugins/cache/ponytail"
         self.assertEqual(sorted(p.parent.name for p in package.glob("skills/*/SKILL.md")), sorted(self.SKILLS))

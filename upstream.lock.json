@@ -1,5 +1,5 @@
 {
-  "generated_on": "2026-08-24",
+  "generated_on": "2026-10-05",
   "optional_tools": {
     "compound-engineering": {
       "commit": "05f3b798b0e5fb76c6bb1830bee7cbc84ff6c4c4",
@@ -26,9 +26,10 @@
   },
   "runtime_tools": {
     "ponytail": {
-      "install_mode": "native Codex plugin; install when absent; updates and removal owned by Codex",
+      "install_mode": "native Codex plugin; install when absent; refresh through its named marketplace",
       "license": "MIT",
       "marketplace": "DietrichGebert/ponytail",
+      "marketplace_name": "ponytail",
       "plugin_id": "ponytail@ponytail",
       "repository": "https://github.com/DietrichGebert/ponytail"
     },
@@ -36,70 +37,84 @@
       "install_mode": "uv tool install; not bundled",
       "license": "AGPL-3.0-or-later",
       "repository": "https://github.com/repowise-dev/repowise",
-      "version": "0.45.0"
+      "version": "0.55.0"
     },
     "uv": {
       "install_mode": "verified upstream installer when missing",
       "installers": {
         "posix": {
-          "sha256": "f1ee4a249799525a330df57643335120150c9102db7483b1d37546cc43af3a16",
-          "url": "https://astral.sh/uv/0.12.4/install.sh"
+          "sha256": "b8e6c43099ee9f9a550984d3ad56948457c689e7a99c090b35377234ac241491",
+          "url": "https://astral.sh/uv/0.12.23/install.sh"
         },
         "windows": {
-          "sha256": "76a0c027f3d47a7ced56f9e63e67a21cb1bcbf525c8ba9ef7ec0d633cc8f89e4",
-          "url": "https://astral.sh/uv/0.12.4/install.ps1"
+          "sha256": "536e6ebe00d41efc96b0ab1121bf6f969b0e9cbd88d1e19cfd09e63722e96160",
+          "url": "https://astral.sh/uv/0.12.23/install.ps1"
         }
       },
       "license": "Apache-2.0 OR MIT",
       "repository": "https://github.com/astral-sh/uv",
-      "version": "0.12.4"
+      "version": "0.12.23"
     }
   },
   "schema_version": 1,
   "skills": {
     "neuroarxiv": {
-      "commit": "b5d20efa12dd1ba177ce890d56809d2e027f8055",
+      "commit": "7d59a92553762e6307b973312e0d2ed32118e6a8",
       "files": [
-        {
-          "destination": "neuroarxiv/SKILL.md",
-          "git_blob_sha1": "cc47304c76f7cb53aa4e8a324702dc8e4f1d5639",
-          "path": "skills/neuroarxiv/SKILL.md"
-        },
         {
           "destination": "neuroarxiv/LICENSE",
           "git_blob_sha1": "aaf95a45d3b11d68387ab0c3a0cee964a4ecd98c",
           "path": "LICENSE"
+        },
+        {
+          "destination": "neuroarxiv/SKILL.md",
+          "git_blob_sha1": "cc47304c76f7cb53aa4e8a324702dc8e4f1d5639",
+          "path": "skills/neuroarxiv/SKILL.md"
         }
       ],
       "license": "MIT",
-      "repository": "https://github.com/UditAkhourii/neuroarxiv"
+      "license_path": "LICENSE",
+      "repository": "https://github.com/UditAkhourii/neuroarxiv",
+      "root": "skills/neuroarxiv"
     },
     "simple-english": {
-      "commit": "59bf6702197a5aadc96d197ea17f290d8d50dcd3",
+      "commit": "a6fcb4fde098b33617cc1578d151ebf58774b883",
       "files": [
-        {
-          "destination": "simple-english/SKILL.md",
-          "git_blob_sha1": "7c41a83908b8adac6a83571df38ef4b731a0a532",
-          "path": "skills/simple-english/SKILL.md"
-        },
-        {
-          "destination": "simple-english/references/checklist.md",
-          "git_blob_sha1": "727536d895f51a977237c61335848aec4cc77602",
-          "path": "skills/simple-english/references/checklist.md"
-        },
-        {
-          "destination": "simple-english/references/use-cases.md",
-          "git_blob_sha1": "61036a228be7e7f2b017ffbbfdc034900bc1bf24",
-          "path": "skills/simple-english/references/use-cases.md"
-        },
         {
           "destination": "simple-english/LICENSE",
           "git_blob_sha1": "e3dd42a3e6dc3ba07a742a83d27b5377a719e814",
           "path": "LICENSE"
+        },
+        {
+          "destination": "simple-english/SKILL.md",
+          "git_blob_sha1": "18968a8a2c631b577327fde0271940335c6a375c",
+          "path": "skills/simple-english/SKILL.md"
+        },
+        {
+          "destination": "simple-english/references/rule-catalog.md",
+          "git_blob_sha1": "23fd3b823e529b2e2c3f134dd51bf6e2056c88d3",
+          "path": "skills/simple-english/references/rule-catalog.md"
+        },
+        {
+          "destination": "simple-english/references/strict-vocabulary.md",
+          "git_blob_sha1": "2233a6da3b35c3e6845722496644e6d555b66b7f",
+          "path": "skills/simple-english/references/strict-vocabulary.md"
+        },
+        {
+          "destination": "simple-english/references/use-cases.md",
+          "git_blob_sha1": "10b2862740a57f3b091a8c7ff7e5399d548dea18",
+          "path": "skills/simple-english/references/use-cases.md"
+        },
+        {
+          "destination": "simple-english/references/word-swaps.md",
+          "git_blob_sha1": "5747f6cb58c029c52b09620f2212acd3ae843336",
+          "path": "skills/simple-english/references/word-swaps.md"
         }
       ],
       "license": "MIT",
-      "repository": "https://github.com/AminBlg/SimpleEnglish"
+      "license_path": "LICENSE",
+      "repository": "https://github.com/AminBlg/SimpleEnglish",
+      "root": "skills/simple-english"
     }
   }
 }

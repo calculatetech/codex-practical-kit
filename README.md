@@ -6,7 +6,7 @@ The managed `AGENTS.md` is a small skill router. Skill descriptions keep unrelat
 
 ## Included components
 
-The kit installs the official Ponytail plugin and these task skills:
+The kit installs the official Ponytail plugin. It also installs these task skills:
 
 - `simple-english`
 - `neuroarxiv`
@@ -44,11 +44,49 @@ pwsh -File .\install.ps1
 pwsh -File .\doctor.ps1
 ```
 
-The installer copies managed skills to `~/.agents/skills/`. Do not edit installed copies. Codex manages Ponytail separately as a native plugin.
+The installer copies managed skills to `~/.agents/skills/`. Do not edit installed copies. Codex manages Ponytail as a native plugin.
 
 The installer writes a managed block in `~/.codex/AGENTS.md`. It renders the absolute PLANS path and names installed skills.
 
 The installer also writes `$CODEX_HOME/PLANS.md` and managed Codex hooks. Session Start announces the AGENTS router.
+
+## Check and apply managed component updates
+
+On macOS or Linux, run this read-only command from the source checkout:
+
+```bash
+./check-updates.sh
+```
+
+On Windows, run:
+
+```powershell
+pwsh -File .\check-updates.ps1
+```
+
+The command reads authoritative upstream sources for all managed runtime tools and bundled skills. It excludes optional tools and does not change installations, plugins, pins, or configuration.
+
+The report compares toolkit pins with upstream identities. Native plugins have no toolkit pin. The report identifies their upstream release and Codex-owned lifecycle.
+
+A complete report returns status 0, including when upstream differs. A request error returns status 2 and prints no partial report.
+
+To apply all managed updates on macOS or Linux, run:
+
+```bash
+./apply-updates.sh
+```
+
+On Windows, run:
+
+```powershell
+pwsh -File .\apply-updates.ps1
+```
+
+The apply command updates `upstream.lock.json` and the selected toolkit installation. It also refreshes each installed managed plugin by its marketplace name.
+
+The command refuses an untracked source lock or an independent source edit. A prior successful apply remains valid when its source lock matches the selected installation. The command validates upstream data before mutation. It writes the source lock only after installation succeeds.
+
+If an operation fails, the command stops and returns status 2. Correct the reported cause, then run the command again.
 
 ## Global and repository instructions
 
@@ -76,7 +114,7 @@ For large histories, agents create reusable reading summaries under `.agent/plan
 
 An unrecorded destination skill is a conflict. The installer stops before it changes that directory.
 
-Open a new Codex session after installation. Use `/hooks` to review and trust the toolkit and Ponytail commands.
+Open a new Codex session after installation. Use `/hooks` to review and trust the toolkit and plugin commands.
 
 ## Ponytail
 
@@ -101,11 +139,30 @@ Bare `@ponytail` reports the mode. `@ponytail default off` changes the default f
 
 The upstream Codex instructions use `@` commands; they do not promise a `/ponytail` slash-menu entry. See the [official Ponytail commands](https://github.com/DietrichGebert/ponytail#commands).
 
-Use Codex's plugin manager for updates, enablement, and removal. Toolkit reinstall does not update or re-enable Ponytail.
+Use Codex's plugin manager for enablement and removal. The apply command refreshes Ponytail but does not re-enable it.
 
 Migration removes an old standalone Ponytail skill only when the toolkit manifest owns its destination and native installation succeeds. An unowned skill or conflicting marketplace source stops installation. Resolve that ownership conflict before retrying.
 
 `--codex-home` selects the Codex home for installation and Doctor. Otherwise, the toolkit uses `CODEX_HOME` or `~/.codex`. Use the same home for native plugin commands.
+
+## 12UI
+
+Install a compatible 12UI plugin through the Codex plugin directory if you want to use it. The toolkit does not install, update, or require 12UI.
+
+The toolkit uses 12UI only for website projects. It does not use 12UI for native applications or other user-interface work.
+
+The toolkit preserves separately installed 12UI plugins and does not copy or edit their skills.
+
+The `just-every/12ui-plugin` Git package at version `0.2.108` includes a Claude Code pane. Its hook configuration contains `modules`, which Codex `0.160.0` rejects.
+
+If an older toolkit installed that package, remove it and its marketplace registration:
+
+```text
+codex plugin remove 12ui-design@12ui-plugin
+codex plugin marketplace remove 12ui-plugin
+```
+
+These commands leave a separately installed `12ui-design@openai-curated-remote` plugin intact. Later toolkit install and apply commands do not restore the Git package.
 
 ## Rule owners
 
@@ -157,7 +214,7 @@ See [RepoWise notes](docs/REPOWISE.md) for setup, refresh, opt-out, and trust-bo
 
 ## Uninstall
 
-Uninstall removes toolkit-managed global integrations and copied skills. `--purge` also removes the toolkit data directory. Both retain native Ponytail resources, settings, uv, RepoWise, and Plan history.
+Uninstall removes toolkit-managed global integrations and copied skills. `--purge` also removes the toolkit data directory. Both retain native plugin resources, uv, RepoWise, and Plan history.
 
 For complete removal, follow the ordered steps below. Keep the source checkout until the removal commands finish.
 
@@ -278,7 +335,7 @@ On macOS or Linux, run:
 
 ```bash
 ./run-tests.sh
-sh -n doctor.sh install.sh run-tests.sh setup-repo.sh uninstall.sh
+sh -n apply-updates.sh check-updates.sh doctor.sh install.sh run-tests.sh setup-repo.sh uninstall.sh
 git diff --check
 sha256sum --check MANIFEST.sha256
 ```

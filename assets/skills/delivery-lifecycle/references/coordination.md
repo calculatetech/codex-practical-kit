@@ -2,6 +2,8 @@
 <!-- cpk-rule-guard: User instructions take precedence over skill guidelines. -->
 <!-- cpk-rule-guard: Only the active coordinator can delegate, manage task state, commit, publish, or orchestrate review. -->
 <!-- cpk-rule-guard: The coordinator can run at most one write-capable implementation subagent at a time. -->
+<!-- cpk-rule-guard: Capture each terminal delegated result. -->
+<!-- cpk-rule-guard: Archive only an explicitly targeted finished agent subtree. -->
 <!-- cpk-rule-guard: Do not interrupt or replace a healthy active delegated task because it is slow. -->
 <!-- cpk-rule-guard: When told to stop, start no new edit, test, review, subagent, commit, or CI action. -->
 
@@ -17,7 +19,11 @@ The coordinator can run at most one write-capable implementation subagent at a t
 
 While an implementation subagent writes, the coordinator performs read-only work.
 
-The coordinator closes each subagent after it reports `complete` or `blocked`.
+A stopped turn does not finish an assignment when a required follow-up remains. Keep the same agent available until the complete assignment reports `complete` or `blocked`.
+
+Capture each terminal delegated result. Then use exposed native thread archival to archive that exact finished agent thread. Always specify the finished thread identifier.
+
+Archive only an explicitly targeted finished agent subtree. Archival cleans persisted thread history and does not prove that agent capacity was released. Do not use a default target that can select the coordinator. Archiving a parent can also archive its descendants, so wait until every descendant has finished and owes no required follow-up. Do not delete session files or edit Codex state directly.
 
 Elapsed time alone cannot authorize a duplicate or restart of an active delegated task. Keep and poll the same task until it completes, reports blocked, or the platform reports that it stopped without coordinator action.
 

@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import base64
+import copy
 import hashlib
 import json
 import os
@@ -24,13 +25,7 @@ from pathlib import Path
 from typing import Any, Iterable
 
 KIT_ID = "codex-practical-kit"
-KIT_VERSION = "0.24.1"
-REPOWISE_VERSION = "0.45.0"
-UV_VERSION = "0.12.4"
-UV_INSTALLER_URL = f"https://astral.sh/uv/{UV_VERSION}/install.sh"
-UV_INSTALLER_SHA256 = "f1ee4a249799525a330df57643335120150c9102db7483b1d37546cc43af3a16"
-UV_WINDOWS_INSTALLER_URL = f"https://astral.sh/uv/{UV_VERSION}/install.ps1"
-UV_WINDOWS_INSTALLER_SHA256 = "76a0c027f3d47a7ced56f9e63e67a21cb1bcbf525c8ba9ef7ec0d633cc8f89e4"
+KIT_VERSION = "0.25.0"
 ROOT = Path(__file__).resolve().parent
 AGENTS_START = "<!-- codex-practical-kit:start -->"
 AGENTS_END = "<!-- codex-practical-kit:end -->"
@@ -230,6 +225,144 @@ def load_lock() -> dict[str, Any]:
     return value
 
 
+def fetch_json(url: str) -> Any:
+    request = urllib.request.Request(
+        url,
+        headers={
+            "Accept": "application/vnd.github+json, application/json",
+            "User-Agent": f"{KIT_ID}/{KIT_VERSION}",
+        },
+    )
+    try:
+        with urllib.request.urlopen(request, timeout=60) as response:
+            return json.loads(response.read().decode("utf-8"))
+    except (urllib.error.URLError, TimeoutError, UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise KitError(f"Could not read component update data from {url}: {exc}") from exc
+
+
+def github_api_url(repository: str, suffix: str) -> str:
+    match = re.fullmatch(r"https://github\.com/([^/]+)/([^/]+?)(?:\.git)?/?", repository)
+    if not match:
+        raise KitError(f"Unsupported repository URL: {repository}")
+    return f"https://api.github.com/repos/{match.group(1)}/{match.group(2)}/{suffix}"
+
+
+def required_string(value: Any, field: str, url: str) -> str:
+    if not isinstance(value, str) or not value:
+        raise KitError(f"Component update source did not return {field}: {url}")
+    return value
+
+
+def release_identity(repository: str) -> str:
+    url = github_api_url(repository, "releases/latest")
+    data = fetch_json(url)
+    return required_string(
+        data.get("tag_name") if isinstance(data, dict) else None,
+        "tag_name",
+        url,
+    )
+
+
+def managed_candidates(*, include_payloads: bool = False) -> tuple[dict[str, Any], list[str], dict[str, bytes]]:
+    lock = load_lock()
+    candidate = copy.deepcopy(lock)
+    lines: list[str] = []
+    payloads: dict[str, bytes] = {}
+
+    for name, component in lock["runtime_tools"].items():
+        repository = component["repository"]
+        if name == "repowise":
+            url = "https://pypi.org/pypi/repowise/json"
+            data = fetch_json(url)
+            info = data.get("info") if isinstance(data, dict) else None
+            upstream = required_string(
+                info.get("version") if isinstance(info, dict) else None,
+                "info.version",
+                url,
+            )
+            pinned = component["version"]
+            state = "same identity" if upstream == pinned else "upstream differs"
+            lines.append(f"{name}: toolkit pin {pinned}; upstream release {upstream}; {state}")
+            candidate["runtime_tools"][name]["version"] = upstream
+        elif name == "uv":
+            upstream = release_identity(repository)
+            comparable = upstream[1:] if upstream.startswith("v") else upstream
+            pinned = component["version"]
+            state = "same identity" if comparable == pinned else "upstream differs"
+            lines.append(f"{name}: toolkit pin {pinned}; upstream release {upstream}; {state}")
+            candidate["runtime_tools"][name]["version"] = comparable
+            if include_payloads:
+                installers = {}
+                for platform, suffix in (("posix", "install.sh"), ("windows", "install.ps1")):
+                    url = f"https://astral.sh/uv/{comparable}/{suffix}"
+                    data = download_url(url)
+                    payloads[f"uv:{platform}"] = data
+                    installers[platform] = {"url": url, "sha256": hashlib.sha256(data).hexdigest()}
+                candidate["runtime_tools"][name]["installers"] = installers
+        elif component.get("plugin_id"):
+            upstream = release_identity(repository)
+            if name == "ponytail":
+                lines.append(
+                    f"{name}: Codex-owned plugin; upstream release {upstream}; use the Codex plugin manager"
+                )
+            else:
+                raise KitError(f"No update source is defined for managed native plugin: {name}")
+        else:
+            raise KitError(f"No update source is defined for managed runtime tool: {name}")
+
+    for name, component in lock["skills"].items():
+        url = github_api_url(component["repository"], "commits?per_page=1")
+        data = fetch_json(url)
+        upstream = required_string(
+            data[0].get("sha") if isinstance(data, list) and data and isinstance(data[0], dict) else None,
+            "default-branch commit SHA",
+            url,
+        )
+        pinned = component["commit"]
+        state = "same identity" if upstream == pinned else "upstream differs"
+        lines.append(f"{name}: toolkit revision {pinned}; upstream revision {upstream}; {state}")
+        candidate["skills"][name]["commit"] = upstream
+        if include_payloads:
+            tree_url = github_api_url(component["repository"], f"git/trees/{upstream}?recursive=1")
+            tree_data = fetch_json(tree_url)
+            tree = tree_data.get("tree") if isinstance(tree_data, dict) else None
+            if not isinstance(tree_data, dict) or tree_data.get("truncated") is not False or not isinstance(tree, list):
+                raise KitError(f"Component update source did not return a complete Git tree: {tree_url}")
+            root = component["root"].rstrip("/") + "/"
+            selected: dict[str, str] = {}
+            for item in tree:
+                if not isinstance(item, dict) or item.get("type") != "blob":
+                    continue
+                path = item.get("path")
+                blob = item.get("sha")
+                if isinstance(path, str) and isinstance(blob, str) and path.startswith(root):
+                    selected[path] = blob
+            license_path = component["license_path"]
+            for item in tree:
+                if isinstance(item, dict) and item.get("type") == "blob" and item.get("path") == license_path:
+                    selected[license_path] = required_string(item.get("sha"), "license Git blob", tree_url)
+                    break
+            if license_path not in selected or not any(path.startswith(root) for path in selected):
+                raise KitError(f"Selected skill package or license is missing from {tree_url}")
+            files = []
+            for path, blob in sorted(selected.items()):
+                destination = f"{name}/LICENSE" if path == license_path else f"{name}/{path.removeprefix(root)}"
+                data = download_file(raw_github_url(component["repository"], upstream, path), blob)
+                payloads[f"skill:{destination}"] = data
+                files.append({"path": path, "destination": destination, "git_blob_sha1": blob})
+            candidate["skills"][name]["files"] = files
+
+    candidate["generated_on"] = time.strftime("%Y-%m-%d")
+    return candidate, lines, payloads
+
+
+def check_updates() -> None:
+    _, lines, _ = managed_candidates()
+    print("Managed component updates:")
+    for line in lines:
+        print(f"- {line}")
+
+
 def raw_github_url(repository: str, commit: str, source_path: str) -> str:
     match = re.fullmatch(r"https://github\.com/([^/]+)/([^/]+?)(?:\.git)?", repository.rstrip("/"))
     if not match:
@@ -239,19 +372,23 @@ def raw_github_url(repository: str, commit: str, source_path: str) -> str:
 
 
 def download_file(url: str, expected_blob: str) -> bytes:
-    request = urllib.request.Request(url, headers={"User-Agent": f"{KIT_ID}/{KIT_VERSION}"})
-    try:
-        with urllib.request.urlopen(request, timeout=60) as response:
-            data = response.read()
-    except (urllib.error.URLError, TimeoutError) as exc:
-        raise KitError(f"Could not download pinned upstream file:\n{url}\n{exc}") from exc
+    data = download_url(url)
     actual = git_blob_sha1(data)
     if actual != expected_blob:
         raise KitError(
-            "Downloaded upstream file did not match the pinned Git blob. "
+            "Downloaded upstream file did not match the selected Git blob. "
             f"Expected {expected_blob}, got {actual}: {url}"
         )
     return data
+
+
+def download_url(url: str) -> bytes:
+    request = urllib.request.Request(url, headers={"User-Agent": f"{KIT_ID}/{KIT_VERSION}"})
+    try:
+        with urllib.request.urlopen(request, timeout=60) as response:
+            return response.read()
+    except (urllib.error.URLError, TimeoutError) as exc:
+        raise KitError(f"Could not download selected upstream file:\n{url}\n{exc}") from exc
 
 
 def download_sha256(url: str, expected_sha256: str) -> bytes:
@@ -270,15 +407,23 @@ def download_sha256(url: str, expected_sha256: str) -> bytes:
     return data
 
 
-def stage_upstream_skills(destination: Path) -> dict[str, dict[str, Any]]:
-    lock = load_lock()
+def stage_upstream_skills(
+    destination: Path,
+    lock: dict[str, Any] | None = None,
+    payloads: dict[str, bytes] | None = None,
+) -> dict[str, dict[str, Any]]:
+    lock = lock or load_lock()
     records: dict[str, dict[str, Any]] = {}
     for skill_name, skill in lock["skills"].items():
         repo = skill["repository"]
         commit = skill["commit"]
         skill_root = destination / skill_name
         for item in skill["files"]:
-            data = download_file(raw_github_url(repo, commit, item["path"]), item["git_blob_sha1"])
+            data = (
+                payloads[f"skill:{item['destination']}"]
+                if payloads is not None
+                else download_file(raw_github_url(repo, commit, item["path"]), item["git_blob_sha1"])
+            )
             target = destination / item["destination"]
             target.parent.mkdir(parents=True, exist_ok=True)
             target.write_bytes(data)
@@ -288,6 +433,50 @@ def stage_upstream_skills(destination: Path) -> dict[str, dict[str, Any]]:
             "license": skill["license"],
         }
     return records
+
+
+def require_clean_update_source(paths: InstallPaths) -> None:
+    root = resolve_git_root(ROOT)
+    if root != ROOT.resolve():
+        raise KitError(f"Update source is not the toolkit checkout: {ROOT}")
+    tracked = run(
+        ["git", "ls-files", "--error-unmatch", "upstream.lock.json"],
+        cwd=ROOT,
+        check=False,
+        timeout=20,
+    )
+    changed = run(
+        ["git", "diff", "--quiet", "HEAD", "--", "upstream.lock.json"],
+        cwd=ROOT,
+        check=False,
+        timeout=20,
+    )
+    installed_lock = paths.install_root / "upstream.lock.json"
+    previous_apply = (
+        changed.returncode == 1
+        and installed_lock.is_file()
+        and installed_lock.read_bytes() == (ROOT / "upstream.lock.json").read_bytes()
+    )
+    if tracked.returncode != 0 or (changed.returncode != 0 and not previous_apply):
+        raise KitError("Refusing to overwrite a modified or untracked upstream.lock.json.")
+
+
+def apply_updates(args: argparse.Namespace, paths: InstallPaths) -> None:
+    candidate, _, payloads = managed_candidates(include_payloads=True)
+    plugin_states = {
+        "ponytail": ponytail_status(paths),
+    }
+    require_clean_update_source(paths)
+    install_core(
+        args,
+        paths,
+        prepared_lock=candidate,
+        prepared_payloads=payloads,
+        refresh_plugins=True,
+        force_runtime=True,
+        plugin_states=plugin_states,
+    )
+    write_file(ROOT / "upstream.lock.json", json.dumps(candidate, indent=2, sort_keys=True) + "\n")
 
 
 # ---------- skills ----------
@@ -511,25 +700,31 @@ def codex_plugin(paths: InstallPaths, *args: str) -> dict[str, Any]:
     return data
 
 
-def official_ponytail_source(source: str) -> bool:
+def official_plugin_source(source: str, repository: str) -> bool:
+    expected = repository.rstrip("/").removesuffix(".git").lower()
+    short = expected.removeprefix("https://github.com/")
     return source.rstrip("/").removesuffix(".git").lower() in {
-        "dietrichgebert/ponytail",
-        "https://github.com/dietrichgebert/ponytail",
-        "git@github.com:dietrichgebert/ponytail",
-        "ssh://git@github.com/dietrichgebert/ponytail",
+        short,
+        expected,
+        f"git@github.com:{short}",
+        f"ssh://git@github.com/{short}",
     }
 
 
-def ponytail_status(paths: InstallPaths) -> tuple[bool, dict[str, Any] | None]:
+def native_plugin_status(paths: InstallPaths, name: str) -> tuple[bool, dict[str, Any] | None]:
+    component = load_lock()["runtime_tools"][name]
+    marketplace_name = component["marketplace_name"]
+    repository = component["repository"]
+    plugin_id = component["plugin_id"]
     try:
         run(["node", "--version"], timeout=20)
     except KitError as exc:
-        raise KitError(f"Ponytail requires Node.js on PATH. {exc}") from exc
+        raise KitError(f"{name} requires Node.js on PATH. {exc}") from exc
     try:
         marketplaces = codex_plugin(paths, "marketplace", "list").get("marketplaces")
-        installed = codex_plugin(paths, "list", "--marketplace", "ponytail").get("installed")
+        installed = codex_plugin(paths, "list", "--marketplace", marketplace_name).get("installed")
     except KitError as exc:
-        raise KitError(f"Ponytail requires working native Codex plugin commands. {exc}") from exc
+        raise KitError(f"{name} requires working native Codex plugin commands. {exc}") from exc
     if not isinstance(marketplaces, list) or not isinstance(installed, list):
         raise KitError("Codex plugin listings are missing marketplace or installation records.")
     marketplace_found = False
@@ -537,24 +732,43 @@ def ponytail_status(paths: InstallPaths) -> tuple[bool, dict[str, Any] | None]:
     for item in marketplaces + installed:
         if not isinstance(item, dict):
             raise KitError("Codex plugin listing contains an invalid record.")
-        if item.get("name") != "ponytail":
+        if item.get("name") not in {marketplace_name, name, plugin_id.split("@", 1)[0]}:
             continue
         source = item.get("marketplaceSource", {})
-        if not isinstance(source, dict) or source.get("sourceType") != "git" or not official_ponytail_source(str(source.get("source", ""))):
-            raise KitError("Ponytail marketplace conflicts with the official DietrichGebert/ponytail source.")
+        if not isinstance(source, dict) or source.get("sourceType") != "git" or not official_plugin_source(str(source.get("source", "")), repository):
+            raise KitError(f"{name} marketplace conflicts with the official {repository} source.")
         if item in marketplaces:
             marketplace_found = True
-        elif item.get("pluginId") == "ponytail@ponytail" and item.get("installed") is True:
+        elif item.get("pluginId") == plugin_id and item.get("installed") is True:
             package = item.get("source", {})
-            if not isinstance(package, dict) or package.get("source") != "git" or not official_ponytail_source(str(package.get("url", ""))):
-                raise KitError("Installed Ponytail plugin conflicts with the official DietrichGebert/ponytail source.")
+            package_ok = isinstance(package, dict) and (
+                package.get("source") == "git"
+                and official_plugin_source(str(package.get("url", "")), repository)
+            )
+            if not package_ok:
+                raise KitError(f"Installed {name} plugin conflicts with the official {repository} source.")
             plugin = item
     return marketplace_found, plugin
 
 
-def install_core(args: argparse.Namespace, paths: InstallPaths) -> None:
+def ponytail_status(paths: InstallPaths) -> tuple[bool, dict[str, Any] | None]:
+    return native_plugin_status(paths, "ponytail")
+
+
+def install_core(
+    args: argparse.Namespace,
+    paths: InstallPaths,
+    *,
+    prepared_lock: dict[str, Any] | None = None,
+    prepared_payloads: dict[str, bytes] | None = None,
+    refresh_plugins: bool = False,
+    force_runtime: bool = False,
+    plugin_states: dict[str, tuple[bool, dict[str, Any] | None]] | None = None,
+) -> None:
     paths.codex_home.mkdir(parents=True, exist_ok=True)
-    marketplace_found, ponytail = ponytail_status(paths)
+    plugin_states = plugin_states or {
+        "ponytail": ponytail_status(paths),
+    }
     paths.install_root.parent.mkdir(parents=True, exist_ok=True)
     paths.install_root.mkdir(parents=True, exist_ok=True)
     previous_manifest = json_load(manifest_path(paths), {})
@@ -586,7 +800,11 @@ def install_core(args: argparse.Namespace, paths: InstallPaths) -> None:
     try:
         skill_stage = staging / "skills"
         skill_stage.mkdir(parents=True)
-        upstream_records = stage_upstream_skills(skill_stage)
+        upstream_records = (
+            stage_upstream_skills(skill_stage, prepared_lock, prepared_payloads)
+            if prepared_lock is not None or prepared_payloads is not None
+            else stage_upstream_skills(skill_stage)
+        )
         copy_custom_skills(skill_stage)
         conflicts = [
             paths.skills_home / name
@@ -601,18 +819,36 @@ def install_core(args: argparse.Namespace, paths: InstallPaths) -> None:
         if plan.exists() and not plan_owned:
             raise KitError(f"This plans file already exists and is not owned by this kit: {plan}")
         validate_global_repowise_config(paths)
-        if ponytail is None:
-            if not marketplace_found:
-                codex_plugin(paths, "marketplace", "add", "DietrichGebert/ponytail")
-            codex_plugin(paths, "add", "ponytail@ponytail")
-        uv, repowise = ensure_repowise_runtime(paths)
+        lock = prepared_lock or load_lock()
+        for name, (marketplace_found, plugin) in plugin_states.items():
+            component = lock["runtime_tools"][name]
+            if plugin is None:
+                if not marketplace_found:
+                    codex_plugin(paths, "marketplace", "add", component["marketplace"])
+                elif refresh_plugins:
+                    codex_plugin(paths, "marketplace", "upgrade", component["marketplace_name"])
+                codex_plugin(paths, "add", component["plugin_id"])
+            elif refresh_plugins:
+                codex_plugin(paths, "marketplace", "upgrade", component["marketplace_name"])
+        uv, repowise = ensure_repowise_runtime(
+            paths,
+            force=force_runtime,
+            uv_installer=(prepared_payloads or {}).get(f"uv:{'windows' if is_windows() else 'posix'}"),
+            repowise_version=lock["runtime_tools"]["repowise"]["version"],
+        )
         install_runtime(paths)
 
         hook_root = paths.install_root / "hooks"
         remove_path(hook_root)
         hook_root.mkdir()
         shutil.copy2(ROOT / "assets" / "hooks" / "session_start.py", hook_root)
-        shutil.copy2(ROOT / "upstream.lock.json", paths.install_root / "upstream.lock.json")
+        if prepared_lock is None:
+            shutil.copy2(ROOT / "upstream.lock.json", paths.install_root / "upstream.lock.json")
+        else:
+            write_file(
+                paths.install_root / "upstream.lock.json",
+                json.dumps(prepared_lock, indent=2, sort_keys=True) + "\n",
+            )
         shutil.copy2(ROOT / "LICENSE", paths.install_root / "LICENSE")
 
         records = install_skills(paths, skill_stage, owned_names)
@@ -705,25 +941,26 @@ def runtime_executable(name: str) -> str:
 
 def find_runtime_command(paths: InstallPaths, name: str) -> str | None:
     executable = runtime_executable(name)
+    manifest = json_load(manifest_path(paths), {})
+    recorded = manifest.get(name) if isinstance(manifest, dict) else None
+    if isinstance(recorded, str) and Path(recorded).is_file():
+        return recorded
     found = shutil.which(executable)
     if found:
         return found
     candidate = user_bin(paths) / executable
-    if candidate.is_file():
-        return str(candidate)
-    manifest = json_load(manifest_path(paths), {})
-    recorded = manifest.get(name) if isinstance(manifest, dict) else None
-    return recorded if isinstance(recorded, str) and Path(recorded).is_file() else None
+    return str(candidate) if candidate.is_file() else None
 
 
-def ensure_uv(paths: InstallPaths) -> str:
+def ensure_uv(paths: InstallPaths, *, force: bool = False, installer_bytes: bytes | None = None) -> str:
+    component = load_lock()["runtime_tools"]["uv"]
+    version = component["version"]
     uv = find_runtime_command(paths, "uv")
-    if uv:
+    if uv and not force:
         return uv
 
     if is_windows():
-        url = UV_WINDOWS_INSTALLER_URL
-        checksum = UV_WINDOWS_INSTALLER_SHA256
+        installer_record = component["installers"]["windows"]
         installer = [
             "pwsh",
             "-NoProfile",
@@ -734,10 +971,13 @@ def ensure_uv(paths: InstallPaths) -> str:
             "& ([scriptblock]::Create([Console]::In.ReadToEnd()))",
         ]
     else:
-        url = UV_INSTALLER_URL
-        checksum = UV_INSTALLER_SHA256
+        installer_record = component["installers"]["posix"]
         installer = ["sh"]
-    script = download_sha256(url, checksum).decode("utf-8")
+    script = (
+        installer_bytes
+        if installer_bytes is not None
+        else download_sha256(installer_record["url"], installer_record["sha256"])
+    ).decode("utf-8")
     destination = user_bin(paths)
     env = os.environ.copy()
     env["HOME"] = str(paths.home)
@@ -746,13 +986,20 @@ def ensure_uv(paths: InstallPaths) -> str:
     run(installer, env=env, input_text=script, timeout=300)
     uv = destination / runtime_executable("uv")
     if not uv.is_file():
-        raise KitError(f"uv {UV_VERSION} installation did not create {uv}")
+        raise KitError(f"uv {version} installation did not create {uv}")
     return str(uv)
 
 
-def ensure_repowise(paths: InstallPaths, uv: str) -> str:
+def ensure_repowise(
+    paths: InstallPaths,
+    uv: str,
+    *,
+    force_install: bool = False,
+    version_expected: str | None = None,
+) -> str:
+    version_expected = version_expected or load_lock()["runtime_tools"]["repowise"]["version"]
     repowise = find_runtime_command(paths, "repowise")
-    force = False
+    force = force_install
     if repowise:
         try:
             result = run([repowise, "--version"], check=False, timeout=20)
@@ -760,7 +1007,7 @@ def ensure_repowise(paths: InstallPaths, uv: str) -> str:
             result = None
         detail = ((result.stdout or result.stderr).strip() if result else "")
         version = detail.splitlines()[0] if detail else None
-        if result and result.returncode == 0 and version and REPOWISE_VERSION in version:
+        if result and result.returncode == 0 and version and version.split()[-1] == version_expected:
             return repowise
         manifest = json_load(manifest_path(paths), {})
         recorded = manifest.get("repowise") if isinstance(manifest, dict) else None
@@ -774,7 +1021,7 @@ def ensure_repowise(paths: InstallPaths, uv: str) -> str:
         if not force:
             raise KitError(
                 f"Found a different RepoWise command at {repowise}: {version or 'unknown version'}. "
-                f"Install RepoWise {REPOWISE_VERSION} or remove that command before retrying."
+                f"Install RepoWise {version_expected} or remove that command before retrying."
             )
 
     destination = user_bin(paths)
@@ -785,18 +1032,29 @@ def ensure_repowise(paths: InstallPaths, uv: str) -> str:
     command = [uv, "tool", "install"]
     if force:
         command.append("--force")
-    command.append(f"repowise=={REPOWISE_VERSION}")
+    command.append(f"repowise=={version_expected}")
     run(command, env=env, timeout=1800)
     run([uv, "tool", "update-shell"], env=env, timeout=60)
     repowise = destination / runtime_executable("repowise")
     if not repowise.is_file():
-        raise KitError(f"RepoWise {REPOWISE_VERSION} installation did not create {repowise}")
+        raise KitError(f"RepoWise {version_expected} installation did not create {repowise}")
     return str(repowise)
 
 
-def ensure_repowise_runtime(paths: InstallPaths) -> tuple[str, str]:
-    uv = ensure_uv(paths)
-    return uv, ensure_repowise(paths, uv)
+def ensure_repowise_runtime(
+    paths: InstallPaths,
+    *,
+    force: bool = False,
+    uv_installer: bytes | None = None,
+    repowise_version: str | None = None,
+) -> tuple[str, str]:
+    uv = ensure_uv(paths, force=force, installer_bytes=uv_installer)
+    return uv, ensure_repowise(
+        paths,
+        uv,
+        force_install=force,
+        version_expected=repowise_version,
+    )
 
 
 def repowise_init_args(prose: bool) -> list[str]:
@@ -1054,19 +1312,26 @@ def check(condition: bool, label: str, detail: str = "") -> bool:
 
 def doctor(args: argparse.Namespace, paths: InstallPaths) -> int:
     ok = True
-    try:
-        _, ponytail = ponytail_status(paths)
-        detail = (
-            f"{ponytail.get('version', 'unknown version')} ({'enabled' if ponytail.get('enabled') else 'disabled by user'})"
-            if ponytail else "not installed; run the toolkit installer"
-        )
-        ok &= check(ponytail is not None, "Ponytail native plugin and Node.js", detail)
-    except KitError as exc:
-        ok &= check(False, "Ponytail native plugin and Node.js", str(exc))
+    for label, status in (("Ponytail", ponytail_status),):
+        try:
+            _, plugin = status(paths)
+            detail = (
+                f"{plugin.get('version', 'unknown version')} ({'enabled' if plugin.get('enabled') else 'disabled by user'})"
+                if plugin else "not installed; run the toolkit installer"
+            )
+            ok &= check(plugin is not None, f"{label} native plugin and Node.js", detail)
+        except KitError as exc:
+            ok &= check(False, f"{label} native plugin and Node.js", str(exc))
     manifest = json_load(manifest_path(paths), {})
     ok &= check(isinstance(manifest, dict) and bool(manifest), "core install manifest", str(manifest_path(paths)))
     installed_version = manifest.get("kit_version") if isinstance(manifest, dict) else None
     ok &= check(installed_version == KIT_VERSION, "kit version", str(installed_version or "unknown"))
+    installed_lock = paths.install_root / "upstream.lock.json"
+    ok &= check(
+        read_text(installed_lock) == read_text(ROOT / "upstream.lock.json"),
+        "managed component lock",
+        str(installed_lock),
+    )
     for name in ALL_SKILLS:
         dest = paths.skills_home / name
         ok &= check(dest.exists(), f"skill {name}", str(dest))
@@ -1117,13 +1382,17 @@ def doctor(args: argparse.Namespace, paths: InstallPaths) -> int:
     )
     uv = find_runtime_command(paths, "uv")
     ok &= check(bool(uv), "uv", uv or "not found")
+    if uv:
+        uv_version = command_version([uv, "--version"])
+        ok &= check(bool(uv_version), "uv version", uv_version or "unavailable")
     repowise = find_runtime_command(paths, "repowise")
     ok &= check(bool(repowise), "RepoWise command", repowise or "not found")
     if repowise:
+        repowise_version = load_lock()["runtime_tools"]["repowise"]["version"]
         version = command_version([repowise, "--version"])
         ok &= check(
-            bool(version and REPOWISE_VERSION in version),
-            f"RepoWise {REPOWISE_VERSION}",
+            bool(version and version.split()[-1] == repowise_version),
+            f"RepoWise {repowise_version}",
             version or "unavailable",
         )
 
@@ -1211,6 +1480,25 @@ def build_parser() -> argparse.ArgumentParser:
     update = sub.add_parser("repowise-update", help="Refresh the pinned RepoWise index.")
     update.add_argument("repo", nargs="?", default=".")
 
+    sub.add_parser(
+        "check-updates",
+        help="Report managed component update availability.",
+        description=(
+            "Read upstream sources and report managed component updates. "
+            "This read-only command changes no files or installations."
+        ),
+    )
+
+    apply = sub.add_parser(
+        "apply-updates",
+        help="Apply every managed component update.",
+        description=(
+            "Read and validate every managed upstream candidate, update the source lock, "
+            "and reconcile the selected toolkit installation."
+        ),
+    )
+    add_path_options(apply)
+
     diag = sub.add_parser("doctor", help="Check the core kit and repository integration.")
     add_path_options(diag)
     diag.add_argument("--repo", help="Also check RepoWise in this repository.")
@@ -1238,6 +1526,13 @@ def main(argv: list[str] | None = None) -> int:
             update_repowise(args, paths)
             print("RepoWise index updated.")
             return 0
+        if args.command == "check-updates":
+            check_updates()
+            return 0
+        if args.command == "apply-updates":
+            apply_updates(args, paths)
+            print("Managed component updates applied.")
+            return 0
 
         if args.command == "install":
             install_core(args, paths)
@@ -1247,7 +1542,7 @@ def main(argv: list[str] | None = None) -> int:
             print(f"Global ExecPlan rules: {plans_path(paths)}")
             print(f"Hooks: {paths.codex_home / 'config.toml'}")
             print("Ponytail: native Codex plugin; existing versions and settings preserved.")
-            print("Open a new Codex session and use `/hooks` to review and trust toolkit and Ponytail hooks.")
+            print("Open a new Codex session and use `/hooks` to review and trust toolkit and plugin hooks.")
             if args.repo:
                 repo_args = argparse.Namespace(repo=args.repo, prose=args.repowise_prose)
                 setup_repo(repo_args, paths)
