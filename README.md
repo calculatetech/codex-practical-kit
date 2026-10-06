@@ -108,9 +108,7 @@ Prompt submission adds a Plan history reminder to Plan-mode prompts. Managed hoo
 
 The edit hooks update `<primary-checkout>/.codex/roadmap-view.md` after an agent changes `docs/roadmap.md`. Keep this generated file open to follow worktree progress. Edit only `docs/roadmap.md`.
 
-The [Plan history skill](assets/skills/plan-history/SKILL.md) keeps repository summaries versioned in `.agent/plan-history/`. Specification associations stay in each record. Later planning sessions find these records across worktrees and reconcile their decisions.
-
-For large histories, agents create reusable reading summaries under `.agent/plan-history/compacted/`. Original records remain unchanged. The skill also preserves reading progress across normal context compaction.
+The [Plan history skill](assets/skills/plan-history/SKILL.md) captures pending decisions in `.agent/plan-history/` and resumes bounded reads after context compaction. Current decisions stay in their authoritative documents or one maintained topic summary. Git retains retired records, so the working tree does not accumulate old captures or summary revisions.
 
 An unrecorded destination skill is a conflict. The installer stops before it changes that directory.
 
@@ -317,7 +315,7 @@ For a custom or package-managed uv installation, use its actual location or pack
 
 ### 6. Review retained files
 
-Plan history remains in repository `.agent/plan-history/` directories and the `$CODEX_HOME/plan-history/` fallback. Keep versioned records for future work, or remove them deliberately in each repository and commit that deletion.
+Pending Plan history remains in repository `.agent/plan-history/` directories and the `$CODEX_HOME/plan-history/` fallback. Routine cleanup follows the [delivery lifecycle](assets/skills/delivery-lifecycle/references/delivery-lifecycle.md). Retired committed records remain available through Git.
 
 Repository-owned `AGENTS.md`, `.agent/PLANS.md`, roadmaps, and other project documentation remain. So do indexes and views in repositories that you did not remove in step 1. Core uninstall does not keep a repository list.
 
@@ -346,5 +344,7 @@ On Windows, run:
 pwsh -File .\run-tests.ps1
 git diff --check
 ```
+
+The test launchers validate syntax in memory and suppress Python bytecode output. They leave no build cache in the source tree.
 
 `MANIFEST.sha256` covers distributed files. Regenerate it after code and documentation are final.

@@ -35,7 +35,7 @@ If the repository has no `docs/roadmap.md`, continue normal work without one. Cr
 5. Replace every placeholder before completion.
 6. Add only work that the user accepted or that current evidence requires.
 
-Use identifiers in the form `<PREFIX>-NNN`, with at least three digits. Allocate the next number above the highest identifier ever recorded for that prefix. Never fill gaps, rename an identifier, erase task history, or reuse a number.
+Use identifiers in the form `<PREFIX>-NNN`, with at least three digits. Allocate the next number above the highest identifier ever recorded for that prefix. Never fill gaps, rename an identifier, or reuse a number. Keep terminal entries concise, with their permanent identifier, outcome, and status. Git retains the detailed history. Remove links to retired specifications.
 
 ## Update lifecycle
 

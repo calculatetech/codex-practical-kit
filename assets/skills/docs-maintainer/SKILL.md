@@ -38,7 +38,7 @@ Preserve required structured formats and exact technical content. A prose prefer
    - Runbooks, migrations, recovery steps, and operational limits.
    - Architecture or decision records for durable design changes.
 4. Update the smallest existing document that owns the fact.
-5. Remove or correct stale statements instead of adding a second explanation.
+5. Remove or correct stale statements instead of adding a second explanation. Consolidate current decisions in their existing owner. Replace obsolete file links with direct Git references when their history is still needed.
 6. Use the `simple-english` skill in pragmatic mode.
 7. Keep code, commands, paths, identifiers, and quoted errors exact.
 8. Make sure that examples can still run as written.

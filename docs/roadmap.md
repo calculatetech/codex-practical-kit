@@ -9,7 +9,7 @@ Status legend:
 - ◻ **Planned later** — accepted but not yet scheduled
 - ⚠️ **Accepted residual risk** — bounded work is complete, but a documented limitation remains accepted
 - ❌ **Declined** — considered and intentionally not supported
-- ✅ **Completed** — implemented and validated
+- ✅ **Completed**
 
 ## Active
 
@@ -33,71 +33,72 @@ No residual risk is accepted.
 
 ## Completed
 
-- ✅ **CPK-066 — Correct runtime identity and install output.** Compare the complete RepoWise version token during installation and Doctor checks. Report only the managed Ponytail plugin in successful install output.
-- ✅ **CPK-065 — Restore the requested finished-thread archival.** Capture terminal delegated results and archive explicitly targeted finished threads with native tools. Remove the substituted closure prerequisite and preserve active work and required follow-ups. [ExecPlan](plans/cpk-065-restore-thread-archival.md)
-- ✅ **CPK-064 — Set the managed-update publication version.** Identify the combined update commands and 12UI compatibility correction as version `0.25.0`. [ExecPlan](plans/cpk-064-publish-managed-updates.md)
-- ✅ **CPK-063 — Stop reinstalling incompatible 12UI hooks.** Remove the Claude Code Git package from managed installation, updates, and Doctor. Preserve separately installed 12UI and the website-only routing rule. [ExecPlan](plans/cpk-063-12ui-codex-compatibility.md)
-- ✅ **CPK-062 — Apply managed updates and add website-only 12UI.** Add explicit update application through thin Bash and PowerShell launchers, reconcile the source lock with the selected installation, install or refresh the official 12UI plugin, and route 12UI only for website projects. [ExecPlan](plans/cpk-062-managed-update-application-12ui.md)
-- ✅ **CPK-061 — Report managed component updates and clean up finished agent threads.** Add a read-only update check for RepoWise and every other managed component. Teach coordinators to preserve required follow-ups, close terminal delegated threads, and archive finished history with native tools. [ExecPlan](plans/cpk-061-component-updates-agent-cleanup.md)
-- ✅ **CPK-060 — Resolve the Codex command on Windows.** Use the Windows npm command shim for native plugin installation and Doctor checks. Publish version `0.24.1`. [ExecPlan](plans/cpk-060-windows-codex-resolution.md)
-- ✅ **CPK-059 — Publish through protected pull requests.** Add readiness-triggered CI, make the repository public, protect main, and release reusable Plan History as version `0.24.0`. [ExecPlan](plans/cpk-059-public-pr-release.md)
-- ✅ **CPK-058 — Compact Plan History and resume interrupted reads.** Reuse verified summaries without changing original records, and preserve reading progress across normal context compaction. [ExecPlan](plans/cpk-058-plan-history-compaction.md)
-- ✅ **CPK-057 — Separate review from testing and complete Astra guidance.** Keep test execution before review and add bounded autonomy, clear communication, and useful delegation to the existing rule owners. [ExecPlan](plans/cpk-057-review-and-astra-guidance.md)
-- ✅ **CPK-056 — Improve interviews and assess rule adherence.** Bound material questions by their prerequisites, clarify correction and proof rules, and compare agent behavior through independent assessment cases. [ExecPlan](plans/cpk-056-interviews-and-assessment.md)
-- ✅ **CPK-055 — Install the official Ponytail plugin.** Preserve upstream skills, hooks, modes, and user settings through native Codex installation. Remove toolkit mode overrides and document complete component removal.
-- ✅ **CPK-054 — Keep Plan summaries out of documentation folders.** Save repository summaries only in `.agent/plan-history/`, preserve specification associations, and relocate this repository's legacy copies without changing their contents.
-- ✅ **CPK-053 — Require continuous production-path proof.** Require one named runnable check to traverse every in-scope production hop from the real entry point to the terminal oracle. Version `0.23.7`.
-- ✅ **CPK-052 — Restore independent trace coverage and severity-based review stops.** Remove repeated-pass severe stops. Require a fresh clean-context trace verifier before each eligible native review. Version `0.23.6`.
-- ✅ **CPK-051 — Make POSIX RepoWise repair tests platform-independent.** Force the POSIX platform in both extensionless-path tests so they pass on Windows and POSIX hosts. Version `0.23.5`.
-- ✅ **CPK-050 — Recover incomplete RepoWise initialization.** Detect an existing index that has no completed sync commit. Rebuild it once, catch it up, and start the required RepoWise graph without terminating Codex. Released as version `0.23.4`.
-- ✅ **CPK-049 — Prevent impatience-driven preflight restarts.** Keep one healthy challenger for both preflight phases. Do not interrupt or replace it because it is slow.
-- ✅ **CPK-048 — Reconcile shared agent and Plan instructions.** Document global instruction precedence, remove eligible copied Plan contracts, and preserve focused project overrides.
-- ✅ **CPK-047 — Repair Plan History worktree handoff, bound preflight, and reconcile PR publication.** Relocate pending Plan records before worktree state checks, constrain challengers to evidence-backed task scope, and require distinct local and PR reviews through local-main integration.
-- ✅ **CPK-046 — Recover RepoWise linked-worktree support and block unauthorized cross-repository fixes.** Use RepoWise’s native worktree behavior, preserve shared-hook safety, keep tooling failures from expanding repository scope, and reserve semantic trace closure for executable production behavior.
-- ✅ **CPK-045 — Close every behavioral boundary.** Design Preflight inventories every explicit behavioral boundary. A fresh two-phase trace verifies implementation paths and tests before native review. The roadmap remains the sole tracked lifecycle view.
-- ✅ **CPK-044 — Separate review findings from correction authority.** Native Codex review discovers defects. A source-independent gate excludes irrelevant observations and permits only direct repairs without human direction. Severe diagnostics lead with plain outcomes and required action.
-- ✅ **CPK-043 — Review PRs before hosted CI.** PR publication now reviews the current head while it remains draft. It scope-gates each finding before severity, correction, or stop behavior.
-- ✅ **CPK-042 — Split large plans into reviewed checkpoints.** Large Plans now use stable semantic subtasks, reviewed local checkpoints, safe replanning, and one final native review.
-- ✅ **CPK-041 — Explain code consequences before decisions.** Material technical choices now show the visible result, implementation shape, source, new moving parts, and maintenance effects before the choice tool.
-- ✅ **CPK-040 — Save Plans at acceptance.** The next prompt saves the completed Plan before the managed prompt hook completes. The managed `SessionEnd` timeout now meets the Codex limit.
-- ✅ **CPK-039 — Add native Windows compatibility.** Add PowerShell 7 entry points and make the required RepoWise runtime work without a POSIX shell. Native Windows validation passed at `d5957f81b61893934a046446d8fdf0f8cf62c7c8`.
-- ✅ **CPK-038 — Keep one live roadmap view across worktrees.** Generate a stable primary-checkout projection only after the active worktree roadmap changes.
-- ✅ **CPK-037 — Remove the invalid Stop context limit.** Install `additionalContextLimit` only for managed hooks that can emit additional context.
-- ✅ **CPK-036 — Preserve Plan Mode decisions.** Save each completed Plan Mode summary as immutable project evidence and require later planning sessions to reconcile it.
-- ✅ **CPK-035 — Make preflight adversarial and research-backed.** Challenge the coordinator after independent derivation, require NeuroArxiv for qualifying prior-art research, and limit only write-capable implementation delegation.
-- ✅ **CPK-034 — Require discriminating Scenario Proof checks.** Each retained scenario proves its exact semantic distinction at the terminal oracle.
-- ✅ **CPK-033 — Keep RepoWise active for the full task.** Every repository lookup stays index-first after `no-llm-provider` and automatic compaction.
-- ✅ **CPK-032 — Invoke planning and RepoWise throughout applicable work.** Qualifying Default-mode implementation and review corrections apply Design Preflight with an xhigh planning challenger, then return to the configured implementation effort. Each new repository lookup returns through RepoWise.
-- ✅ **CPK-031 — Keep operational progress untracked.** The roadmap is the sole tracked lifecycle-state record. Detailed task, validation, review, checkpoint, and delivery results stay outside tracked files.
-- ✅ **CPK-030 — Make RepoWise index-first and self-refreshing.** Exact lookups use indexed selectors, model synthesis remains optional, and active Codex sessions keep working-tree edits indexed without model calls.
-- ✅ **CPK-029 — Activate normal mode when Plan mode starts.** The managed prompt hook selects Ponytail normal mode before each Plan-mode prompt. Other modes keep their selected implementation mode.
-- ✅ **CPK-028 — Scope minimalism by lifecycle phase.** Planning, research, test-scope definition, and read-only review use normal mode. Implementation uses Ponytail after scenario obligations are fixed, and each retained runtime scenario maps to one production path, oracle, runnable check, and result.
-- ✅ **CPK-027 — Move rules into lifecycle skills.** AGENTS now routes tasks to lifecycle skills. Each shared rule remains in one focused owner, and upgrades remove the obsolete general package.
-- ✅ **CPK-026 — Add content-addressed review checkpoints.** Later correctness passes review only fix deltas and direct impact. One final native review checks the complete task after fixes.
-- ✅ **CPK-025 — Verify the live toolkit before publication.** Toolkit publication now requires live installation and a ready Doctor result from the reviewed candidate.
-- ✅ **CPK-024 — Bind reviews to documented product scope.** One scope owner now limits planning and review to documented product use cases and task-relevant owners.
-- ✅ **CPK-023 — Enforce single rule ownership.** Focused rule files are authoritative. AGENTS routes by task, and validation rejects duplicate owners and invalid routes.
-- ✅ **Minimal implementation discipline.** Ponytail, Simple English, repository-first inspection, and focused validation rules are installed.
-- ✅ **Design and planning foundation.** Design Preflight, Spec Kit guidance, and ExecPlan rules are available.
-- ✅ **Review and documentation foundation.** Clean-context adversarial review, the three-pass breaker, and documentation maintenance are available.
-- ✅ **CPK-001 — Make roadmap state authoritative.** The Roadmap Maintainer, template, and lifecycle rules make `docs/roadmap.md` the human source of truth.
-- ✅ **CPK-003 — Reconcile adversarial review.** One fresh reviewer per pass applies the supported-model true or false gate before commit.
-- ✅ **CPK-004 — Define Git task isolation.** Branches isolate one implementation stream. Worktrees isolate independent writers. Main remains available for bounded documentation work.
-- ✅ **CPK-005 — Define version increments.** Initial development starts at 0.1.0. Features increment minor versions. Fixes and published same-feature checkpoints increment patch versions.
-- ✅ **CPK-006 — Define PR publication.** Repositories use PR mode only after CI and protected `main` enforce its gates. One `publish` request then authorizes the path through verified squash merge.
-- ✅ **CPK-007 — Close PR conversations.** Delivered through CPK-006. Current CI, a current Codex clean signal, and resolved conversations gate merge.
-- ✅ **CPK-010 — Restore deterministic least effort.** Copy-only installation with manifest-scoped ownership, one-attempt failure handling, plain Git status, and bounded review replace speculative recovery and proof machinery.
-- ✅ **CPK-002 — Make ExecPlan the durable task model.** The kit installs one global ExecPlan fallback, preserves repository overrides, and removes Task Brief as a competing owner.
-- ✅ **CPK-011 — Make RepoWise self-starting and self-updating.** The kit installs missing runtime tools, initializes Git repositories from Codex, enables RepoWise MCP calls, and maintains the wiki after commits.
-- ✅ **CPK-012 — Prevent self-invalidating review closure.** Material changes invalidate review. Review-result, roadmap, publication, checksum, and ignored test-record updates close a clean review without recursion.
-- ✅ **CPK-008 — Make decision handoffs operator-readable.** Material choices now use a compact handoff with the trigger, likelihood, exposure, option effects, recommendation, and exact question.
-- ✅ **CPK-013 — Bootstrap empty project folders.** Empty workspaces now initialize Git and RepoWise. Non-empty, non-Git folders remain unchanged.
-- ✅ **CPK-014 — Remove the Stop hook.** The toolkit installs only Session Start. Reinstallation removes old Stop and Session End hooks while it preserves unrelated handlers. Agent instructions remain the review authority.
-- ✅ **CPK-015 — Install Codex hooks in config.toml.** The installer checks parsed Session Start handler entries in the documented Codex configuration file. It leaves existing matching entries unchanged and creates no legacy JSON file.
-- ✅ **CPK-016 — Require the RepoWise code graph.** Codex waits for automatic RepoWise initialization and does not continue without the required graph.
-- ✅ **CPK-017 — Count only implementation defects toward the review breaker.** Documentation and review-housekeeping findings remain actionable but do not advance or reset the three-defect count.
-- ✅ **CPK-018 — Compact the global agent profile.** The managed policy is below 100 lines and defines safe coordinator, subagent, and reviewer roles.
-- ✅ **CPK-019 — Make direct publication integrate final work.** In direct mode, one `publish` request now authorizes the path through verified integration into `main`. Tags, releases, and cleanup remain separate.
-- ✅ **CPK-020 — Protect full-set invariants from bounded samples.** Implementation policy, Design Preflight, and correctness review now reject success derived from bounded raw-input samples.
-- ✅ **CPK-021 — Diagnose severe defects at review stop gates.** Each stop finding gets a separate decision handoff. The same final response includes the complete diagnostic before the human halt.
-- ✅ **CPK-022 — Derive runtime scenarios before implementation.** Design Preflight now derives independent input, path, transition, and collection scenarios, preserves contract gaps, and stores accepted proof in one ExecPlan.
+- ✅ **CPK-067 — Keep current work lean and let Git own history.** Consolidate useful decisions, remove obsolete planning files and spent output, prevent capture replay, and validate without bytecode clutter. [ExecPlan](plans/cpk-067-lean-retention.md)
+- ✅ **CPK-066 — Correct runtime identity and install output.**
+- ✅ **CPK-065 — Restore the requested finished-thread archival.**
+- ✅ **CPK-064 — Set the managed-update publication version.**
+- ✅ **CPK-063 — Stop reinstalling incompatible 12UI hooks.**
+- ✅ **CPK-062 — Apply managed updates and add website-only 12UI.**
+- ✅ **CPK-061 — Report managed component updates and clean up finished agent threads.**
+- ✅ **CPK-060 — Resolve the Codex command on Windows.**
+- ✅ **CPK-059 — Publish through protected pull requests.**
+- ✅ **CPK-058 — Compact Plan History and resume interrupted reads.**
+- ✅ **CPK-057 — Separate review from testing and complete Astra guidance.**
+- ✅ **CPK-056 — Improve interviews and assess rule adherence.**
+- ✅ **CPK-055 — Install the official Ponytail plugin.**
+- ✅ **CPK-054 — Keep Plan summaries out of documentation folders.**
+- ✅ **CPK-053 — Require continuous production-path proof.**
+- ✅ **CPK-052 — Restore independent trace coverage and severity-based review stops.**
+- ✅ **CPK-051 — Make POSIX RepoWise repair tests platform-independent.**
+- ✅ **CPK-050 — Recover incomplete RepoWise initialization.**
+- ✅ **CPK-049 — Prevent impatience-driven preflight restarts.**
+- ✅ **CPK-048 — Reconcile shared agent and Plan instructions.**
+- ✅ **CPK-047 — Repair Plan History worktree handoff, bound preflight, and reconcile PR publication.**
+- ✅ **CPK-046 — Recover RepoWise linked-worktree support and block unauthorized cross-repository fixes.**
+- ✅ **CPK-045 — Close every behavioral boundary.**
+- ✅ **CPK-044 — Separate review findings from correction authority.**
+- ✅ **CPK-043 — Review PRs before hosted CI.**
+- ✅ **CPK-042 — Split large plans into reviewed checkpoints.**
+- ✅ **CPK-041 — Explain code consequences before decisions.**
+- ✅ **CPK-040 — Save Plans at acceptance.**
+- ✅ **CPK-039 — Add native Windows compatibility.**
+- ✅ **CPK-038 — Keep one live roadmap view across worktrees.**
+- ✅ **CPK-037 — Remove the invalid Stop context limit.**
+- ✅ **CPK-036 — Preserve Plan Mode decisions.**
+- ✅ **CPK-035 — Make preflight adversarial and research-backed.**
+- ✅ **CPK-034 — Require discriminating Scenario Proof checks.**
+- ✅ **CPK-033 — Keep RepoWise active for the full task.**
+- ✅ **CPK-032 — Invoke planning and RepoWise throughout applicable work.**
+- ✅ **CPK-031 — Keep operational progress untracked.**
+- ✅ **CPK-030 — Make RepoWise index-first and self-refreshing.**
+- ✅ **CPK-029 — Activate normal mode when Plan mode starts.**
+- ✅ **CPK-028 — Scope minimalism by lifecycle phase.**
+- ✅ **CPK-027 — Move rules into lifecycle skills.**
+- ✅ **CPK-026 — Add content-addressed review checkpoints.**
+- ✅ **CPK-025 — Verify the live toolkit before publication.**
+- ✅ **CPK-024 — Bind reviews to documented product scope.**
+- ✅ **CPK-023 — Enforce single rule ownership.**
+- ✅ **Minimal implementation discipline.**
+- ✅ **Design and planning foundation.**
+- ✅ **Review and documentation foundation.**
+- ✅ **CPK-001 — Make roadmap state authoritative.**
+- ✅ **CPK-003 — Reconcile adversarial review.**
+- ✅ **CPK-004 — Define Git task isolation.**
+- ✅ **CPK-005 — Define version increments.**
+- ✅ **CPK-006 — Define PR publication.**
+- ✅ **CPK-007 — Close PR conversations.**
+- ✅ **CPK-010 — Restore deterministic least effort.**
+- ✅ **CPK-002 — Make ExecPlan the durable task model.**
+- ✅ **CPK-011 — Make RepoWise self-starting and self-updating.**
+- ✅ **CPK-012 — Prevent self-invalidating review closure.**
+- ✅ **CPK-008 — Make decision handoffs operator-readable.**
+- ✅ **CPK-013 — Bootstrap empty project folders.**
+- ✅ **CPK-014 — Remove the Stop hook.**
+- ✅ **CPK-015 — Install Codex hooks in config.toml.**
+- ✅ **CPK-016 — Require the RepoWise code graph.**
+- ✅ **CPK-017 — Count only implementation defects toward the review breaker.**
+- ✅ **CPK-018 — Compact the global agent profile.**
+- ✅ **CPK-019 — Make direct publication integrate final work.**
+- ✅ **CPK-020 — Protect full-set invariants from bounded samples.**
+- ✅ **CPK-021 — Diagnose severe defects at review stop gates.**
+- ✅ **CPK-022 — Derive runtime scenarios before implementation.**

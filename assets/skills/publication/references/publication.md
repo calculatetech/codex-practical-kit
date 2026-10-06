@@ -6,7 +6,7 @@
 <!-- cpk-rule-guard: Apply Plan History handoff before publication classifies worktree state. -->
 <!-- cpk-rule-guard: Local native review and GitHub pull-request review are separate cumulative gates. -->
 <!-- cpk-rule-guard: Publication completes only after local `main` equals `origin/main` and contains the merged result. -->
-<!-- cpk-rule-guard: Publication does not authorize tag creation, a GitHub release, or cleanup. -->
+<!-- cpk-rule-guard: Publication does not authorize tag creation, a GitHub release, or branch and worktree removal. -->
 <!-- cpk-rule-guard: Before Codex Practical Kit publication, use the Windows PowerShell launchers on Windows and the shell launchers elsewhere. Require `Result: ready`. -->
 
 # Publication
@@ -100,4 +100,6 @@ Publication ends after verified integration.
 
 Commit and push do not authorize a pull request or release.
 
-Publication does not authorize tag creation, a GitHub release, or cleanup.
+Publication does not authorize tag creation, a GitHub release, or branch and worktree removal.
+
+Routine task-file cleanup follows Delivery Lifecycle.

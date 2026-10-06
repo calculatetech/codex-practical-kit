@@ -262,7 +262,7 @@ def event_key(event: dict[str, object]) -> str:
 
 def write_record(
     directory: Path, prefix: str, timestamp: str, key: str, content: bytes,
-    search_directories: list[Path],
+    search_directories: list[Path], historical: bool = False,
 ) -> bool:
     directory.mkdir(parents=True, exist_ok=True)
     escaped_prefix = glob.escape(prefix)
@@ -272,7 +272,7 @@ def write_record(
     )
     if any(path.read_bytes() == content for path in existing):
         return False
-    if existing:
+    if existing or historical:
         digest = hashlib.sha256(content).hexdigest()
         collisions = sorted(
             path for location in search_directories
@@ -285,7 +285,7 @@ def write_record(
         name = f"{prefix}.{timestamp}.{key}.md"
     with (directory / name).open("xb") as output:
         output.write(content)
-    return bool(existing)
+    return bool(existing) or historical
 
 
 def plan_targets(root: Path | None, markers: list[str]) -> tuple[list[Path], list[str]]:
@@ -326,7 +326,19 @@ def save_plan(event: dict[str, object]) -> list[str]:
     timestamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%fZ")
     key = event_key(event)
     content = message.encode("utf-8")
+    historical_blobs = set()
     if root is not None:
+        paths = [f".agent/plan-history/plan-summary.*.{key}.md",
+                 f".agent/plan-history/plan-summary.*.{key}.*.md"]
+        changes = subprocess.check_output(
+            ["git", "log", "--all", "--full-history", "--no-renames", "--diff-merges=separate", "--format=",
+             "--raw", "--no-abbrev", "--diff-filter=AM", "--", *paths],
+            cwd=root, text=True, encoding="utf-8",
+        )
+        historical_blobs = {line.split()[3] for line in changes.splitlines() if line.startswith(":")}
+        if any(subprocess.check_output(["git", "cat-file", "blob", blob], cwd=root) == content
+               for blob in historical_blobs):
+            return []
         history = root / ".agent" / "plan-history"
         worktrees = subprocess.run(
             ["git", "worktree", "list", "--porcelain", "-z"],
@@ -343,6 +355,7 @@ def save_plan(event: dict[str, object]) -> list[str]:
         search_directories = [history]
     collisions = write_record(
         history, "plan-summary", timestamp, key, content, search_directories,
+        historical=bool(historical_blobs),
     )
 
     warnings = []
