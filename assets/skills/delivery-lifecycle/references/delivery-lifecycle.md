@@ -2,7 +2,9 @@
 <!-- cpk-rule-guard: Carry prior authorization forward within the active mode and accepted scope. -->
 <!-- cpk-rule-guard: The implementation owner completes validation before review. -->
 <!-- cpk-rule-guard: Finalize substantive documentation before review. -->
-<!-- cpk-rule-guard: Keep detailed results in one ignored `.agent/test-results/` file per task. -->
+<!-- cpk-rule-guard: Keep detailed results in one ignored `.agent/test-results/` file per active task. -->
+<!-- cpk-rule-guard: Delete task-owned temporary files immediately after their last required use. -->
+<!-- cpk-rule-guard: Git owns historical versions. Do not create duplicate archives. -->
 <!-- cpk-rule-guard: Freeze every tracked task record before the task commit, CI, push, pull request, merge, or publication. -->
 <!-- cpk-rule-guard: Invoke Design Preflight before implementation or an accepted correction when its trigger matches, even outside Plan Mode. -->
 <!-- cpk-rule-guard: The roadmap is the only tracked lifecycle-state record. -->
@@ -24,7 +26,7 @@ The implementation owner completes validation before review. Run the checks appr
 
 After checks pass, repeat or broaden them only for changed code, failures, or a concrete unresolved concern. Perform that validation outside review. Reading this lifecycle during review does not assign implementation work to the reviewer.
 
-Keep detailed results in one ignored `.agent/test-results/` file per task. Never stage that file.
+Keep detailed results in one ignored `.agent/test-results/` file per active task. Never stage that file. Keep only evidence still needed for reconciliation, validation, review, or authorized delivery. Replace obsolete results instead of appending an unlimited log.
 
 Do not record task, checkpoint, validation, review, or delivery progress in tracked files. The roadmap is the only tracked lifecycle-state record. Untracked or ignored working files can record progress.
 
@@ -51,6 +53,18 @@ After the freeze, record delivery progress and results only in Git, GitHub, the 
 A substantive correction reopens the candidate. Finalize its applicable documentation, validation, review, and closure before the next freeze.
 
 End the final response with one `Review:` status and one `Docs:` status from the applicable skills.
+
+## Working files and cleanup
+
+Git owns historical versions. Do not create duplicate archives. Keep current decisions in the smallest existing rule, specification, or document that uses them. Consolidate useful decisions before removing obsolete alternatives, completed ExecPlans, or redundant summaries. Check that needed historical sources are committed and reachable before removing their working-tree copies. Use Git references when a current document needs an older source.
+
+Perform this maintenance at task start, before planning or replanning, and at delivery. An active or pending task keeps its needed specification and unresolved decisions. A completed specification can remain for an unfinished integration or another named current consumer. Remove it when that purpose ends.
+
+Delete task-owned temporary files immediately after their last required use. Remove consumed scratch files, comparison output, old logs, and generated caches. Remove the active result record when the authorized task sequence finishes. If a required follow-up remains, retain only the evidence that it needs. Do not rename spent files into an archive or commit them to preserve clutter.
+
+Keep generated build output in its owner's designated output directory. Retain only output for active work or explicitly approved releases. Remove superseded candidates and obsolete output. Temporary validation output must disappear when validation finishes.
+
+Establish ownership and remaining purpose before deletion. Preserve active work, unrelated user files and configuration, and unknown ownership. Ignored or untracked status alone is not permission to delete. Do not use blanket `git clean`. Routine task-file cleanup needs no additional permission. Removing branches or worktrees and changing published releases keep their separate authority gates.
 
 ## Corrections after failed checks
 

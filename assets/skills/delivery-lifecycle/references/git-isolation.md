@@ -22,7 +22,7 @@ Record the base branch, base commit, task branch, and isolation form in the task
 
 Task implementation authorizes coherent local checkpoint commits on the isolated branch. Review the cumulative diff from its base.
 
-A checkpoint does not authorize push, merge, pull-request creation, or cleanup.
+A checkpoint does not authorize push, merge, pull-request creation, or branch and worktree removal.
 
 Remove a worktree or branch only after integration is proven and its state is clean. Cleanup always needs separate authorization.
 

@@ -741,6 +741,63 @@ class PlanHistoryHookTests(unittest.TestCase):
                 status = subprocess.check_output(["git", "status", "--short"], cwd=primary, text=True)
                 self.assertEqual(status, "")
 
+    def test_retired_plan_history_is_not_recreated_from_git(self):
+        self.check_retired_plan_history()
+
+    def test_retired_merge_plan_history_is_not_recreated_from_git(self):
+        self.check_retired_plan_history(merge=True)
+
+    def check_retired_plan_history(self, *, merge=False):
+        for name, source in self.CAPTURE_EVENTS:
+            with self.subTest(name=name, source=source), tempfile.TemporaryDirectory() as temp:
+                root = Path(temp) / "repo"
+                root.mkdir()
+                GitFixture(root).commit("docs/feature.md", "# Feature\n")
+                history = root / ".agent/plan-history"
+                if merge:
+                    primary_branch = subprocess.check_output(
+                        ["git", "branch", "--show-current"], cwd=root, text=True,
+                    ).strip()
+                    subprocess.run(["git", "checkout", "-qb", "merge-source"], cwd=root, check=True)
+                    (root / "docs/merge.md").write_text("# Merge\n")
+                    subprocess.run(["git", "add", "docs/merge.md"], cwd=root, check=True)
+                    subprocess.run(["git", "commit", "-qm", "merge input"], cwd=root, check=True)
+                    subprocess.run(["git", "checkout", "-q", primary_branch], cwd=root, check=True)
+                    subprocess.run(["git", "merge", "--no-ff", "--no-commit", "merge-source"],
+                                   cwd=root, check=True, capture_output=True)
+
+                def retire():
+                    subprocess.run(["git", "add", ".agent/plan-history"], cwd=root, check=True)
+                    subprocess.run(["git", "commit", "-qm", "capture"], cwd=root, check=True)
+                    for record in history.glob("*.md"):
+                        record.unlink()
+                    subprocess.run(["git", "add", "-u"], cwd=root, check=True)
+                    subprocess.run(["git", "commit", "-qm", "retire"], cwd=root, check=True)
+
+                event, original = self.capture_event(root, name, source)
+                self.run_hook(event)
+                retire()
+                for _ in range(2):
+                    event, _ = self.capture_event(root, name, source)
+                    self.run_hook(event)
+                    self.assertEqual(list(history.glob("*.md")), [])
+                event, changed = self.capture_event(root, name, source, title="Changed Plan")
+                warning = self.run_hook(event)
+                self.assertIn("same event identity", warning.stdout)
+                record, = history.glob("*.md")
+                self.assertEqual(record.read_bytes(), changed.encode())
+                retire()
+                # A newer different blob must not hide an older exact historical match.
+                for title in ("Observed Plan", "Changed Plan"):
+                    event, _ = self.capture_event(root, name, source, title=title)
+                    self.run_hook(event)
+                    self.assertEqual(list(history.glob("*.md")), [])
+                event, _ = self.capture_event(root, name, source, turn="new-event")
+                self.run_hook(event)
+                self.run_hook(event)
+                record, = history.glob("*.md")
+                self.assertEqual(record.read_bytes(), original.encode())
+
     def test_plan_history_cross_worktree_identity(self):
         for name, source in self.CAPTURE_EVENTS:
             with self.subTest(name=name, source=source), tempfile.TemporaryDirectory() as temp:
@@ -1202,16 +1259,18 @@ class RoadmapViewHookTests(unittest.TestCase):
             )
 
 
-@unittest.skipUnless(shutil.which("pwsh"), "PowerShell 7 is not installed")
 class PowerShellLauncherTests(unittest.TestCase):
-    def invoke(self, script: Path, *, exit_code: int = 0, fail_tests: bool = False):
+    def invoke(self, script: Path, *, exit_code: int = 0, fail_tests: bool = False, invalid_source: str | None = None, legacy: bool = False):
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp) / "source with spaces"
             root.mkdir()
             target = root / script.name
-            target.write_text(script.read_text(), encoding="utf-8")
+            source_text = script.read_text()
+            if legacy:
+                source_text = '$PSNativeCommandArgumentPassing = "Legacy"\n' + source_text
+            target.write_text(source_text, encoding="utf-8")
             log = Path(temp) / "args.json"
-            if script.name == "run-tests.ps1":
+            if script.name in {"run-tests.ps1", "run-tests.sh"}:
                 (root / "kit.py").write_text("", encoding="utf-8")
             else:
                 (root / "kit.py").write_text(
@@ -1228,6 +1287,8 @@ class PowerShellLauncherTests(unittest.TestCase):
             runtime = root / "assets" / "runtime"
             runtime.mkdir()
             (runtime / "bootstrap.py").write_text("", encoding="utf-8")
+            if invalid_source:
+                (root / invalid_source).write_text("return 1\n", encoding="utf-8")
             tests = root / "tests"
             tests.mkdir()
             if fail_tests:
@@ -1241,10 +1302,13 @@ class PowerShellLauncherTests(unittest.TestCase):
                 (tests / "test_success.py").write_text(
                     "import os, unittest\n"
                     "class Success(unittest.TestCase):\n"
-                    "    def test_success(self): self.assertEqual(os.environ.get('PYTHONUTF8'), '1')\n",
+                    "    def test_success(self): self.assertEqual(os.environ.get('PYTHONDONTWRITEBYTECODE'), '1'); "
+                    + ("self.assertEqual(os.environ.get('PYTHONUTF8'), '1')\n" if script.suffix == ".ps1" else "\n"),
                     encoding="utf-8",
                 )
             env = os.environ.copy()
+            env.pop("PYTHONDONTWRITEBYTECODE", None)
+            env.pop("PYTHONUTF8", None)
             env["CPK_LOG"] = str(log)
             env["CPK_EXIT"] = str(exit_code)
             command_dir = Path(temp) / "commands"
@@ -1255,14 +1319,17 @@ class PowerShellLauncherTests(unittest.TestCase):
                 )
             else:
                 (command_dir / "python").symlink_to(sys.executable)
+                (command_dir / "python3").symlink_to(sys.executable)
             env["PATH"] = str(command_dir) + os.pathsep + env["PATH"]
             arguments = (
                 []
-                if script.name == "run-tests.ps1"
+                if script.name in {"run-tests.ps1", "run-tests.sh"}
                 else ["--label", "path with spaces"]
             )
             result = subprocess.run(
-                ["pwsh", "-NoProfile", "-File", str(target), *arguments],
+                (["sh", str(target)] if script.suffix == ".sh" else
+                 ["pwsh", "-NoProfile", "-File", str(target), *arguments]),
+                cwd=root,
                 text=True,
                 capture_output=True,
                 env=env,
@@ -1270,17 +1337,11 @@ class PowerShellLauncherTests(unittest.TestCase):
                 timeout=30,
             )
             call = json.loads(log.read_text()) if log.exists() else None
-            compiled = {
-                path.relative_to(root).as_posix()
-                for path in (
-                    root / "kit.py",
-                    *sorted(hooks.glob("*.py")),
-                    *sorted(runtime.glob("*.py")),
-                )
-                if any((path.parent / "__pycache__").glob(path.stem + ".*.pyc"))
-            }
+            compiled = {path.relative_to(root).as_posix() for path in root.rglob("*")
+                        if path.suffix == ".pyc" or path.name == "__pycache__"}
             return result, call, compiled
 
+    @unittest.skipUnless(shutil.which("pwsh"), "PowerShell 7 is not installed")
     def test_action_launchers_forward_arguments_and_exit_status(self):
         actions = {
             "install.ps1": "install",
@@ -1294,11 +1355,17 @@ class PowerShellLauncherTests(unittest.TestCase):
                 self.assertEqual(result.returncode, 9)
                 self.assertEqual(call, [action, "--label", "path with spaces"])
 
+    @unittest.skipUnless(shutil.which("pwsh"), "PowerShell 7 is not installed")
     def test_test_launcher_stops_after_failed_unit_phase(self):
-        result, _, compiled = self.invoke(ROOT / "run-tests.ps1", fail_tests=True)
+        valid, _, artifacts = self.invoke(ROOT / "run-tests.ps1")
+        self.assertEqual(valid.returncode, 0, valid.stdout + valid.stderr)
+        self.assertEqual(artifacts, set())
+        result, _, compiled = self.invoke(ROOT / "run-tests.ps1", fail_tests=True, invalid_source="kit.py")
+        self.assertNotIn("SyntaxError", result.stdout + result.stderr)
         self.assertNotEqual(result.returncode, 0)
         self.assertEqual(compiled, set())
 
+    @unittest.skipUnless(shutil.which("pwsh"), "PowerShell 7 is not installed")
     def test_action_launcher_reports_missing_python(self):
         env = os.environ.copy()
         env["PATH"] = ""
@@ -1312,18 +1379,28 @@ class PowerShellLauncherTests(unittest.TestCase):
         self.assertEqual(result.returncode, 1)
         self.assertIn("python", result.stderr)
 
+    @unittest.skipUnless(shutil.which("pwsh"), "PowerShell 7 is not installed")
     def test_test_launcher_compiles_kit_and_every_hook(self):
-        result, _, compiled = self.invoke(ROOT / "run-tests.ps1")
-        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-        self.assertEqual(
-            compiled,
-            {
-                "kit.py",
-                "assets/hooks/alpha.py",
-                "assets/hooks/omega.py",
-                "assets/runtime/bootstrap.py",
-            },
-        )
+        self.check_syntax_launcher(ROOT / "run-tests.ps1")
+        self.check_syntax_launcher(ROOT / "run-tests.ps1", legacy=True)
+
+    def check_syntax_launcher(self, script, *, legacy=False):
+        for invalid in (None, "kit.py", "assets/hooks/alpha.py", "assets/hooks/omega.py",
+                        "assets/runtime/bootstrap.py"):
+            with self.subTest(script=script.name, invalid=invalid):
+                result, _, artifacts = self.invoke(script, invalid_source=invalid, legacy=legacy)
+                self.assertEqual(result.returncode == 0, invalid is None, result.stdout + result.stderr)
+                self.assertEqual(artifacts, set())
+                if invalid:
+                    self.assertIn("SyntaxError", result.stdout + result.stderr)
+
+    @unittest.skipIf(os.name == "nt", "POSIX launcher")
+    def test_shell_launcher_checks_syntax_without_bytecode(self):
+        self.check_syntax_launcher(ROOT / "run-tests.sh")
+        result, _, artifacts = self.invoke(ROOT / "run-tests.sh", fail_tests=True, invalid_source="kit.py")
+        self.assertNotEqual(result.returncode, 0)
+        self.assertNotIn("SyntaxError", result.stdout + result.stderr)
+        self.assertEqual(artifacts, set())
 
 
 class RepoWiseRuntimeTests(unittest.TestCase):
@@ -2688,8 +2765,8 @@ class IntegrationTests(unittest.TestCase):
         self.assertIn("untracked test-result record", closure)
         self.assertIn("completed checkpoint history in Git", history)
         self.assertIn("current conversation when available", history)
-        self.assertIn("Do not rewrite completed ExecPlans", history)
-        self.assertIn("Never edit a Plan history record or remove its last copy", history)
+        self.assertIn("Obsolete committed captures, superseded summaries, and completed ExecPlans can leave the working tree", history)
+        self.assertIn("Git preserves retired source records", history)
         self.assertNotIn("publication status", closure)
         self.assertIn("cpk-rule-route-only: delivery-lifecycle", publication)
 
@@ -3731,7 +3808,7 @@ class IntegrationTests(unittest.TestCase):
         self.assertIn("one final review of the complete task", plans)
 
         self.assertIn("Before a replan, read the current ExecPlan", history)
-        self.assertIn("Account for every applicable Plan record through the reading and summary procedure", history)
+        self.assertIn("Account for every applicable current Plan decision", history)
         self.assertIn("completed checkpoint history in Git", history)
         self.assertIn("Split, merge, reorder, or replace only unfinished subtasks", history)
         self.assertIn("Never amend or rewrite a completed checkpoint commit", history)
@@ -3758,7 +3835,7 @@ class IntegrationTests(unittest.TestCase):
         self.assertIn("`pwsh -File .\\doctor.ps1`", publication)
         self.assertIn("from the reviewed candidate", publication)
         self.assertIn("`Result: ready`", publication)
-        self.assertEqual(kit.KIT_VERSION, "0.25.0")
+        self.assertEqual(kit.KIT_VERSION, "0.26.0")
         self.assertNotIn("Version `0.22.0`", (ROOT / "README.md").read_text())
         self.assertNotIn("version 0.22.0", (ROOT / "CODEX-INSTALL-PROMPT.md").read_text())
 
@@ -3871,89 +3948,62 @@ permissions:
                 content = (ROOT / relative.removeprefix("./")).read_bytes()
                 self.assertEqual(records[relative][0], hashlib.sha256(content).hexdigest())
 
-    def test_plan_history_is_immutable_and_complete(self):
-        skill = (ROOT / "assets" / "skills" / "plan-history" / "SKILL.md").read_text()
-        agents = (ROOT / "assets" / "AGENTS.block.md").read_text()
-        plans = (ROOT / ".agent" / "PLANS.md").read_text()
-        isolation = (
-            ROOT
-            / "assets"
-            / "skills"
-            / "delivery-lifecycle"
-            / "references"
-            / "git-isolation.md"
-        ).read_text()
-
+    def test_plan_history_keeps_current_decisions_and_uses_git_history(self):
+        skill = (ROOT / "assets/skills/plan-history/SKILL.md").read_text()
+        for clause in (
+            "Account for every applicable current Plan decision",
+            "Do not reopen every completed task by default",
+            "before the next submitted prompt continues",
+            "same event and exact bytes in live worktrees or reachable Git history",
+            "Replay must not recreate a retired committed record",
+            "Different event identities or different bytes remain distinct evidence",
+            "Do not trust a RepoWise match limit",
+            "A redundant prefix must not hide a later distinct decision",
+            "including chunks within one large record",
+            "continue from the first unaccounted range",
+            "Do not emit a plan based on an unread tail",
+            "compacted/<topic>.md",
+            "Update that file instead of creating timestamped revisions",
+            "Git commit and repository path",
+            "Compare every covered decision with its original",
+            "A SHA-256 match proves byte identity, not semantic fidelity",
+            "Do not build chains of summaries of summaries",
+            "Never discard a unique unresolved constraint",
+            "Status: superseded",
+            "Retain decisions outside that scope",
+            "Stop planning when retained decisions conflict",
+            "<!-- cpk-plan-spec: none -->",
+            "Relocate applicable untracked Plan records",
+            "Do not overwrite",
+            "Compare complete source and destination bytes",
+            "If they differ or the copy fails, preserve both and stop",
+        ):
+            self.assertIn(clause, skill)
+        for obsolete in ("Never overwrite a summary revision", "retain their last copies",
+                         "Never edit a Plan history record or remove its last copy",
+                         "Link every applicable original record"):
+            self.assertNotIn(obsolete, skill)
         self.assertIn("plan-history", kit.CUSTOM_SKILLS)
-        self.assertIn("cpk-rule-owner: plan-history", skill)
-        self.assertIn("Inventory every original record in `.agent/plan-history/`", skill)
-        self.assertIn("before the next submitted prompt continues", skill)
-        self.assertIn("Every repository Plan capture has a record", skill)
-        self.assertIn("Do not trust a RepoWise match limit", skill)
-        self.assertNotIn("If the complete applicable set cannot fit in context, stop", skill)
-        self.assertIn("including chunks within one large record", skill)
-        self.assertIn("Every applicable original must have complete direct-read coverage or verified summary coverage", skill)
-        self.assertIn("enumerate the original inventory again", skill)
-        self.assertIn("do not emit a plan based on an unread tail", skill)
-        self.assertIn("compacted/<topic>.<UTC>.md", skill)
-        self.assertIn("these derived summaries are not original captures", skill)
-        self.assertIn("A broader task must reopen the original evidence", skill)
-        self.assertIn("A SHA-256 match proves byte identity, not semantic fidelity", skill)
-        self.assertIn("Do not build chains of summaries of summaries", skill)
-        self.assertIn("new, uncovered, changed, or distinct-content records", skill)
-        self.assertIn("Original evidence takes precedence", skill)
-        self.assertIn("retain carried decisions outside that scope", skill)
-        self.assertIn("both original sources", skill)
-        self.assertIn("not summary creation times", skill)
-        self.assertIn("before long reads and after each completed chunk or batch", skill)
-        self.assertIn("Do not mark that record complete", skill)
-        self.assertIn("continue from the first unaccounted range", skill)
-        self.assertIn("reconstruct coverage from verified reusable summaries", skill)
-        self.assertIn("reread that source from its beginning", skill)
-        self.assertIn("Summary links are supplemental", skill)
-        self.assertIn("same event key and identical bytes", skill)
-        self.assertIn("Retain and reconcile every distinct-content collision record", skill)
-        self.assertIn("duplicate", skill.lower())
-        self.assertIn("Prior plan reconciliation", skill)
-        self.assertIn("Status: superseded", skill)
-        self.assertIn("<!-- cpk-plan-spec: none -->", skill)
-        self.assertIn("implements a plan after context was cleared", skill)
-        self.assertIn("specification becomes known after capture", skill)
-        self.assertIn(
-            "enumerate every other worktree in the same Git repository before task edits",
-            skill,
-        )
-        self.assertIn("Exclude the task worktree", skill)
-        self.assertIn(
-            "Relocate each applicable untracked record to the same repository-relative path",
-            skill,
-        )
-        self.assertIn("Inspect the task-worktree destination before writing", skill)
-        self.assertIn("Do not overwrite an existing destination", skill)
-        self.assertLess(
-            skill.index("Compare the source and destination bytes"),
-            skill.index("remove the redundant untracked source copy"),
-        )
-        self.assertIn("If the bytes differ or the destination copy fails", skill)
-        self.assertIn("During worktree handoff, never remove a tracked, unique, unrelated, or different-content record", skill)
-        self.assertIn("Retain every distinct-content collision record", skill)
-        self.assertIn("This is the only location for new repository summaries", skill)
-        self.assertIn("Keep these records versioned in Git", skill)
-        self.assertIn("git worktree list --porcelain -z", skill)
-        self.assertIn("also read legacy siblings", skill)
-        self.assertIn("link the existing central record", skill)
-        self.assertIn("Do not copy it back to `main`", skill)
-        self.assertIn("Compare the complete source and destination bytes before removing the legacy copy", skill)
-        self.assertNotIn("also create exact sibling records", skill)
-        self.assertNotIn("copy the exact unlinked record beside it", skill)
-        self.assertIn("Never edit a Plan history record or remove its last copy", skill)
-        self.assertNotIn(
-            "copy each applicable untracked record to the same repository-relative path before task edits",
-            skill,
-        )
-        self.assertIn("`plan-history`", agents)
-        self.assertIn("Immutable Plan Mode summaries are source records", plans)
-        self.assertIn("cpk-rule-route-only: plan-history", isolation)
+
+    def test_lifecycle_removes_spent_artifacts_without_archives(self):
+        delivery = (ROOT / "assets/skills/delivery-lifecycle/references/delivery-lifecycle.md").read_text()
+        plans = (ROOT / ".agent/PLANS.md").read_text()
+        for clause in (
+            "Git owns historical versions. Do not create duplicate archives.",
+            "at task start, before planning or replanning, and at delivery",
+            "Delete task-owned temporary files immediately after their last required use",
+            "Remove the active result record when the authorized task sequence finishes",
+            "If a required follow-up remains, retain only the evidence that it needs",
+            "Retain only output for active work or explicitly approved releases",
+            "Remove superseded candidates and obsolete output",
+            "Preserve active work, unrelated user files and configuration, and unknown ownership",
+            "Ignored or untracked status alone is not permission to delete",
+            "Do not use blanket `git clean`",
+        ):
+            self.assertIn(clause, delivery)
+        self.assertIn("pending integration", plans)
+        self.assertNotIn("Do not rewrite completed ExecPlans", plans)
+        self.assertNotIn("Immutable Plan Mode summaries", plans)
 
     def test_repowise_is_required(self):
         config = kit.repowise_config_block(

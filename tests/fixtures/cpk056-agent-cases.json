@@ -1,6 +1,6 @@
 {
   "format_version": 1,
-  "procedure": "../../docs/plans/cpk-056-interviews-and-assessment.md#assessment-procedure",
+  "procedure": "https://github.com/calculatetech/codex-practical-kit/blob/424ce7e7142d79fbed49be82ffb720c8b12db06f/docs/plans/cpk-056-interviews-and-assessment.md#assessment-procedure",
   "cases": [
     {
       "id": "A",
