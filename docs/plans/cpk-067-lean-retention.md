@@ -83,11 +83,18 @@ The named checks are:
 
 Require every applicable check to pass. Use PowerShell when installed. Regenerate the manifest from remaining distributed paths before validation. Record current proof in the one ignored task-result file, then remove it after review, local delivery, and live installation finish. A short Git commit message retains the final review and validation outcome without an archived log.
 
+## Publication identity
+
+
+The follow-up user request adds publication through the existing protected PR procedure. Select source version `0.26.0` from committed `0.25.0`. The new cleanup capability requires a minor increment under the [version policy](../../assets/skills/publication/references/versioning.md).
+
+Record this decision in Git with the version metadata. Then retire the working-tree handoff before the task push. Publication can use its committed source without preserving another live planning file. Follow the [publication procedure](../../assets/skills/publication/references/publication.md). This request does not add tag or GitHub release creation.
+
 ## Delivery and recovery
 
 
 Finalize substantive documents before review. Use native review of the exact staged tree from the base commit. After clean review, close the roadmap, update its checksum, and commit locally. Install the candidate and require Doctor readiness. Preserve the current handoff specification while integration remains unfinished.
 
-Old tracked records remain recoverable through Git. A unique unresolved decision or unknown file owner prevents deletion of that file. Do not use broad filesystem cleanup. No version selection, push, tag, or release is included in this task.
+Old tracked records remain recoverable through Git. A unique unresolved decision or unknown file owner prevents deletion of that file. Do not use broad filesystem cleanup. The follow-up publication scope is defined above.
 
-Revision: replace cumulative archival with bounded current evidence and terminal cleanup in response to the user's packrat-behavior report.
+Revision: define publication identity after the user's publish request, then retire the consumed handoff through Git-backed cleanup.

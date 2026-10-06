@@ -57,13 +57,13 @@ d69f7436f838d6daa56b7a311cfdbe7f77fbbf1b9c6c2835a813709e75187416  ./docs/REPOWIS
 e27b3d72ff47ebf7230a96b3a5f2d6ea3f410e22ef382f8e7d9cd27c7bb59892  ./docs/REVIEW.md
 e86355a4eae8ec5cd42e7674461ebaf1acc4f14f20fa9600da2bb5248efb8e43  ./docs/SPEC-KIT.md
 f7298a2735489830b11a83c5a852984916147e8c3408214cc722d58a4f7a139f  ./docs/WHY-THIS-SHAPE.md
-4b358ea13ad7100f99fa72ad9dc16e267fca49f5202b4e311d91efb1e3fbb143  ./docs/plans/cpk-067-lean-retention.md
-fb7b951f90b86a94576582bd1fad18c98838a5274ea8edacac9976fdfc95c338  ./docs/roadmap.md
+8f8ad57b2e0dca2c11c16947d7599f1fba6c07097c0a80ea9e1669ad4c7732fe  ./docs/plans/cpk-067-lean-retention.md
+e03065e7b874d15ba91cb73d2f76978421d1c459a12f19857bb3de02b71f8ed7  ./docs/roadmap.md
 6f8f14ca5fd8ad935eee66256b3f7c49d5c40957eedff938ba21365e30869719  ./doctor.ps1
 ab56a88d9188979f06ea142d1f58ea0d6ad9088e83a965bd324209d83da513ad  ./doctor.sh
 8087bdb3ee654c0baac278a8e3bf85e33e314f8acfd486e7ebf675126a697058  ./install.ps1
 3466d2e34145cfdaa83d793960794b2aefc96f3d9c48d22fd2af930ec819e9c4  ./install.sh
-fd117b24c3810c2078a610c9a97034d711b0bf2551e7ff832b5fce62f51c94c2  ./kit.py
+54daa83ee5e415bfb5fac1e30d06309c667f104ed3b59b3aed1a10f0aad51dd2  ./kit.py
 bbc6440e9686b886bac407dffea3d3a21dc175d784f2645b0b97305214f96023  ./run-tests.ps1
 88528842a28f08ec8d96eb014eb93a248d2dede495c6d553151840ec1f9688e2  ./run-tests.sh
 85a2ba72e2b0cd1ab6c25a51f39059502415c3ac62a6bffa613d7e31b6422cd4  ./setup-repo.ps1
@@ -74,7 +74,7 @@ e1e231aac51822f7e1bb3aa61aba138cf8c5df9cefd3079b0c1b5a98eea03bd9  ./tests/fixtur
 e65a14cd4d2744b0a9ee0dc9d2d74afa7e1cac835d832419b34be1baacc94379  ./tests/fixtures/cpk056-agent-cases.json
 e32941eb74be1f2cdcb6c82cf71e113b841651bf0d01786f364176de2da1b9c5  ./tests/fixtures/cpk056-agent-grading.json
 289367b7090a0d71936b41f08c4a354bc2758013dceb709819de36a1b73d9aa6  ./tests/live_plan_history.py
-cd92260dc5c30cb2e832e730cc7b74b322acf2f07ea4c32300500e24a9a90ea6  ./tests/test_kit.py
+5947183183063da3141431ae2b9247f4033ce2a839d16a559fa8c1abb585d50d  ./tests/test_kit.py
 dbeb390655fbe5321578256db17b6a7c9edc1a4a7e7499ff5fe524dccbfc1719  ./tests/test_ponytail.py
 8fb5aefac7fa8a9cef45296f2dacbcc0663bed19a0daee5d94f71cebce15b012  ./tests/test_updates.py
 54673ace20ec6333c73ead405c82d52560848bc8b9aa3a0102fc39935cc3ab87  ./tests/update_subprocess_fixture.py
