@@ -60,6 +60,8 @@ Update application reuses an external RepoWise executable when its version match
 
 On Windows, reinstall also repairs a failed `repowise.exe` when the previous kit manifest records the fixed user-bin path.
 
+Before Windows repair or upgrade, the installer checks for processes that use the selected RepoWise environment or launcher. It stops before replacement and lists matching process IDs. Close Codex sessions and stop RepoWise watchers before you rerun the command from a separate PowerShell window. The installer does not terminate processes. It reuses a healthy matching version without replacement.
+
 The installer adds a user-level RepoWise MCP server. If Codex starts in a completely empty folder, the server command initializes Git first. It does not initialize Git in a non-empty folder.
 
 The first start in a Git repository initializes a no-prose index when `.repowise` is absent. Each start then installs RepoWise's marker-delimited `post-commit` hook and catches up the index.

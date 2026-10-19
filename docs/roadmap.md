@@ -33,6 +33,7 @@ No residual risk is accepted.
 
 ## Completed
 
+- ✅ **CPK-068 — Repair Windows installation safely.** Detect active RepoWise processes before replacement, preserve native plugin configuration during reinstall, and restore the local installation.
 - ✅ **CPK-067 — Keep current work lean and let Git own history.** Consolidate useful decisions, remove obsolete planning files and spent output, prevent capture replay, and validate without bytecode clutter.
 - ✅ **CPK-066 — Correct runtime identity and install output.**
 - ✅ **CPK-065 — Restore the requested finished-thread archival.**

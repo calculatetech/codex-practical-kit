@@ -25,7 +25,7 @@ from pathlib import Path
 from typing import Any, Iterable
 
 KIT_ID = "codex-practical-kit"
-KIT_VERSION = "0.26.0"
+KIT_VERSION = "0.26.1"
 ROOT = Path(__file__).resolve().parent
 AGENTS_START = "<!-- codex-practical-kit:start -->"
 AGENTS_END = "<!-- codex-practical-kit:end -->"
@@ -189,6 +189,8 @@ def json_load(path: Path, default: Any) -> Any:
 
 
 def marker_block(text: str, start: str, end: str, body: str) -> str:
+    if start in (HOOKS_START, REPOWISE_START):
+        text = remove_marker_block(text, start, end)
     block = f"{start}\n{body.rstrip()}\n{end}"
     pattern = re.compile(re.escape(start) + r".*?" + re.escape(end), re.DOTALL)
     if pattern.search(text):
@@ -199,7 +201,20 @@ def marker_block(text: str, start: str, end: str, body: str) -> str:
 
 def remove_marker_block(text: str, start: str, end: str) -> str:
     pattern = re.compile(r"\n?" + re.escape(start) + r".*?" + re.escape(end) + r"\n?", re.DOTALL)
-    result = pattern.sub("\n", text, count=1)
+    def replacement(match: re.Match[str]) -> str:
+        if start not in (HOOKS_START, REPOWISE_START):
+            return "\n"
+        # Codex can insert unrelated TOML tables before a managed closing comment.
+        owner = "hooks" if start == HOOKS_START else "mcp_servers.repowise"
+        owned_header = re.compile(r"\[\[?" + re.escape(owner) + r"(?:\.|\])")
+        sections = re.split(r"(?m)(?=^\[)", match.group())
+        return "\n" + "".join(
+            section.replace(end, "")
+            for section in sections[1:]
+            if not owned_header.match(section)
+        )
+
+    result = pattern.sub(replacement, text, count=1)
     result = re.sub(r"\n{3,}", "\n\n", result).strip()
     return result + ("\n" if result else "")
 
@@ -1029,6 +1044,28 @@ def ensure_repowise(
     env["HOME"] = str(paths.home)
     env["UV_TOOL_BIN_DIR"] = str(destination)
     env["UV_TOOL_DIR"] = str(paths.home / ".local" / "share" / "uv" / "tools")
+    if is_windows():
+        # Windows cannot replace a tool environment while its executables are running.
+        script = """
+$ErrorActionPreference = 'Stop'
+$toolPrefix = (Join-Path $env:UV_TOOL_DIR 'repowise') + [IO.Path]::DirectorySeparatorChar
+$launcher = Join-Path $env:UV_TOOL_BIN_DIR 'repowise.exe'
+@(Get-CimInstance Win32_Process | Where-Object {
+    $_.ExecutablePath -and (
+        $_.ExecutablePath.StartsWith($toolPrefix, [StringComparison]::OrdinalIgnoreCase) -or
+        $_.ExecutablePath.Equals($launcher, [StringComparison]::OrdinalIgnoreCase)
+    )
+}).ProcessId -join ', '
+"""
+        running = run(
+            ["pwsh", "-NoProfile", "-NonInteractive", "-Command", script], env=env, timeout=30
+        ).stdout.strip()
+        if running:
+            raise KitError(
+                f"RepoWise is still running (process IDs: {running}). "
+                "Close Codex sessions and stop RepoWise watchers, then rerun this command "
+                "from a separate PowerShell window. No RepoWise files were changed."
+            )
     command = [uv, "tool", "install"]
     if force:
         command.append("--force")

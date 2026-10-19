@@ -11,6 +11,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import tomllib
 import unittest
 import urllib.parse
 from unittest import mock
@@ -39,7 +40,7 @@ class ApplyUpdateTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp:
             paths = self.paths(Path(temp))
             uv = paths.home / "bin/uv"
-            repowise = paths.home / ".local/bin/repowise"
+            repowise = paths.home / ".local/bin" / kit.runtime_executable("repowise")
             uv.parent.mkdir(parents=True)
             uv.write_text("uv")
             repowise.parent.mkdir(parents=True)
@@ -352,7 +353,8 @@ class ApplyUpdateTests(unittest.TestCase):
     def test_powershell_update_launchers_complete_path(self):
         with tempfile.TemporaryDirectory(prefix="update launchers ") as temp:
             shim = Path(temp) / "python"
-            shim.symlink_to(sys.executable)
+            if os.name != "nt":
+                shim.symlink_to(sys.executable)
             env = {**os.environ, "PATH": temp + os.pathsep + os.environ["PATH"]}
             for script in ("check-updates.ps1", "apply-updates.ps1"):
                 success = subprocess.run(["pwsh", "-NoProfile", "-File", str(ROOT / script), "--help"], cwd=temp, env=env, text=True, capture_output=True)
@@ -416,6 +418,13 @@ class ComposedUpdateTests(unittest.TestCase):
             ],
             "installed": [self.plugin("ponytail", enabled=False, user="keep")],
         }
+        # Actual Codex 0.163.0 can append native tables before this trailing marker.
+        kit.write_file(self.paths.codex_home / "config.toml", kit.marker_block(
+            "", kit.REPOWISE_START, kit.REPOWISE_END,
+            '[mcp_servers.repowise]\ncommand = "old"\n'
+            '[marketplaces.ponytail]\nsource_type = "git"\nsource = "https://github.com/DietrichGebert/ponytail.git"\n'
+            '[plugins."ponytail@ponytail"]\nenabled = false\n',
+        ))
         self.fail_upgrade = None
         self.repowise_version = "9.9.9"
         self.skill_payloads = {
@@ -520,6 +529,8 @@ class ComposedUpdateTests(unittest.TestCase):
             suffix = ".exe" if executable == "pwsh" else ""
             (target / f"uv{suffix}").write_text("fixture")
             return subprocess.CompletedProcess(command, 0, "", "")
+        if executable == "pwsh":
+            return subprocess.CompletedProcess(command, 0, "", "")
         if executable in {"uv", "uv.exe"}:
             if command[1:] == ["--version"]:
                 return subprocess.CompletedProcess(command, 0, "uv 8.8.8\n", "")
@@ -540,13 +551,16 @@ class ComposedUpdateTests(unittest.TestCase):
             return subprocess.CompletedProcess(command, 0, "Logged in\n", "")
         args = command[2:-1]
         if args == ["marketplace", "list"]:
-            output = {"marketplaces": self.plugin_state["marketplaces"]}
+            config = tomllib.loads(kit.read_text(self.paths.codex_home / "config.toml"))
+            output = {"marketplaces": [item for item in self.plugin_state["marketplaces"]
+                if item["name"] != "ponytail" or "ponytail" in config.get("marketplaces", {})]}
         elif args[:2] == ["list", "--marketplace"]:
             marketplace = args[2]
             output = {
                 "installed": [
                     item for item in self.plugin_state["installed"]
                     if item["pluginId"].endswith("@" + marketplace)
+                    and item["pluginId"] in tomllib.loads(kit.read_text(self.paths.codex_home / "config.toml")).get("plugins", {})
                 ]
             }
         elif args[:2] == ["marketplace", "add"]:
@@ -651,6 +665,7 @@ class ComposedUpdateTests(unittest.TestCase):
         ponytail = next(item for item in self.plugin_state["installed"] if item["name"] == "ponytail")
         self.assertFalse(ponytail["enabled"])
         self.assertEqual(ponytail["user"], "keep")
+        self.assertFalse(tomllib.loads(kit.read_text(self.paths.codex_home / "config.toml"))["plugins"]["ponytail@ponytail"]["enabled"])
         router = (self.paths.codex_home / "AGENTS.md").read_text()
         self.assertIn("Use 12ui-design only for website projects", router)
         self.assertNotIn("all non-trivial UI", router.lower())
