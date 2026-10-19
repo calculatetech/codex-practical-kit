@@ -8,6 +8,7 @@ from pathlib import Path
 import re
 import subprocess
 import tempfile
+import tomllib
 import unittest
 from unittest import mock
 
@@ -74,7 +75,12 @@ class PonytailIntegrationTests(unittest.TestCase):
         config = home / "config.toml"
         pattern = rf'(?m)^\[plugins\."{re.escape(plugin_id)}"\]\nenabled = (?:true|false)\n'
         text = re.sub(pattern, '', kit.read_text(config))
-        kit.write_file(config, text + f'\n[plugins."{plugin_id}"]\nenabled = ' + str(enabled).lower() + '\n')
+        text = re.sub(rf'(?m)^\[marketplaces\.{re.escape(marketplace)}\]\nsource_type = "git"\nsource = .*\n', '', text)
+        block = f'\n[plugins."{plugin_id}"]\nenabled = ' + str(enabled).lower() + '\n'
+        block += f'\n[marketplaces.{marketplace}]\nsource_type = "git"\nsource = {json.dumps(source)}\n'
+        # Native Codex 0.163.0 inserts new tables before the final trailing comment.
+        end = max(text.rfind(kit.HOOKS_END), text.rfind(kit.REPOWISE_END))
+        kit.write_file(config, text[:end] + block + text[end:] if end >= 0 else text + block)
         if name == "ponytail":
             kit.write_file(home / "plugins/data/ponytail-ponytail/.ponytail-active", "ultra")
             kit.write_file(self.paths.home / ".config/ponytail/config.json", '{"defaultMode":"off"}')
@@ -104,10 +110,17 @@ class PonytailIntegrationTests(unittest.TestCase):
         args = command[2:]
         state = self.state(home)
         if args == ["marketplace", "list", "--json"]:
-            output = {"marketplaces": state["marketplaces"]}
+            config = tomllib.loads(kit.read_text(home / "config.toml"))
+            output = {"marketplaces": [item for item in state["marketplaces"] if item["name"] in config.get("marketplaces", {})]}
         elif len(args) == 4 and args[:2] == ["list", "--marketplace"] and args[3] == "--json":
             marketplace = args[2]
-            output = {"installed": [item for item in state["installed"] if item["pluginId"].endswith("@" + marketplace)], "available": []}
+            config = tomllib.loads(kit.read_text(home / "config.toml"))
+            output = {"installed": [
+                {**item, "enabled": config["plugins"][item["pluginId"]]["enabled"]}
+                for item in state["installed"]
+                if item["pluginId"].endswith("@" + marketplace)
+                and item["pluginId"] in config.get("plugins", {})
+            ], "available": []}
         elif args[:2] == ["marketplace", "add"] and args[-1] == "--json":
             source = args[2]
             marketplace = "ponytail" if "ponytail" in source.lower() else "12ui-plugin"
@@ -224,6 +237,23 @@ class PonytailIntegrationTests(unittest.TestCase):
                 self.assertIn("enabled" if enabled else "disabled by user", output)
                 self.assertEqual(self.mutations(), [])
 
+    def test_install_preserves_native_tables_inside_either_marker(self):
+        for start, end, body in (
+            (kit.HOOKS_START, kit.HOOKS_END, kit.hooks_config_block(self.paths)),
+            (kit.REPOWISE_START, kit.REPOWISE_END, kit.repowise_config_block("fake-repowise", kit.repowise_bootstrap_path(self.paths))),
+        ):
+            with self.subTest(marker=start):
+                # The plugin is absent when native add writes its tables into existing kit config.
+                self.write_state({"marketplaces": [], "installed": []})
+                config = self.paths.codex_home / "config.toml"
+                kit.write_file(config, f"{start}\n{body}\n{end}\n")
+                self.assertEqual(self.cli("install")[0], 0)
+                self.assertEqual(self.cli("doctor")[0], 0)
+                self.assertEqual(self.cli("install")[0], 0)
+                parsed = tomllib.loads(config.read_text())
+                self.assertIn("ponytail", parsed["marketplaces"])
+                self.assertTrue(parsed["plugins"]["ponytail@ponytail"]["enabled"])
+
     def test_native_plugin_survives_reinstall_and_uninstall(self):
         for existing in (False, True):
             for purge in (False, True):
@@ -235,11 +265,15 @@ class PonytailIntegrationTests(unittest.TestCase):
                     before = self.snapshot(paths.codex_home / "plugins")
                     settings = (self.paths.home / ".config/ponytail/config.json").read_bytes()
                     self.assertEqual(self.cli("install", paths=paths)[0], 0)
+                    self.seed_plugin(home=paths.codex_home, enabled=not existing)
                     self.assertEqual(self.cli("uninstall", *(["--purge"] if purge else []), paths=paths)[0], 0)
                     self.assertEqual(self.snapshot(paths.codex_home / "plugins"), before)
                     self.assertEqual((self.paths.home / ".config/ponytail/config.json").read_bytes(), settings)
                     self.assertIn('[plugins."ponytail@ponytail"]', (paths.codex_home / "config.toml").read_text())
                     self.assertIn('enabled = ' + str(not existing).lower(), (paths.codex_home / "config.toml").read_text())
+                    _, retained = kit.ponytail_status(paths)
+                    self.assertIsNotNone(retained)
+                    self.assertEqual(retained["enabled"], not existing)
 
     def test_plugin_commands_use_selected_codex_home(self):
         default = self.root / "default"

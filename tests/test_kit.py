@@ -37,6 +37,34 @@ class GitFixture:
 
 
 class MarkerTests(unittest.TestCase):
+    def test_toml_markers_preserve_every_unrelated_table(self):
+        foreign = (
+            '[marketplaces.ponytail]\nsource_type = "git"\n'
+            '[plugins."ponytail@ponytail"]\nenabled = false\n'
+            '[hooks_extra]\nvalue = "keep"\n'
+            '[mcp_servers.repowise_extra]\ncommand = "keep"\n'
+            '[sentinel.last]\nvalue = "later distinct table"\n'
+        )
+        expected = tomllib.loads(foreign)
+        for start, end, old, new in (
+            (kit.HOOKS_START, kit.HOOKS_END, '[[hooks.Stop]]\nmatcher = "old"\n',
+             '[[hooks.SessionStart]]\nmatcher = "new"\n'),
+            (kit.REPOWISE_START, kit.REPOWISE_END, '[mcp_servers.repowise]\ncommand = "old"\n',
+             '[mcp_servers.repowise]\ncommand = "new"\n'),
+        ):
+            tail = old.replace("old", "second") if start == kit.HOOKS_START else '[mcp_servers.repowise.env]\nOLD = "stale"\n'
+            text = start + "\n" + old + foreign + tail + end + "\n"
+            for _ in range(2):
+                text = kit.marker_block(text, start, end, new)
+                self.assertEqual(text.count(start), 1)
+                config = tomllib.loads(text)
+                self.assertEqual(config["marketplaces"], expected["marketplaces"])
+                self.assertEqual(config["plugins"], expected["plugins"])
+                self.assertEqual(config["sentinel"], expected["sentinel"])
+                self.assertEqual(config["hooks_extra"], expected["hooks_extra"])
+                self.assertEqual(config["mcp_servers"]["repowise_extra"], expected["mcp_servers"]["repowise_extra"])
+            self.assertEqual(tomllib.loads(kit.remove_marker_block(text, start, end)), expected)
+
     def test_managed_block_round_trip(self):
         original = "before\nafter\n"
         installed = kit.marker_block(original, "# start", "# end", "managed")
@@ -282,7 +310,11 @@ class InstallerTests(unittest.TestCase):
             paths = self.paths(Path(temp))
             config = paths.codex_home / "config.toml"
             kit.install_hooks(paths)
-            config.write_text(config.read_text() + "\n\n" + kit.hooks_config_block(paths) + "\n")
+            foreign = '[plugins."ponytail@ponytail"]\nenabled = false\n'
+            config.write_text(
+                config.read_text().replace(kit.HOOKS_END, foreign + kit.HOOKS_END)
+                + "\n\n" + kit.hooks_config_block(paths) + "\n"
+            )
 
             kit.install_hooks(paths)
 
@@ -291,6 +323,7 @@ class InstallerTests(unittest.TestCase):
             for event in kit.MANAGED_HOOK_EVENTS:
                 self.assertEqual(len(hooks[event]), 1)
             self.assertNotIn(kit.HOOKS_START, text)
+            self.assertFalse(tomllib.loads(text)["plugins"]["ponytail@ponytail"]["enabled"])
 
     def test_reinstall_removes_stop_context_limit(self):
         with tempfile.TemporaryDirectory() as temp:
@@ -1612,6 +1645,93 @@ class RepoWiseRuntimeTests(unittest.TestCase):
                 repowise, str(paths.home / ".local" / "bin" / "repowise.exe")
             )
 
+    @unittest.skipUnless(os.name == "nt" and shutil.which("pwsh"), "Windows PowerShell process query")
+    def test_windows_repowise_repair_checks_process_paths(self):
+        with tempfile.TemporaryDirectory(prefix="Kit's test ") as temp:
+            paths = self.paths(Path(temp))
+            launcher = kit.user_bin(paths) / "repowise.exe"
+            tool = paths.home / ".local/share/uv/tools/repowise"
+            kit.write_file(launcher, "broken launcher")
+            kit.write_file(tool / "keep.txt", "unchanged runtime")
+            kit.write_file(kit.manifest_path(paths), json.dumps({"repowise": str(launcher)}))
+            python = str(tool / "Scripts/python.exe")
+            unrelated = {"ProcessId": 10, "ExecutablePath": str(tool) + "-other\\Scripts\\python.exe"}
+            matching = [
+                {"ProcessId": 11, "ExecutablePath": python},
+                {"ProcessId": 12, "ExecutablePath": python},
+                {"ProcessId": 13, "ExecutablePath": str(launcher)},
+            ]
+            inventory = []
+            uv_calls = []
+            real_run = kit.run
+
+            def run(command, **kwargs):
+                if command == [str(launcher), "--version"]:
+                    return subprocess.CompletedProcess(command, 1, "", "missing module")
+                if command[0] == "pwsh":
+                    # Replace only the OS inventory; run the production selector and error handling.
+                    script = "function Get-CimInstance { $env:CPK_TEST_PROCESSES | ConvertFrom-Json };\n"
+                    return real_run(
+                        [*command[:-1], script + command[-1]],
+                        **{**kwargs, "env": {**kwargs["env"], "CPK_TEST_PROCESSES": json.dumps(inventory)}},
+                    )
+                uv_calls.append(command)
+                return subprocess.CompletedProcess(command, 0, "", "")
+
+            with mock.patch.object(kit, "find_runtime_command", return_value=str(launcher)), mock.patch.object(
+                kit, "run", side_effect=run
+            ):
+                # An unrelated prefix before duplicate matching paths must not hide the launcher.
+                for records in ([matching[0]], [matching[2]], [unrelated, *matching]):
+                    inventory[:] = records
+                    with self.subTest(records=records), self.assertRaises(kit.KitError) as caught:
+                        kit.ensure_repowise(paths, "fake-uv")
+                    message = str(caught.exception)
+                    for record in records:
+                        if record is not unrelated:
+                            self.assertIn(str(record["ProcessId"]), message)
+                    self.assertIn("Close", message)
+                    self.assertEqual(uv_calls, [])
+                    self.assertEqual(launcher.read_text(), "broken launcher")
+                    self.assertEqual((tool / "keep.txt").read_text(), "unchanged runtime")
+
+                # The same process records must match equivalent selected paths with different case.
+                inventory[:] = matching
+                different_case = kit.InstallPaths(
+                    Path(str(paths.home).swapcase()), paths.codex_home, paths.skills_home, paths.install_root
+                )
+                with self.assertRaises(kit.KitError) as caught:
+                    kit.ensure_repowise(different_case, "fake-uv")
+                for record in matching:
+                    self.assertIn(str(record["ProcessId"]), str(caught.exception))
+                self.assertEqual(uv_calls, [])
+
+                # Once blockers exit, empty or unrelated inventories permit the ordinary repair.
+                for records in ([], [unrelated, {"ProcessId": 20, "ExecutablePath": None}]):
+                    inventory[:] = records
+                    uv_calls.clear()
+                    self.assertEqual(kit.ensure_repowise(paths, "fake-uv"), str(launcher))
+                    self.assertEqual(uv_calls, [
+                        ["fake-uv", "tool", "install", "--force", f"repowise=={kit.load_lock()['runtime_tools']['repowise']['version']}"],
+                        ["fake-uv", "tool", "update-shell"],
+                    ])
+
+    @unittest.skipUnless(os.name == "nt" and shutil.which("pwsh"), "Windows PowerShell process query")
+    def test_windows_repowise_process_query_errors_stop_install(self):
+        with tempfile.TemporaryDirectory() as temp:
+            paths = self.paths(Path(temp))
+            real_run = kit.run
+
+            def run(command, **kwargs):
+                self.assertEqual(command[0], "pwsh", "uv ran without a valid process inventory")
+                script = "function Get-CimInstance { Write-Error 'CIM query failed' };\n"
+                return real_run([*command[:-1], script + command[-1]], **kwargs)
+
+            with mock.patch.object(kit, "find_runtime_command", return_value=None), mock.patch.object(
+                kit, "run", side_effect=run
+            ), self.assertRaisesRegex(kit.KitError, "CIM query failed"):
+                kit.ensure_repowise(paths, "fake-uv")
+
     def test_install_repairs_manifest_owned_broken_windows_repowise(self):
         with tempfile.TemporaryDirectory() as temp:
             paths = self.paths(Path(temp))
@@ -2640,6 +2760,12 @@ class IntegrationTests(unittest.TestCase):
                 return subprocess.CompletedProcess([], 0, "", "")
 
             paths = kit.InstallPaths(root, root / "codex", root / "skills", root / "kit")
+            config_path = root / ".codex/config.toml"
+            foreign = '[plugins."sentinel@local"]\nenabled = false\n'
+            config_path.write_text(kit.marker_block(
+                config_path.read_text(), kit.REPOWISE_START, kit.REPOWISE_END,
+                '[mcp_servers.repowise]\ncommand = "old"\n' + foreign,
+            ), encoding="utf-8")
             with mock.patch.object(kit, "repowise_command", fake_repowise), mock.patch.object(
                 kit, "ensure_repowise_runtime", return_value=("/usr/bin/uv", "/usr/bin/repowise")
             ):
@@ -2650,6 +2776,8 @@ class IntegrationTests(unittest.TestCase):
                 repo_config["mcp_servers"]["repowise"]["args"],
                 [str(kit.repowise_bootstrap_path(paths)), "/usr/bin/repowise"],
             )
+            self.assertEqual(repo_config["mcp_servers"]["repowise"]["cwd"], str(root))
+            self.assertFalse(repo_config["plugins"]["sentinel@local"]["enabled"])
             self.assertTrue(kit.repowise_bootstrap_path(paths).is_file())
             self.assertTrue(any(call[:2] == ("hook", "install") for call in calls))
             self.assertFalse(any(call and call[0] == "update" for call in calls))
@@ -2658,6 +2786,11 @@ class IntegrationTests(unittest.TestCase):
             with mock.patch.object(kit, "repowise_command", fake_repowise), mock.patch.object(
                 kit, "ensure_repowise_runtime", return_value=("/usr/bin/uv", "/usr/bin/repowise")
             ):
+                # Move the native table back inside the marker before the removal entry point.
+                config_path.write_text(
+                    config_path.read_text().replace(foreign, "").replace(kit.REPOWISE_END, foreign + kit.REPOWISE_END),
+                    encoding="utf-8",
+                )
                 view = root / ".codex/roadmap-view.md"
                 view.write_text(kit.ROADMAP_VIEW_MARKER + "\nowned\n", encoding="utf-8")
                 exclude = root / ".git/info/exclude"
@@ -2671,6 +2804,9 @@ class IntegrationTests(unittest.TestCase):
                 kit.remove_repo(Namespace(repo=str(root), delete_index=False), paths)
             self.assertEqual((root / "AGENTS.md").read_text(), "# Project rules\n")
             self.assertIn("enabled = false", (root / ".codex" / "config.toml").read_text())
+            removed_config = tomllib.loads(config_path.read_text())
+            self.assertFalse(removed_config["plugins"]["sentinel@local"]["enabled"])
+            self.assertFalse(removed_config["mcp_servers"]["repowise"]["enabled"])
             self.assertTrue(any(call[:2] == ("hook", "uninstall") for call in calls))
             self.assertFalse(view.exists())
             self.assertNotIn(kit.ROADMAP_EXCLUDE_START, kit.read_text(exclude))
@@ -3835,7 +3971,7 @@ class IntegrationTests(unittest.TestCase):
         self.assertIn("`pwsh -File .\\doctor.ps1`", publication)
         self.assertIn("from the reviewed candidate", publication)
         self.assertIn("`Result: ready`", publication)
-        self.assertEqual(kit.KIT_VERSION, "0.26.0")
+        self.assertEqual(kit.KIT_VERSION, "0.26.1")
         self.assertNotIn("Version `0.22.0`", (ROOT / "README.md").read_text())
         self.assertNotIn("version 0.22.0", (ROOT / "CODEX-INSTALL-PROMPT.md").read_text())
 
